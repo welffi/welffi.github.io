@@ -47,10 +47,7 @@
             color: white;
         }
         .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); /* Responsive grid */
-            gap: 20px;
-            align-items: start;
+            display: block;
             margin-top: 20px;
         }
         .grid div {
@@ -59,14 +56,9 @@
             padding: 20px;
             border-radius: 4px;
             color: white;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
+            margin-bottom: 20px;
             word-wrap: break-word;
-            max-width: 100%; /* Ensure text doesn’t stretch outside grid */
-            height: 200px; /* Fixed height for uniform boxes */
+            max-width: 100%;
         }
         .grid button {
             padding: 10px 20px;
