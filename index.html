@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Formula Calculator</title>
+    <title>Quadratic Factorizer</title>
     <style>
         body {
             display: flex;
@@ -22,8 +22,8 @@
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
-        input[type="number"] {
-            width: 100px;
+        input[type="text"] {
+            width: 300px;
             margin: 10px;
             padding: 5px;
             font-size: 16px;
@@ -50,23 +50,42 @@
 </head>
 <body>
     <div class="calculator">
-        <h2>Formula Calculator</h2>
-        <input type="number" id="a" placeholder="Enter a">
-        <input type="number" id="b" placeholder="Enter b">
-        <button onclick="calculate()">Calculate</button>
+        <h2>Quadratic Factorizer</h2>
+        <input type="text" id="equation" placeholder="Enter quadratic (e.g., x^2 + 26x + 48)">
+        <button onclick="factorize()">Factorize</button>
         <div class="result" id="result"></div>
     </div>
     <script>
-        function calculate() {
-            const a = parseFloat(document.getElementById('a').value);
-            const b = parseFloat(document.getElementById('b').value);
-            if (isNaN(a) || isNaN(b)) {
-                document.getElementById('result').innerText = "Please enter valid numbers.";
+        function factorize() {
+            const input = document.getElementById('equation').value;
+
+            // Regular expression to parse the quadratic equation
+            const match = input.match(/^x\^2\s*([\+\-]\s*\d+)x\s*([\+\-]\s*\d+)$/);
+            if (!match) {
+                document.getElementById('result').innerText = "Invalid input! Please use the format 'x^2 + bx + c'.";
                 return;
             }
-            // Example formula: x = a^2 + b^2
-            const result = Math.pow(a, 2) + Math.pow(b, 2);
-            document.getElementById('result').innerText = `Result: ${result}`;
+
+            // Extract coefficients b and c
+            const b = parseInt(match[1].replace(/\s+/g, ''), 10);
+            const c = parseInt(match[2].replace(/\s+/g, ''), 10);
+
+            // Solve for the roots
+            const discriminant = Math.pow(b, 2) - 4 * 1 * c;
+            if (discriminant < 0) {
+                document.getElementById('result').innerText = "No real factors (discriminant < 0).";
+                return;
+            }
+
+            const root1 = (-b + Math.sqrt(discriminant)) / (2 * 1);
+            const root2 = (-b - Math.sqrt(discriminant)) / (2 * 1);
+
+            // Construct the factored form
+            const factor1 = `x ${root1 < 0 ? '+ ' + Math.abs(root1) : '- ' + root1}`;
+            const factor2 = `x ${root2 < 0 ? '+ ' + Math.abs(root2) : '- ' + root2}`;
+            const factoredForm = `(${factor1})(${factor2})`;
+
+            document.getElementById('result').innerText = `Factored Form: ${factoredForm}`;
         }
     </script>
 </body>
