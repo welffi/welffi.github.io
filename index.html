@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dynamic Button Grid with Copyable Code</title>
+    <title>Dynamic Button Grid</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 20px;
-            background-color: #f4f4f4;
+            background-color: black;
+            color: white;
         }
         .container {
             max-width: 800px;
@@ -41,9 +42,17 @@
         }
         .grid {
             display: grid;
-            grid-template-columns: 1fr auto;
-            gap: 10px 20px;
+            grid-template-columns: 1fr;
+            gap: 20px;
             align-items: center;
+            margin-top: 20px;
+        }
+        .grid div {
+            text-align: center;
+            background-color: #333;
+            padding: 15px;
+            border-radius: 4px;
+            color: white;
         }
         .grid button {
             padding: 10px 20px;
@@ -57,44 +66,17 @@
         .grid button:hover {
             background-color: #1e7e34;
         }
-        .code-area {
-            margin-top: 20px;
-            background-color: #f9f9f9;
-            padding: 15px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-family: monospace;
-        }
-        .code-button {
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px;
-            border: none;
-            cursor: pointer;
-        }
-        .code-button:hover {
-            background-color: #45a049;
-        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="form">
-            <input type="text" id="name" placeholder="Enter name">
-            <input type="url" id="link" placeholder="Enter link">
+            <input type="text" id="name" placeholder="Enter website name">
+            <input type="url" id="link" placeholder="Enter website link">
             <button onclick="addEntry()">Add</button>
         </div>
         
         <div class="grid" id="grid"></div>
-
-        <!-- Code area for easy copying -->
-        <div class="code-area">
-            <h3>Copy the code below to add a new entry manually:</h3>
-            <textarea id="copyCode" readonly rows="4" cols="50">
-                addEntry('New Name', 'https://www.newlink.com');
-            </textarea>
-            <button class="code-button" onclick="copyCode()">Copy Code</button>
-        </div>
     </div>
 
     <script>
@@ -131,28 +113,20 @@
         function createEntry(name, link) {
             const grid = document.getElementById('grid');
 
-            // Create name element
-            const nameDiv = document.createElement('div');
-            nameDiv.textContent = name;
+            // Create the name and link text
+            const entryDiv = document.createElement('div');
+            entryDiv.innerHTML = `<p>${name} (${link})</p>`;
 
-            // Create button element
+            // Create "Go" button
             const button = document.createElement('button');
-            button.textContent = 'Play';
+            button.textContent = 'Go';
             button.onclick = () => {
                 window.open(link, '_blank');
             };
 
             // Add elements to grid
-            grid.appendChild(nameDiv);
+            grid.appendChild(entryDiv);
             grid.appendChild(button);
-        }
-
-        function copyCode() {
-            const copyText = document.getElementById('copyCode');
-            copyText.select();
-            copyText.setSelectionRange(0, 99999); // For mobile devices
-            document.execCommand('copy');
-            alert('Code copied to clipboard!');
         }
     </script>
 </body>
