@@ -1,7 +1,73 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formula Calculator</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f4f4;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        .calculator {
+            text-align: center;
+            padding: 20px;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        input[type="number"] {
+            width: 100px;
+            margin: 10px;
+            padding: 5px;
+            font-size: 16px;
+        }
+        button {
+            margin: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .result {
+            margin-top: 15px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+    </style>
+</head>
 <body>
-<h1>Hello World</h1>
-<p>I'm hosted with GitHub Pages.</p>
+    <div class="calculator">
+        <h2>Formula Calculator</h2>
+        <input type="number" id="a" placeholder="Enter a">
+        <input type="number" id="b" placeholder="Enter b">
+        <button onclick="calculate()">Calculate</button>
+        <div class="result" id="result"></div>
+    </div>
+    <script>
+        function calculate() {
+            const a = parseFloat(document.getElementById('a').value);
+            const b = parseFloat(document.getElementById('b').value);
+            if (isNaN(a) || isNaN(b)) {
+                document.getElementById('result').innerText = "Please enter valid numbers.";
+                return;
+            }
+            // Example formula: x = a^2 + b^2
+            const result = Math.pow(a, 2) + Math.pow(b, 2);
+            document.getElementById('result').innerText = `Result: ${result}`;
+        }
+    </script>
 </body>
 </html>
