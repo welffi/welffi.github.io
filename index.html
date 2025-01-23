@@ -27,6 +27,8 @@
             border: 1px solid #ccc;
             border-radius: 4px;
             flex: 1;
+            background-color: #333;
+            color: white;
         }
         .form button {
             padding: 10px 20px;
@@ -42,10 +44,11 @@
         }
         .showLinksToggle {
             margin-bottom: 20px;
+            color: white;
         }
         .grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); /* Two columns that automatically fill the space */
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); /* Responsive grid */
             gap: 20px;
             align-items: start;
             margin-top: 20px;
@@ -53,15 +56,17 @@
         .grid div {
             text-align: center;
             background-color: #333;
-            padding: 15px;
+            padding: 20px;
             border-radius: 4px;
             color: white;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
+            justify-content: space-between;
             align-items: center;
             gap: 10px;
             word-wrap: break-word;
             max-width: 100%; /* Ensure text doesn’t stretch outside grid */
+            height: 200px; /* Fixed height for uniform boxes */
         }
         .grid button {
             padding: 10px 20px;
@@ -86,6 +91,11 @@
         }
         .remove-button:hover {
             background-color: #c82333;
+        }
+        .form input, .form button, .remove-button {
+            background-color: #333;
+            color: white;
+            border-radius: 4px;
         }
     </style>
 </head>
