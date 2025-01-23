@@ -71,15 +71,13 @@
             background-color: #1e7e34;
         }
         .remove-button {
-            width: 30px;
-            height: 30px;
+            padding: 8px 16px;
             background-color: #dc3545;
             color: white;
             border: none;
-            border-radius: 50%;
-            font-size: 18px;
+            border-radius: 4px;
+            font-size: 14px;
             cursor: pointer;
-            text-align: center;
         }
         .remove-button:hover {
             background-color: #c82333;
@@ -142,7 +140,7 @@
                 window.open(link, '_blank');
             };
 
-            // Create the red "X" button to remove the entry
+            // Create the red "Remove" button to remove the entry
             const removeButton = document.createElement('button');
             removeButton.classList.add('remove-button');
             removeButton.textContent = 'Remove';
@@ -150,7 +148,7 @@
                 removeEntry(name, link, entryDiv);
             };
 
-            // Append the "Go" button and the red "X" button to the entry div
+            // Append the "Go" button and the "Remove" button to the entry div
             entryDiv.appendChild(button);
             entryDiv.appendChild(removeButton);
 
