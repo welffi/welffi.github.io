@@ -3,89 +3,156 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quadratic Factorizer</title>
+    <title>Dynamic Button Grid with Copyable Code</title>
     <style>
         body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #f4f4f4;
-            margin: 0;
             font-family: Arial, sans-serif;
-        }
-        .calculator {
-            text-align: center;
+            margin: 0;
             padding: 20px;
-            background: white;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            background-color: #f4f4f4;
         }
-        input[type="text"] {
-            width: 300px;
-            margin: 10px;
-            padding: 5px;
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .form input {
+            padding: 10px;
             font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            flex: 1;
         }
-        button {
-            margin: 10px;
+        .form button {
             padding: 10px 20px;
             font-size: 16px;
-            background: #007BFF;
+            background-color: #007BFF;
             color: white;
             border: none;
-            border-radius: 5px;
+            border-radius: 4px;
             cursor: pointer;
         }
-        button:hover {
-            background: #0056b3;
+        .form button:hover {
+            background-color: #0056b3;
         }
-        .result {
-            margin-top: 15px;
-            font-size: 18px;
-            font-weight: bold;
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 10px 20px;
+            align-items: center;
+        }
+        .grid button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .grid button:hover {
+            background-color: #1e7e34;
+        }
+        .code-area {
+            margin-top: 20px;
+            background-color: #f9f9f9;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        .code-button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px;
+            border: none;
+            cursor: pointer;
+        }
+        .code-button:hover {
+            background-color: #45a049;
         }
     </style>
 </head>
 <body>
-    <div class="calculator">
-        <h2>Quadratic Factorizer</h2>
-        <input type="text" id="equation" placeholder="Enter quadratic (e.g., x^2 + 26x + 48)">
-        <button onclick="factorize()">Factorize</button>
-        <div class="result" id="result"></div>
+    <div class="container">
+        <div class="form">
+            <input type="text" id="name" placeholder="Enter name">
+            <input type="url" id="link" placeholder="Enter link">
+            <button onclick="addEntry()">Add</button>
+        </div>
+        
+        <div class="grid" id="grid"></div>
+
+        <!-- Code area for easy copying -->
+        <div class="code-area">
+            <h3>Copy the code below to add a new entry manually:</h3>
+            <textarea id="copyCode" readonly rows="4" cols="50">
+                addEntry('New Name', 'https://www.newlink.com');
+            </textarea>
+            <button class="code-button" onclick="copyCode()">Copy Code</button>
+        </div>
     </div>
+
     <script>
-        function factorize() {
-            const input = document.getElementById('equation').value;
+        // Load saved entries from localStorage on page load
+        window.onload = function() {
+            const savedEntries = JSON.parse(localStorage.getItem('entries')) || [];
+            savedEntries.forEach(entry => {
+                createEntry(entry.name, entry.link);
+            });
+        };
 
-            // Regular expression to parse the quadratic equation
-            const match = input.match(/^x\^2\s*([\+\-]\s*\d+)x\s*([\+\-]\s*\d+)$/);
-            if (!match) {
-                document.getElementById('result').innerText = "Invalid input! Please use the format 'x^2 + bx + c'.";
+        function addEntry() {
+            const name = document.getElementById('name').value.trim();
+            const link = document.getElementById('link').value.trim();
+
+            if (!name || !link) {
+                alert('Please enter both a name and a link.');
                 return;
             }
 
-            // Extract coefficients b and c
-            const b = parseInt(match[1].replace(/\s+/g, ''), 10);
-            const c = parseInt(match[2].replace(/\s+/g, ''), 10);
+            // Save the new entry to localStorage
+            const savedEntries = JSON.parse(localStorage.getItem('entries')) || [];
+            savedEntries.push({ name, link });
+            localStorage.setItem('entries', JSON.stringify(savedEntries));
 
-            // Solve for the roots
-            const discriminant = Math.pow(b, 2) - 4 * 1 * c;
-            if (discriminant < 0) {
-                document.getElementById('result').innerText = "No real factors (discriminant < 0).";
-                return;
-            }
+            // Create the new entry in the grid
+            createEntry(name, link);
 
-            const root1 = (-b + Math.sqrt(discriminant)) / (2 * 1);
-            const root2 = (-b - Math.sqrt(discriminant)) / (2 * 1);
+            // Clear inputs
+            document.getElementById('name').value = '';
+            document.getElementById('link').value = '';
+        }
 
-            // Construct the factored form
-            const factor1 = `x ${root1 < 0 ? '+ ' + Math.abs(root1) : '- ' + root1}`;
-            const factor2 = `x ${root2 < 0 ? '+ ' + Math.abs(root2) : '- ' + root2}`;
-            const factoredForm = `(${factor1})(${factor2})`;
+        function createEntry(name, link) {
+            const grid = document.getElementById('grid');
 
-            document.getElementById('result').innerText = `Factored Form: ${factoredForm}`;
+            // Create name element
+            const nameDiv = document.createElement('div');
+            nameDiv.textContent = name;
+
+            // Create button element
+            const button = document.createElement('button');
+            button.textContent = 'Play';
+            button.onclick = () => {
+                window.open(link, '_blank');
+            };
+
+            // Add elements to grid
+            grid.appendChild(nameDiv);
+            grid.appendChild(button);
+        }
+
+        function copyCode() {
+            const copyText = document.getElementById('copyCode');
+            copyText.select();
+            copyText.setSelectionRange(0, 99999); // For mobile devices
+            document.execCommand('copy');
+            alert('Code copied to clipboard!');
         }
     </script>
 </body>
