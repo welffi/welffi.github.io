@@ -59,6 +59,10 @@
             border-radius: 5px;
             border: 1px solid #555;
         }
+        .rare {
+            border: 2px solid;
+            border-image: linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet) 1;
+        }
     </style>
 </head>
 <body>
@@ -100,6 +104,9 @@
                         let traitDiv = document.createElement("div");
                         traitDiv.className = "trait";
                         traitDiv.innerText = chances[i].name;
+                        if (chances[i].chance < 1) {
+                            traitDiv.classList.add("rare");
+                        }
                         resultDiv.appendChild(traitDiv);
                         break;
                     }
