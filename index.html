@@ -120,7 +120,6 @@
         
         let counters = {};
         let totalRolls = 0;
-        let isRolling = false;
 
         function initializeCounters() {
             const countersDiv = document.getElementById("counters");
@@ -138,9 +137,6 @@
         }
 
         function rollChance() {
-            if (isRolling) return; // Prevent multiple rolls at once
-
-            isRolling = true;
             let rolls = parseInt(document.getElementById("numberInput").value) || 1;
             let resultDiv = document.getElementById("result");
             let delay = 1000 / rolls;
@@ -180,15 +176,9 @@
             setTimeout(() => {
                 resultDiv.style.opacity = 1; // Fade in after traits are added
             }, 100); // Short delay to let the traits get added before fading in
-
-            setTimeout(() => {
-                isRolling = false;
-            }, rolls * delay);
         }
 
         function clearResults() {
-            if (isRolling) return; // Prevent clearing while rolling
-
             document.getElementById("result").innerHTML = "";
             initializeCounters();
         }
