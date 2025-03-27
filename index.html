@@ -74,6 +74,8 @@
             padding: 10px;
             border-radius: 5px;
             border: 1px solid #555;
+            opacity: 0;
+            animation: fadeIn 1s forwards;
         }
         .rare {
             border: 2px solid;
@@ -146,29 +148,39 @@
             totalRolls += rolls;
             document.getElementById("total-rolls").innerText = `TOTAL ROLLS: ${totalRolls}`;
 
+            // Collect all rolls and apply the fade-in at once
+            let allTraits = [];
             for (let j = 0; j < rolls; j++) {
-                setTimeout(() => {
-                    let roll = Math.random() * 100;
-                    let cumulative = 0;
+                let roll = Math.random() * 100;
+                let cumulative = 0;
 
-                    for (let i = 0; i < chances.length; i++) {
-                        cumulative += chances[i].chance;
-                        if (roll < cumulative) {
-                            let traitDiv = document.createElement("div");
-                            traitDiv.className = "trait";
-                            traitDiv.innerText = chances[i].name;
-                            if (chances[i].chance < 1) {
-                                traitDiv.classList.add("rare");
-                            }
-                            resultDiv.appendChild(traitDiv);
-
-                            counters[chances[i].name]++;
-                            document.getElementById("counter-" + chances[i].name).innerText = `${chances[i].name}: ${counters[chances[i].name]}`;
-                            break;
-                        }
+                for (let i = 0; i < chances.length; i++) {
+                    cumulative += chances[i].chance;
+                    if (roll < cumulative) {
+                        allTraits.push(chances[i].name);
+                        counters[chances[i].name]++;
+                        document.getElementById("counter-" + chances[i].name).innerText = `${chances[i].name}: ${counters[chances[i].name]}`;
+                        break;
                     }
-                }, j * delay);
+                }
             }
+
+            // Add all rolls to the result container and apply fade-in
+            allTraits.forEach((traitName) => {
+                let traitDiv = document.createElement("div");
+                traitDiv.className = "trait";
+                traitDiv.innerText = traitName;
+                let traitObj = chances.find(trait => trait.name === traitName);
+                if (traitObj.chance < 1) {
+                    traitDiv.classList.add("rare");
+                }
+                resultDiv.appendChild(traitDiv);
+            });
+
+            // Trigger fade-in animation on the entire result container
+            setTimeout(() => {
+                resultDiv.style.opacity = 1; // Fade in after traits are added
+            }, 100); // Short delay to let the traits get added before fading in
 
             setTimeout(() => {
                 isRolling = false;
