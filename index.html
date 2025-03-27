@@ -66,14 +66,14 @@
             grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
             gap: 10px;
             text-align: center;
+            opacity: 0;
+            animation: fadeIn 1s forwards; /* Apply fadeIn to the entire result container */
         }
         .trait {
             background-color: #222;
             padding: 10px;
             border-radius: 5px;
             border: 1px solid #555;
-            opacity: 0;
-            animation: fadeIn 1s forwards;
         }
         .rare {
             border: 2px solid;
@@ -141,6 +141,7 @@
             isRolling = true;
             let rolls = parseInt(document.getElementById("numberInput").value) || 1;
             let resultDiv = document.getElementById("result");
+            resultDiv.innerHTML = ""; // Clear previous results before new ones
             let delay = 1000 / rolls;
             totalRolls += rolls;
             document.getElementById("total-rolls").innerText = `TOTAL ROLLS: ${totalRolls}`;
