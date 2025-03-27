@@ -3,209 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dynamic Button Grid</title>
+    <title>Roll Chance</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: black;
-            color: white;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        .form {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        .form input {
-            padding: 10px;
-            font-size: 16px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            flex: 1;
-            background-color: #333;
-            color: white;
-        }
-        .form button {
-            padding: 10px 20px;
-            font-size: 16px;
-            background-color: #007BFF;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        .form button:hover {
-            background-color: #0056b3;
-        }
-        .showLinksToggle {
-            margin-bottom: 20px;
-            color: white;
-        }
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); /* Ensures equal sizes */
-            gap: 15px; /* Reduced gap to make buttons closer */
-            margin-top: 20px;
-        }
-        .grid div {
-            text-align: center;
-            background-color: #333;
-            padding: 15px; /* Reduced padding for smaller boxes */
-            border-radius: 4px;
-            color: white;
-            word-wrap: break-word;
-            max-width: 100%;
-            height: 150px; /* Reduced height for smaller boxes */
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            font-family: Arial, sans-serif;
         }
-        .grid button {
-            padding: 8px 16px; /* Reduced button padding */
-            font-size: 14px; /* Reduced font size */
-            background-color: #28a745;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-bottom: 8px; /* Added margin between buttons */
+        .container {
+            display: flex;
+            align-items: center;
         }
-        .grid button:hover {
-            background-color: #1e7e34;
+        input {
+            padding: 10px;
+            font-size: 16px;
+            text-align: center;
         }
-        .remove-button {
-            padding: 8px 16px;
-            background-color: #dc3545;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-size: 14px;
+        button {
+            padding: 10px;
+            margin-left: 10px;
+            font-size: 16px;
             cursor: pointer;
         }
-        .remove-button:hover {
-            background-color: #c82333;
-        }
-        .form input, .form button, .remove-button {
-            background-color: #333;
-            color: white;
-            border-radius: 4px;
+        #result {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="form">
-            <input type="text" id="name" placeholder="Enter website name">
-            <input type="url" id="link" placeholder="Enter website link">
-            <button onclick="addEntry()">Add</button>
-        </div>
-
-        <div class="showLinksToggle">
-            <input type="checkbox" id="showLinks" onclick="toggleLinks()"> 
-            <label for="showLinks">Show Links Next to Name</label>
-        </div>
-
-        <div class="grid" id="grid"></div>
+        <input type="number" id="numberInput" placeholder="Enter a number">
+        <button onclick="rollChance()">ROLL</button>
     </div>
+    <div id="result"></div>
 
     <script>
-        // Load saved entries and showLinks setting from localStorage on page load
-        window.onload = function() {
-            const savedEntries = JSON.parse(localStorage.getItem('entries')) || [];
-            const showLinks = JSON.parse(localStorage.getItem('showLinks')) ?? true; // Default to true if no setting is saved
-            document.getElementById('showLinks').checked = showLinks;
+        function rollChance() {
+            const chances = [
+                { name: "Range", chance: 26 },
+                { name: "Swift", chance: 26 },
+                { name: "Vigor", chance: 26 },
+                { name: "Scholar", chance: 10 },
+                { name: "Marksman", chance: 6.5 },
+                { name: "Fortune", chance: 2.5 },
+                { name: "Blitz", chance: 1.85 },
+                { name: "Solar", chance: 0.5 },
+                { name: "Deadeye", chance: 0.375 },
+                { name: "Ethereal", chance: 0.175 },
+                { name: "Monarch", chance: 0.1 }
+            ];
 
-            savedEntries.forEach(entry => {
-                createEntry(entry.name, entry.link, showLinks);
-            });
-        };
+            let roll = Math.random() * 100;
+            let cumulative = 0;
 
-        function addEntry() {
-            const name = document.getElementById('name').value.trim();
-            const link = document.getElementById('link').value.trim();
-
-            if (!name || !link) {
-                alert('Please enter both a name and a link.');
-                return;
+            for (let i = 0; i < chances.length; i++) {
+                cumulative += chances[i].chance;
+                if (roll < cumulative) {
+                    document.getElementById("result").innerText = "You got: " + chances[i].name;
+                    return;
+                }
             }
-
-            // Save the new entry to localStorage
-            const savedEntries = JSON.parse(localStorage.getItem('entries')) || [];
-            savedEntries.push({ name, link });
-            localStorage.setItem('entries', JSON.stringify(savedEntries));
-
-            // Create the new entry in the grid
-            const showLinks = document.getElementById('showLinks').checked;
-            createEntry(name, link, showLinks);
-
-            // Clear inputs
-            document.getElementById('name').value = '';
-            document.getElementById('link').value = '';
-        }
-
-        function createEntry(name, link, showLinks) {
-            const grid = document.getElementById('grid');
-
-            // Create the name and link text, depending on the showLinks setting
-            const entryDiv = document.createElement('div');
-            if (showLinks) {
-                entryDiv.innerHTML = `<p>${name} (${link})</p>`;
-            } else {
-                entryDiv.innerHTML = `<p>${name}</p>`;
-            }
-
-            // Create "Go" button
-            const button = document.createElement('button');
-            button.textContent = 'Go';
-            button.onclick = () => {
-                window.open(link, '_blank');
-            };
-
-            // Create the red "Remove" button to remove the entry
-            const removeButton = document.createElement('button');
-            removeButton.classList.add('remove-button');
-            removeButton.textContent = 'Remove';
-            removeButton.onclick = () => {
-                removeEntry(name, link, entryDiv);
-            };
-
-            // Append the "Go" button and the "Remove" button to the entry div
-            entryDiv.appendChild(button);
-            entryDiv.appendChild(removeButton);
-
-            // Add elements to grid
-            grid.appendChild(entryDiv);
-        }
-
-        function removeEntry(name, link, entryDiv) {
-            // Remove from the display
-            entryDiv.remove();
-
-            // Remove from localStorage
-            const savedEntries = JSON.parse(localStorage.getItem('entries')) || [];
-            const updatedEntries = savedEntries.filter(entry => entry.name !== name || entry.link !== link);
-            localStorage.setItem('entries', JSON.stringify(updatedEntries));
-        }
-
-        function toggleLinks() {
-            const showLinks = document.getElementById('showLinks').checked;
-
-            // Save the setting to localStorage
-            localStorage.setItem('showLinks', JSON.stringify(showLinks));
-
-            // Refresh the grid with updated setting
-            const savedEntries = JSON.parse(localStorage.getItem('entries')) || [];
-            const grid = document.getElementById('grid');
-            grid.innerHTML = ''; // Clear current grid
-
-            savedEntries.forEach(entry => {
-                createEntry(entry.name, entry.link, showLinks);
-            });
         }
     </script>
 </body>
