@@ -70,16 +70,23 @@
             animation: fadeIn 1s forwards; /* Apply fadeIn to the entire result container */
         }
         .trait {
-            background-color: #222;
             padding: 10px;
             border-radius: 5px;
             border: 1px solid #555;
             opacity: 0;
             animation: fadeIn 1s forwards;
         }
-        .rare {
-            border: 2px solid;
-            border-image: linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet) 1;
+        /* Define specific background colors for traits */
+        .range { background-color: red; }
+        .swift { background-color: blue; }
+        .vigor { background-color: purple; }
+        .scholar { background-color: yellow; }
+        .marksman { background-color: yellow; }
+        .fortune { background-color: yellow; }
+        .blitz { background-color: yellow; }
+        /* Traits below 1% should have a rainbow background */
+        .rainbow-bg {
+            background-image: linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet);
         }
         #total-rolls {
             margin-top: 10px;
@@ -165,10 +172,20 @@
                 let traitDiv = document.createElement("div");
                 traitDiv.className = "trait";
                 traitDiv.innerText = traitName;
-                let traitObj = chances.find(trait => trait.name === traitName);
-                if (traitObj.chance < 1) {
-                    traitDiv.classList.add("rare");
+
+                // Apply background colors for traits
+                if (traitName === "Range") traitDiv.classList.add("range");
+                else if (traitName === "Swift") traitDiv.classList.add("swift");
+                else if (traitName === "Vigor") traitDiv.classList.add("vigor");
+                else if (traitName === "Scholar") traitDiv.classList.add("scholar");
+                else if (traitName === "Marksman") traitDiv.classList.add("marksman");
+                else if (traitName === "Fortune") traitDiv.classList.add("fortune");
+                else if (traitName === "Blitz") traitDiv.classList.add("blitz");
+                // Traits below 1% should have rainbow background
+                else if (chances.find(t => t.name === traitName).chance < 1) {
+                    traitDiv.classList.add("rainbow-bg");
                 }
+
                 resultDiv.appendChild(traitDiv);
             });
 
