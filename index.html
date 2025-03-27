@@ -72,10 +72,16 @@
             padding: 10px;
             border-radius: 5px;
             border: 1px solid #555;
+            opacity: 0;
+            animation: fadeIn 1s forwards;
         }
         .rare {
             border: 2px solid;
             border-image: linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet) 1;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
     </style>
 </head>
@@ -122,27 +128,30 @@
         function rollChance() {
             let rolls = parseInt(document.getElementById("numberInput").value) || 1;
             let resultDiv = document.getElementById("result");
+            let delay = 1000 / rolls;
 
             for (let j = 0; j < rolls; j++) {
-                let roll = Math.random() * 100;
-                let cumulative = 0;
-                
-                for (let i = 0; i < chances.length; i++) {
-                    cumulative += chances[i].chance;
-                    if (roll < cumulative) {
-                        let traitDiv = document.createElement("div");
-                        traitDiv.className = "trait";
-                        traitDiv.innerText = chances[i].name;
-                        if (chances[i].chance < 1) {
-                            traitDiv.classList.add("rare");
+                setTimeout(() => {
+                    let roll = Math.random() * 100;
+                    let cumulative = 0;
+                    
+                    for (let i = 0; i < chances.length; i++) {
+                        cumulative += chances[i].chance;
+                        if (roll < cumulative) {
+                            let traitDiv = document.createElement("div");
+                            traitDiv.className = "trait";
+                            traitDiv.innerText = chances[i].name;
+                            if (chances[i].chance < 1) {
+                                traitDiv.classList.add("rare");
+                            }
+                            resultDiv.appendChild(traitDiv);
+                            
+                            counters[chances[i].name]++;
+                            document.getElementById("counter-" + chances[i].name).innerText = `${chances[i].name}: ${counters[chances[i].name]}`;
+                            break;
                         }
-                        resultDiv.appendChild(traitDiv);
-                        
-                        counters[chances[i].name]++;
-                        document.getElementById("counter-" + chances[i].name).innerText = `${chances[i].name}: ${counters[chances[i].name]}`;
-                        break;
                     }
-                }
+                }, j * delay);
             }
         }
         
