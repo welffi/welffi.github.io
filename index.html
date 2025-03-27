@@ -89,6 +89,10 @@
         .rainbow-border {
             border-image: linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet) 1;
         }
+        /* Class to fade out common traits */
+        .faded {
+            opacity: 0.5;
+        }
         #total-rolls {
             margin-top: 10px;
             font-size: 18px;
@@ -104,6 +108,7 @@
         <input type="number" id="numberInput" placeholder="Enter a number">
         <button onclick="rollChance()">ROLL</button>
         <button onclick="clearResults()">CLEAR ALL</button>
+        <button onclick="toggleFade()">Fade Common Traits</button> <!-- New toggle button -->
     </div>
     <div id="counters"></div>
     <div id="result-container">
@@ -128,6 +133,7 @@
         
         let counters = {};
         let totalRolls = 0;
+        let fadeCommonTraits = false; // Variable to track whether fading is toggled on
 
         function initializeCounters() {
             const countersDiv = document.getElementById("counters");
@@ -187,6 +193,11 @@
                     traitDiv.classList.add("rainbow-border");
                 }
 
+                // Fade common traits if the toggle is on
+                if (fadeCommonTraits && chances.find(t => t.name === traitName).chance > 1) {
+                    traitDiv.classList.add("faded");
+                }
+
                 resultDiv.appendChild(traitDiv);
             });
 
@@ -199,6 +210,13 @@
         function clearResults() {
             document.getElementById("result").innerHTML = "";
             initializeCounters();
+        }
+
+        // Toggle fading of common traits
+        function toggleFade() {
+            fadeCommonTraits = !fadeCommonTraits;
+            let button = document.querySelector("button:nth-child(4)");
+            button.innerText = fadeCommonTraits ? "Unfade Common Traits" : "Fade Common Traits";
         }
 
         initializeCounters();
