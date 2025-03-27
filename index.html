@@ -118,6 +118,8 @@
         
         let counters = {};
         let totalRolls = 0;
+        let isRolling = false;
+
         function initializeCounters() {
             const countersDiv = document.getElementById("counters");
             countersDiv.innerHTML = "";
@@ -132,8 +134,11 @@
             totalRolls = 0;
             document.getElementById("total-rolls").innerText = `TOTAL ROLLS: ${totalRolls}`;
         }
-        
+
         function rollChance() {
+            if (isRolling) return; // Prevent multiple rolls at once
+
+            isRolling = true;
             let rolls = parseInt(document.getElementById("numberInput").value) || 1;
             let resultDiv = document.getElementById("result");
             let delay = 1000 / rolls;
@@ -144,7 +149,7 @@
                 setTimeout(() => {
                     let roll = Math.random() * 100;
                     let cumulative = 0;
-                    
+
                     for (let i = 0; i < chances.length; i++) {
                         cumulative += chances[i].chance;
                         if (roll < cumulative) {
@@ -155,7 +160,7 @@
                                 traitDiv.classList.add("rare");
                             }
                             resultDiv.appendChild(traitDiv);
-                            
+
                             counters[chances[i].name]++;
                             document.getElementById("counter-" + chances[i].name).innerText = `${chances[i].name}: ${counters[chances[i].name]}`;
                             break;
@@ -163,13 +168,19 @@
                     }
                 }, j * delay);
             }
+
+            setTimeout(() => {
+                isRolling = false;
+            }, rolls * delay);
         }
-        
+
         function clearResults() {
+            if (isRolling) return; // Prevent clearing while rolling
+
             document.getElementById("result").innerHTML = "";
             initializeCounters();
         }
-        
+
         initializeCounters();
     </script>
 </body>
