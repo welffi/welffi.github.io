@@ -143,7 +143,6 @@
             isRolling = true;
             let rolls = parseInt(document.getElementById("numberInput").value) || 1;
             let resultDiv = document.getElementById("result");
-            resultDiv.innerHTML = ""; // Clear previous results before new ones
             let delay = 1000 / rolls;
             totalRolls += rolls;
             document.getElementById("total-rolls").innerText = `TOTAL ROLLS: ${totalRolls}`;
