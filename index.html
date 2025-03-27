@@ -38,6 +38,19 @@
             color: #fff;
             border: 1px solid #555;
         }
+        #counters {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .counter {
+            background-color: #222;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #555;
+            text-align: center;
+        }
         #result-container {
             flex-grow: 1;
             overflow-y: auto;
@@ -71,26 +84,41 @@
         <button onclick="rollChance()">ROLL</button>
         <button onclick="clearResults()">CLEAR ALL</button>
     </div>
+    <div id="counters"></div>
     <div id="result-container">
         <div id="result"></div>
     </div>
 
     <script>
+        const chances = [
+            { name: "Range", chance: 26 },
+            { name: "Swift", chance: 26 },
+            { name: "Vigor", chance: 26 },
+            { name: "Scholar", chance: 10 },
+            { name: "Marksman", chance: 6.5 },
+            { name: "Fortune", chance: 2.5 },
+            { name: "Blitz", chance: 1.85 },
+            { name: "Solar", chance: 0.5 },
+            { name: "Deadeye", chance: 0.375 },
+            { name: "Ethereal", chance: 0.175 },
+            { name: "Monarch", chance: 0.1 }
+        ];
+        
+        let counters = {};
+        function initializeCounters() {
+            const countersDiv = document.getElementById("counters");
+            countersDiv.innerHTML = "";
+            chances.forEach(trait => {
+                counters[trait.name] = 0;
+                let counterDiv = document.createElement("div");
+                counterDiv.className = "counter";
+                counterDiv.id = "counter-" + trait.name;
+                counterDiv.innerText = `${trait.name}: 0`;
+                countersDiv.appendChild(counterDiv);
+            });
+        }
+        
         function rollChance() {
-            const chances = [
-                { name: "Range", chance: 26 },
-                { name: "Swift", chance: 26 },
-                { name: "Vigor", chance: 26 },
-                { name: "Scholar", chance: 10 },
-                { name: "Marksman", chance: 6.5 },
-                { name: "Fortune", chance: 2.5 },
-                { name: "Blitz", chance: 1.85 },
-                { name: "Solar", chance: 0.5 },
-                { name: "Deadeye", chance: 0.375 },
-                { name: "Ethereal", chance: 0.175 },
-                { name: "Monarch", chance: 0.1 }
-            ];
-
             let rolls = parseInt(document.getElementById("numberInput").value) || 1;
             let resultDiv = document.getElementById("result");
 
@@ -108,15 +136,21 @@
                             traitDiv.classList.add("rare");
                         }
                         resultDiv.appendChild(traitDiv);
+                        
+                        counters[chances[i].name]++;
+                        document.getElementById("counter-" + chances[i].name).innerText = `${chances[i].name}: ${counters[chances[i].name]}`;
                         break;
                     }
                 }
             }
         }
-
+        
         function clearResults() {
             document.getElementById("result").innerHTML = "";
+            initializeCounters();
         }
+        
+        initializeCounters();
     </script>
 </body>
 </html>
