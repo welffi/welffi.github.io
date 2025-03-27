@@ -11,6 +11,8 @@
             align-items: center;
             justify-content: center;
             height: 100vh;
+            background-color: #121212;
+            color: #ffffff;
             font-family: Arial, sans-serif;
         }
         .container {
@@ -21,17 +23,25 @@
             padding: 10px;
             font-size: 16px;
             text-align: center;
+            background-color: #333;
+            color: #fff;
+            border: 1px solid #555;
         }
         button {
             padding: 10px;
             margin-left: 10px;
             font-size: 16px;
             cursor: pointer;
+            background-color: #444;
+            color: #fff;
+            border: 1px solid #555;
         }
         #result {
             margin-top: 20px;
             font-size: 18px;
             font-weight: bold;
+            text-align: center;
+            white-space: pre-line;
         }
     </style>
 </head>
@@ -58,16 +68,22 @@
                 { name: "Monarch", chance: 0.1 }
             ];
 
-            let roll = Math.random() * 100;
-            let cumulative = 0;
+            let rolls = parseInt(document.getElementById("numberInput").value) || 1;
+            let results = "";
 
-            for (let i = 0; i < chances.length; i++) {
-                cumulative += chances[i].chance;
-                if (roll < cumulative) {
-                    document.getElementById("result").innerText = "You got: " + chances[i].name;
-                    return;
+            for (let j = 0; j < rolls; j++) {
+                let roll = Math.random() * 100;
+                let cumulative = 0;
+                
+                for (let i = 0; i < chances.length; i++) {
+                    cumulative += chances[i].chance;
+                    if (roll < cumulative) {
+                        results += "You got: " + chances[i].name + "\n";
+                        break;
+                    }
                 }
             }
+            document.getElementById("result").innerText = results;
         }
     </script>
 </body>
