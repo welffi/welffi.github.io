@@ -123,6 +123,29 @@
       gap: 2px;
     }
 
+    .category {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 1.5rem 0 0.5rem;
+    }
+    .category:first-child { padding-top: 0; }
+    .category::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .category-label {
+      font-size: 0.58rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 400;
+      flex-shrink: 0;
+    }
+
     .link-item {
       display: grid;
       grid-template-columns: 20px 1fr auto;
@@ -257,46 +280,66 @@
 <script>
   const links = [
     {
-      label: "Roblox",
-      sub:   "@welffi",
-      url:   "https://www.roblox.com/users/3479653682/profile",
-      icon:  "roblox"
+      category: "Socials (i never upload)",
+      items: [
+        {
+          label: "YouTube",
+          sub:   "@welffi",
+          url:   "https://www.youtube.com/@welffireal",
+          icon:  "youtube"
+        },
+        {
+          label: "TikTok",
+          sub:   "@welffi",
+          url:   "https://www.tiktok.com/@welffi",
+          icon:  "tiktok"
+        },
+        {
+          label: "Instagram",
+          sub:   "@welffi",
+          url:   "https://www.instagram.com/shifflew/",
+          icon:  "instagram"
+        },
+      ]
     },
     {
-      label: "TikTok",
-      sub:   "@welffi",
-      url:   "https://www.tiktok.com/@welffi",
-      icon:  "tiktok"
+      category: "Gaming",
+      items: [
+        {
+          label: "Roblox",
+          sub:   "@theblox3rd",
+          url:   "https://www.roblox.com/users/3479653682/profile",
+          icon:  "roblox"
+        },
+        {
+          label: "Steam",
+          sub:   "@welffi",
+          url:   "https://steamcommunity.com/id/welffi/",
+          icon:  "steam"
+        },
+      ]
     },
     {
-      label: "Steam",
-      sub:   "@welffi",
-      url:   "https://steamcommunity.com/id/welffi/",
-      icon:  "steam"
+      category: "Community",
+      items: [
+        {
+          label: "Discord",
+          sub:   "my server",
+          url:   "https://discord.gg/FpNeacu6tG",
+          icon:  "discord"
+        },
+      ]
     },
     {
-      label: "Instagram",
-      sub:   "@welffi",
-      url:   "https://www.instagram.com/shifflew/",
-      icon:  "instagram"
-    },
-    {
-      label: "Discord",
-      sub:   "Community for my projects",
-      url:   "https://discord.gg/FpNeacu6tG",
-      icon:  "discord"
-    },
-    {
-      label: "YouTube",
-      sub:   "@welffi",
-      url:   "https://www.youtube.com/@welffireal",
-      icon:  "youtube"
-    },
-    {
-      label: "Spotify",
-      sub:   "@welffi",
-      url:   "https://open.spotify.com/user/31yqt4l3tpkufkij4wi7oxod5rli",
-      icon:  "spotify"
+      category: "Music",
+      items: [
+        {
+          label: "Spotify",
+          sub:   "@welffi",
+          url:   "https://open.spotify.com/user/31yqt4l3tpkufkij4wi7oxod5rli",
+          icon:  "spotify"
+        },
+      ]
     },
   ];
 
@@ -319,26 +362,35 @@
 
   const container = document.getElementById('links-container');
 
-  links.forEach((link, i) => {
-    const a = document.createElement('a');
-    a.href = link.url;
-    a.className = 'link-item';
-    a.target = link.url.startsWith('mailto') ? '_self' : '_blank';
-    a.rel = 'noopener noreferrer';
-    a.style.animationDelay = `${0.08 + i * 0.06}s`;
+  let globalIndex = 0;
+  links.forEach((group) => {
+    const categoryEl = document.createElement('div');
+    categoryEl.className = 'category';
+    categoryEl.innerHTML = `<span class="category-label">${group.category}</span>`;
+    container.appendChild(categoryEl);
 
-    a.innerHTML = `
-      <span class="link-num">0${i + 1}</span>
-      <span class="link-body">
-        <span class="link-label">${link.label}</span>
-        ${link.sub ? `<span class="link-sub">${link.sub}</span>` : ''}
-      </span>
-      <span class="link-right">
-        <span class="link-icon">${icons[link.icon] || icons.website}</span>
-        <span class="link-arrow">↗</span>
-      </span>
-    `;
-    container.appendChild(a);
+    group.items.forEach((link) => {
+      const i = globalIndex++;
+      const a = document.createElement('a');
+      a.href = link.url;
+      a.className = 'link-item';
+      a.target = link.url.startsWith('mailto') ? '_self' : '_blank';
+      a.rel = 'noopener noreferrer';
+      a.style.animationDelay = `${0.08 + i * 0.06}s`;
+
+      a.innerHTML = `
+        <span class="link-num">0${i + 1}</span>
+        <span class="link-body">
+          <span class="link-label">${link.label}</span>
+          ${link.sub ? `<span class="link-sub">${link.sub}</span>` : ''}
+        </span>
+        <span class="link-right">
+          <span class="link-icon">${icons[link.icon] || icons.website}</span>
+          <span class="link-arrow">↗</span>
+        </span>
+      `;
+      container.appendChild(a);
+    });
   });
 </script>
 </body>
