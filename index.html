@@ -24,6 +24,8 @@
     html, body {
       min-height: 100%;
       background: var(--bg);
+      background-image: radial-gradient(circle, rgba(255,255,255,0.045) 1px, transparent 1px);
+      background-size: 22px 22px;
       color: var(--text);
       font-family: 'DM Mono', monospace;
       -webkit-font-smoothing: antialiased;
@@ -100,11 +102,8 @@
       font-weight: 300;
       letter-spacing: -0.01em;
       line-height: 1;
+      color: var(--text);
     }
-    h1 .w1 { color: #f4a4b0; }
-    h1 .w2 { color: #b8a9f5; }
-    h1 .w3 { color: #7ecfb8; }
-    h1 .w4 { color: #f5c97a; }
 
     .links {
       display: flex;
@@ -212,34 +211,6 @@
       animation: fadeUp 0.5s 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
     }
 
-    .bg-avatar {
-      position: fixed;
-      bottom: -40px;
-      left: -40px;
-      width: 420px;
-      height: 420px;
-      z-index: 0;
-      pointer-events: none;
-      mask-image: radial-gradient(ellipse 75% 75% at 15% 85%, black 10%, transparent 70%);
-      -webkit-mask-image: radial-gradient(ellipse 75% 75% at 15% 85%, black 10%, transparent 70%);
-      opacity: 0;
-      animation: bgAvatarIn 1.2s 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-    }
-
-    .bg-avatar img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-      border-radius: 50%;
-      filter: saturate(0.7) brightness(0.6);
-    }
-
-    @keyframes bgAvatarIn {
-      from { opacity: 0; transform: translate(-20px, 20px); }
-      to   { opacity: 1; transform: translate(0, 0); }
-    }
-
     @keyframes fadeUp {
       from { opacity: 0; transform: translateY(10px); }
       to   { opacity: 1; transform: translateY(0); }
@@ -247,9 +218,6 @@
   </style>
 </head>
 <body>
-<div class="bg-avatar">
-  <img src="https://media.discordapp.net/attachments/1442377532061126828/1500186368830210229/image.png?ex=69f784ee&is=69f6336e&hm=e0d295b037c4db61859b1e22929691ab3377473fd23919c3b4bb144a4016d485&=&format=webp&quality=lossless&width=282&height=282" alt="" />
-</div>
 <div class="page">
   <div class="card">
 
@@ -257,7 +225,7 @@
       <div class="avatar">
         <img src="https://media.discordapp.net/attachments/1442377532061126828/1500186368830210229/image.png?ex=69f784ee&is=69f6336e&hm=e0d295b037c4db61859b1e22929691ab3377473fd23919c3b4bb144a4016d485&=&format=webp&quality=lossless&width=282&height=282" alt="welffi" />
       </div>
-      <h1><span class="w1">hi</span> <span class="w2">hi</span> <span class="w3">hi</span> <span class="w4">hi</span></h1>
+      <h1>hi hi hi hi</h1>
     </header>
 
     <nav class="links" id="links-container"></nav>
