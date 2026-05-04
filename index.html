@@ -16,13 +16,10 @@
       --border:   #241f1b;
       --border2:  #2e2821;
       --text:     #ede8e0;
-      --text2:    #b8af a4;
       --muted:    #4e463c;
       --muted2:   #695e52;
       --accent:   #d4a574;
       --accent2:  #e8c49a;
-      --glow:     rgba(212, 165, 116, 0.12);
-      --glow2:    rgba(212, 165, 116, 0.06);
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -35,7 +32,6 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    /* Subtle dot grid */
     body::before {
       content: '';
       position: fixed;
@@ -46,7 +42,6 @@
       z-index: 0;
     }
 
-    /* Ambient top glow */
     body::after {
       content: '';
       position: fixed;
@@ -58,7 +53,6 @@
       z-index: 0;
     }
 
-    /* ─── PAGE LAYOUT ─── */
     .page {
       position: relative;
       z-index: 1;
@@ -78,7 +72,6 @@
       gap: 0;
     }
 
-    /* ─── HEADER ─── */
     .header {
       display: flex;
       align-items: center;
@@ -87,31 +80,20 @@
       margin-bottom: 1.6rem;
       border-bottom: 1px solid var(--border);
       animation: fadeUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
-      position: relative;
     }
 
-    .avatar-wrap {
-      position: relative;
-      flex-shrink: 0;
-    }
+    .avatar-wrap { position: relative; flex-shrink: 0; }
 
     .avatar {
       width: 56px;
       height: 56px;
       border-radius: 50%;
       overflow: hidden;
-      position: relative;
       border: 1px solid rgba(212,165,116,0.25);
     }
 
-    .avatar img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
+    .avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-    /* Pulsing ring */
     .avatar-ring {
       position: absolute;
       inset: -4px;
@@ -128,9 +110,7 @@
       animation: ringPulse 3s ease-in-out 1s infinite;
     }
 
-    .header-text {
-      flex: 1;
-    }
+    .header-text { flex: 1; }
 
     h1 {
       font-family: 'Fraunces', serif;
@@ -150,7 +130,6 @@
       text-transform: lowercase;
     }
 
-    /* Online indicator */
     .status-dot {
       display: inline-block;
       width: 5px;
@@ -162,12 +141,7 @@
       animation: blink 2.5s ease-in-out infinite;
     }
 
-    /* ─── LINKS ─── */
-    .links {
-      display: flex;
-      flex-direction: column;
-      gap: 0;
-    }
+    .links { display: flex; flex-direction: column; gap: 0; }
 
     .category-row {
       display: flex;
@@ -195,12 +169,7 @@
       flex-shrink: 0;
     }
 
-    /* Link grid — 2-column for the first section (3 items → 2+1), full width otherwise */
-    .link-group {
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-    }
+    .link-group { display: flex; flex-direction: column; gap: 3px; }
 
     .link-item {
       display: flex;
@@ -214,15 +183,10 @@
       border: 1px solid transparent;
       position: relative;
       overflow: hidden;
-      transition:
-        background 0.3s ease,
-        border-color 0.3s ease,
-        transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
-        padding-left 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+      transition: background 0.3s ease, border-color 0.3s ease, transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s ease, padding-left 0.25s cubic-bezier(0.22, 1, 0.36, 1);
       animation: fadeUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
     }
 
-    /* Shimmer on hover */
     .link-item::before {
       content: '';
       position: absolute;
@@ -232,14 +196,8 @@
       transition: transform 0.5s ease;
     }
 
-    .link-item:hover::before {
-      transform: translateX(100%);
-    }
-
-    .link-item:hover {
-      transform: translateY(-1px);
-      padding-left: 1.15rem;
-    }
+    .link-item:hover::before { transform: translateX(100%); }
+    .link-item:hover { transform: translateY(-1px); padding-left: 1.15rem; }
 
     .link-icon {
       display: flex;
@@ -249,19 +207,11 @@
       height: 34px;
       border-radius: 9px;
       flex-shrink: 0;
-      position: relative;
       transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
-    .link-item:hover .link-icon {
-      transform: scale(1.1) rotate(-3deg);
-    }
-
-    .link-icon svg {
-      width: 15px;
-      height: 15px;
-      display: block;
-    }
+    .link-item:hover .link-icon { transform: scale(1.1) rotate(-3deg); }
+    .link-icon svg { width: 15px; height: 15px; display: block; }
 
     .link-body {
       display: flex;
@@ -271,12 +221,7 @@
       min-width: 0;
     }
 
-    .link-label {
-      font-size: 0.77rem;
-      letter-spacing: 0.06em;
-      color: var(--text);
-      font-weight: 400;
-    }
+    .link-label { font-size: 0.77rem; letter-spacing: 0.06em; color: var(--text); font-weight: 400; }
 
     .link-sub {
       font-size: 0.62rem;
@@ -294,12 +239,8 @@
       opacity: 0;
     }
 
-    .link-item:hover .link-arrow {
-      opacity: 1;
-      transform: translate(2px, -2px);
-    }
+    .link-item:hover .link-arrow { opacity: 1; transform: translate(2px, -2px); }
 
-    /* ─── TASKBAR ─── */
     .taskbar {
       position: fixed;
       bottom: 20px;
@@ -308,7 +249,6 @@
       z-index: 100;
       display: flex;
       align-items: center;
-      gap: 0;
       padding: 0 6px;
       height: 52px;
       background: rgba(20, 17, 14, 0.82);
@@ -316,36 +256,17 @@
       -webkit-backdrop-filter: blur(24px) saturate(180%);
       border: 1px solid rgba(212,165,116,0.14);
       border-radius: 18px;
-      box-shadow:
-        0 8px 32px rgba(0,0,0,0.5),
-        0 0 0 1px rgba(255,255,255,0.03) inset,
-        0 1px 0 rgba(255,255,255,0.06) inset;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.03) inset, 0 1px 0 rgba(255,255,255,0.06) inset;
       animation: dockSlideUp 0.7s 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
     }
 
-    .taskbar-section {
-      display: flex;
-      align-items: center;
-      gap: 2px;
-      padding: 0 8px;
-    }
+    .taskbar-section { display: flex; align-items: center; gap: 2px; padding: 0 8px; }
 
-    .taskbar-divider {
-      width: 1px;
-      height: 24px;
-      background: var(--border);
-      flex-shrink: 0;
-      margin: 0 2px;
-    }
+    .taskbar-divider { width: 1px; height: 24px; background: var(--border); flex-shrink: 0; margin: 0 2px; }
 
-    /* Clock */
-    .taskbar-clock {
-      padding: 0 10px;
-      text-align: center;
-    }
+    .taskbar-clock { padding: 0 10px; text-align: center; }
 
     .clock-time {
-      font-family: 'DM Mono', monospace;
       font-size: 0.72rem;
       font-weight: 400;
       color: var(--accent);
@@ -354,7 +275,6 @@
     }
 
     .clock-date {
-      font-family: 'DM Mono', monospace;
       font-size: 0.5rem;
       font-weight: 300;
       color: var(--muted2);
@@ -363,7 +283,6 @@
       text-transform: lowercase;
     }
 
-    /* Dock icon buttons */
     .dock-btn {
       display: flex;
       align-items: center;
@@ -379,19 +298,9 @@
       text-decoration: none;
     }
 
-    .dock-btn:hover {
-      background: rgba(212,165,116,0.08);
-      transform: translateY(-4px) scale(1.08);
-    }
+    .dock-btn:hover { background: rgba(212,165,116,0.08); transform: translateY(-4px) scale(1.08); }
+    .dock-btn svg { width: 16px; height: 16px; display: block; }
 
-    .dock-btn svg {
-      width: 16px;
-      height: 16px;
-      display: block;
-      transition: opacity 0.2s;
-    }
-
-    /* Active dot indicator */
     .dock-btn.active::after {
       content: '';
       position: absolute;
@@ -404,7 +313,6 @@
       background: var(--accent);
     }
 
-    /* Tooltip */
     .dock-btn .tooltip {
       position: absolute;
       bottom: calc(100% + 8px);
@@ -423,25 +331,39 @@
       transition: opacity 0.15s, transform 0.15s;
     }
 
-    .dock-btn:hover .tooltip {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
+    .dock-btn:hover .tooltip { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    .spotify-player { display: flex; align-items: center; gap: 8px; padding: 0 6px; max-width: 240px; }
+
+    .sp-art {
+      width: 30px;
+      height: 30px;
+      border-radius: 6px;
+      overflow: hidden;
+      flex-shrink: 0;
+      background: var(--surface2);
+      border: 1px solid var(--border);
     }
 
-    /* Playback controls group */
-    .playback-group {
-      display: flex;
-      align-items: center;
-      gap: 1px;
-    }
+    .sp-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+    .sp-art-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+    .sp-art-placeholder svg { width: 14px; height: 14px; color: var(--muted2); }
+
+    .sp-info { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; overflow: hidden; }
+
+    .sp-track { font-size: 0.62rem; color: var(--text); font-weight: 400; letter-spacing: 0.04em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sp-artist { font-size: 0.54rem; color: var(--muted2); font-weight: 300; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .sp-controls { display: flex; align-items: center; gap: 1px; flex-shrink: 0; }
 
     .play-btn {
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 28px;
-      height: 28px;
-      border-radius: 8px;
+      width: 26px;
+      height: 26px;
+      border-radius: 7px;
       border: none;
       background: transparent;
       cursor: pointer;
@@ -449,25 +371,44 @@
       transition: color 0.2s, background 0.2s;
     }
 
-    .play-btn:hover {
-      color: var(--accent);
-      background: rgba(212,165,116,0.08);
+    .play-btn:hover { color: #1ed760; background: rgba(30,215,96,0.08); }
+    .play-btn svg { width: 11px; height: 11px; }
+
+    .sp-connect-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0 12px;
+      height: 30px;
+      border-radius: 8px;
+      border: 1px solid rgba(30,215,96,0.3);
+      background: rgba(30,215,96,0.07);
+      cursor: pointer;
+      color: #1ed760;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.58rem;
+      letter-spacing: 0.1em;
+      transition: background 0.2s, border-color 0.2s;
+      white-space: nowrap;
     }
 
-    .play-btn svg {
-      width: 12px;
-      height: 12px;
+    .sp-connect-btn:hover { background: rgba(30,215,96,0.14); border-color: rgba(30,215,96,0.5); }
+    .sp-connect-btn svg { width: 12px; height: 12px; }
+
+    .sp-idle { font-size: 0.58rem; color: var(--muted); letter-spacing: 0.08em; padding: 0 4px; }
+
+    .bars { display: flex; align-items: flex-end; gap: 2px; height: 12px; flex-shrink: 0; }
+
+    .bar { width: 2px; background: #1ed760; border-radius: 1px; animation: barBounce 0.8s ease-in-out infinite; }
+    .bar:nth-child(1) { animation-delay: 0s;    height: 6px; }
+    .bar:nth-child(2) { animation-delay: 0.15s; height: 10px; }
+    .bar:nth-child(3) { animation-delay: 0.3s;  height: 7px; }
+
+    @keyframes barBounce {
+      0%, 100% { transform: scaleY(0.4); }
+      50%       { transform: scaleY(1); }
     }
 
-    /* Tiny music note indicator */
-    .music-note {
-      font-size: 0.7rem;
-      color: var(--muted2);
-      animation: noteBob 1.8s ease-in-out infinite;
-      display: inline-block;
-    }
-
-    /* ─── ANIMATIONS ─── */
     @keyframes fadeUp {
       from { opacity: 0; transform: translateY(12px); }
       to   { opacity: 1; transform: translateY(0); }
@@ -487,30 +428,12 @@
       0%, 100% { opacity: 1; }
       50%       { opacity: 0.4; }
     }
-
-    @keyframes noteBob {
-      0%, 100% { transform: translateY(0); }
-      50%       { transform: translateY(-2px); }
-    }
-
-    /* footer */
-    footer {
-      margin-top: 2rem;
-      font-size: 0.55rem;
-      letter-spacing: 0.2em;
-      color: var(--muted);
-      text-transform: lowercase;
-      text-align: center;
-      opacity: 0.5;
-      animation: fadeUp 0.5s 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
-    }
   </style>
 </head>
 <body>
 
 <div class="page">
   <div class="card">
-
     <header class="header">
       <div class="avatar-wrap">
         <div class="avatar">
@@ -527,14 +450,12 @@
 
     <nav class="links" id="links-container"></nav>
 
-    <footer>made with ♥ · welffi.xyz</footer>
+    <footer></footer>
   </div>
 </div>
 
-<!-- ─── TASKBAR ─── -->
 <div class="taskbar">
 
-  <!-- Clock -->
   <div class="taskbar-section">
     <div class="taskbar-clock">
       <div class="clock-time" id="clock-time">--:--</div>
@@ -544,7 +465,6 @@
 
   <div class="taskbar-divider"></div>
 
-  <!-- Nav icons -->
   <div class="taskbar-section">
     <button class="dock-btn active" onclick="window.scrollTo({top:0,behavior:'smooth'})">
       <span class="tooltip">home</span>
@@ -567,28 +487,15 @@
         <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057.1 18.081.114 18.104.133 18.12a19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
       </svg>
     </a>
-
-    <a class="dock-btn" href="https://open.spotify.com/user/31yqt4l3tpkufkij4wi7oxod5rli" target="_blank" rel="noopener">
-      <span class="tooltip">spotify</span>
-      <svg viewBox="0 0 24 24" fill="currentColor" style="color:#1ed760">
-        <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-      </svg>
-    </a>
   </div>
 
   <div class="taskbar-divider"></div>
 
-  <!-- Decorative music controls -->
   <div class="taskbar-section">
-    <div class="playback-group">
-      <button class="play-btn" title="prev" onclick="void(0)">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
-      </button>
-      <button class="play-btn" title="play" onclick="void(0)">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-      </button>
-      <button class="play-btn" title="next" onclick="void(0)">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+    <div class="spotify-player" id="spotify-player">
+      <button class="sp-connect-btn" onclick="spotifyLogin()">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+        connect
       </button>
     </div>
   </div>
@@ -596,24 +503,146 @@
 </div>
 
 <script>
-  /* ── Clock ── */
+  const SPOTIFY_CLIENT_ID = 'YOUR_CLIENT_ID_HERE';
+  const REDIRECT_URI = window.location.origin + window.location.pathname;
+  const SCOPES = 'user-read-currently-playing user-read-playback-state user-modify-playback-state';
+
+  let spotifyToken = null;
+  let pollInterval = null;
+
+  function generateRandom(len) {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    return Array.from(crypto.getRandomValues(new Uint8Array(len))).map(b => chars[b % chars.length]).join('');
+  }
+
+  async function sha256(plain) {
+    const enc = new TextEncoder().encode(plain);
+    const hash = await crypto.subtle.digest('SHA-256', enc);
+    return btoa(String.fromCharCode(...new Uint8Array(hash))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+  }
+
+  async function spotifyLogin() {
+    const verifier = generateRandom(64);
+    const challenge = await sha256(verifier);
+    sessionStorage.setItem('sp_verifier', verifier);
+    const params = new URLSearchParams({
+      response_type: 'code',
+      client_id: SPOTIFY_CLIENT_ID,
+      scope: SCOPES,
+      redirect_uri: REDIRECT_URI,
+      code_challenge_method: 'S256',
+      code_challenge: challenge,
+    });
+    window.location.href = 'https://accounts.spotify.com/authorize?' + params;
+  }
+
+  async function exchangeCode(code) {
+    const verifier = sessionStorage.getItem('sp_verifier');
+    if (!verifier) return;
+    const res = await fetch('https://accounts.spotify.com/api/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'authorization_code',
+        code,
+        redirect_uri: REDIRECT_URI,
+        client_id: SPOTIFY_CLIENT_ID,
+        code_verifier: verifier,
+      }),
+    });
+    const data = await res.json();
+    if (data.access_token) {
+      spotifyToken = data.access_token;
+      sessionStorage.removeItem('sp_verifier');
+      window.history.replaceState({}, '', window.location.pathname);
+      startPolling();
+    }
+  }
+
+  async function fetchNowPlaying() {
+    if (!spotifyToken) return;
+    try {
+      const res = await fetch('https://api.spotify.com/v1/me/player/currently-playing', {
+        headers: { Authorization: 'Bearer ' + spotifyToken },
+      });
+      if (res.status === 204) { renderIdle(); return; }
+      if (res.status === 401) { spotifyToken = null; renderConnect(); return; }
+      const data = await res.json();
+      if (data && data.item) renderPlaying(data.item, data.is_playing);
+      else renderIdle();
+    } catch {}
+  }
+
+  async function spotifyAction(action) {
+    if (!spotifyToken) return;
+    const map = {
+      prev:  { method: 'POST', url: 'https://api.spotify.com/v1/me/player/previous' },
+      next:  { method: 'POST', url: 'https://api.spotify.com/v1/me/player/next' },
+      play:  { method: 'PUT',  url: 'https://api.spotify.com/v1/me/player/play' },
+      pause: { method: 'PUT',  url: 'https://api.spotify.com/v1/me/player/pause' },
+    };
+    const ep = map[action];
+    if (!ep) return;
+    await fetch(ep.url, { method: ep.method, headers: { Authorization: 'Bearer ' + spotifyToken } });
+    setTimeout(fetchNowPlaying, 400);
+  }
+
+  const spotifyIconSvg = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>`;
+
+  function renderConnect() {
+    document.getElementById('spotify-player').innerHTML =
+      `<button class="sp-connect-btn" onclick="spotifyLogin()">${spotifyIconSvg}connect</button>`;
+  }
+
+  function renderIdle() {
+    document.getElementById('spotify-player').innerHTML =
+      `<div class="sp-art"><div class="sp-art-placeholder">${spotifyIconSvg}</div></div>
+       <span class="sp-idle">not playing</span>`;
+  }
+
+  function renderPlaying(track, playing) {
+    const art = track.album?.images?.[2]?.url || track.album?.images?.[0]?.url || '';
+    const name = track.name || 'Unknown';
+    const artist = track.artists?.map(a => a.name).join(', ') || '';
+    const playIcon = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>`;
+    const pauseIcon = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`;
+    document.getElementById('spotify-player').innerHTML =
+      `<div class="sp-art">${art ? `<img src="${art}" alt=""/>` : `<div class="sp-art-placeholder">${spotifyIconSvg}</div>`}</div>
+       ${playing ? `<div class="bars"><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>` : ''}
+       <div class="sp-info">
+         <span class="sp-track">${name}</span>
+         <span class="sp-artist">${artist}</span>
+       </div>
+       <div class="sp-controls">
+         <button class="play-btn" onclick="spotifyAction('prev')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg></button>
+         <button class="play-btn" onclick="spotifyAction('${playing ? 'pause' : 'play'}')">${playing ? pauseIcon : playIcon}</button>
+         <button class="play-btn" onclick="spotifyAction('next')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg></button>
+       </div>`;
+  }
+
+  function startPolling() {
+    fetchNowPlaying();
+    if (pollInterval) clearInterval(pollInterval);
+    pollInterval = setInterval(fetchNowPlaying, 4000);
+  }
+
+  const urlCode = new URLSearchParams(window.location.search).get('code');
+  if (urlCode) exchangeCode(urlCode);
+
   function updateClock() {
     const now = new Date();
-    const h = String(now.getHours()).padStart(2, '0');
-    const m = String(now.getMinutes()).padStart(2, '0');
-    const s = String(now.getSeconds()).padStart(2, '0');
+    const h = String(now.getHours()).padStart(2,'0');
+    const m = String(now.getMinutes()).padStart(2,'0');
+    const s = String(now.getSeconds()).padStart(2,'0');
     document.getElementById('clock-time').textContent = `${h}:${m}:${s}`;
     const days = ['sun','mon','tue','wed','thu','fri','sat'];
     const months = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
-    const day = days[now.getDay()];
-    const date = String(now.getDate()).padStart(2, '0');
-    const month = months[now.getMonth()];
-    document.getElementById('clock-date').textContent = `${day} · ${month} ${date}`;
+    document.getElementById('clock-date').textContent =
+      `${days[now.getDay()]} · ${months[now.getMonth()]} ${String(now.getDate()).padStart(2,'0')}`;
   }
   updateClock();
   setInterval(updateClock, 1000);
 
-  /* ── Links data ── */
   const links = [
     {
       category: "my media things",
@@ -626,10 +655,10 @@
     {
       category: "my other things",
       items: [
-        { label: "Roblox",  sub: "@theblox3rd", url: "https://www.roblox.com/users/3479653682/profile",             icon: "roblox",  color: "#f0ebe3" },
-        { label: "Steam",   sub: "@welffi",     url: "https://steamcommunity.com/id/welffi/",                       icon: "steam",   color: "#6baadf" },
-        { label: "Discord", sub: "join the server", url: "https://discord.gg/FpNeacu6tG",                           icon: "discord", color: "#8a9ef5" },
-        { label: "Spotify", sub: "@welffi",     url: "https://open.spotify.com/user/31yqt4l3tpkufkij4wi7oxod5rli", icon: "spotify", color: "#1ed760" },
+        { label: "Roblox",  sub: "@theblox3rd",    url: "https://www.roblox.com/users/3479653682/profile",             icon: "roblox",  color: "#f0ebe3" },
+        { label: "Steam",   sub: "@welffi",         url: "https://steamcommunity.com/id/welffi/",                       icon: "steam",   color: "#6baadf" },
+        { label: "Discord", sub: "join the server", url: "https://discord.gg/FpNeacu6tG",                               icon: "discord", color: "#8a9ef5" },
+        { label: "Spotify", sub: "@welffi",         url: "https://open.spotify.com/user/31yqt4l3tpkufkij4wi7oxod5rli", icon: "spotify", color: "#1ed760" },
       ]
     },
   ];
@@ -682,10 +711,8 @@
         a.style.boxShadow = 'none';
       });
 
-      const iconBg = `rgba(${r},${g},${b},0.1)`;
-
       a.innerHTML = `
-        <span class="link-icon" style="background:${iconBg};color:${link.color}">${icons[link.icon] || ''}</span>
+        <span class="link-icon" style="background:rgba(${r},${g},${b},0.1);color:${link.color}">${icons[link.icon] || ''}</span>
         <span class="link-body">
           <span class="link-label">${link.label}</span>
           ${link.sub ? `<span class="link-sub">${link.sub}</span>` : ''}
