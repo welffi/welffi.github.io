@@ -659,19 +659,25 @@
   function loadImage(file) {
     const url = URL.createObjectURL(file);
     cropImg.onload = () => {
-      const natW = cropImg.naturalWidth;
-      const natH = cropImg.naturalHeight;
-      const containerW = cropContainer.parentElement.clientWidth;
-      const maxH = Math.min(window.innerHeight * 0.55, 460);
-      const rawH = containerW * (natH / natW);
-      const containerH = Math.min(rawH, maxH);
-      cropContainer.style.height = containerH + 'px';
-
       uploadZone.style.display = 'none';
       cropperArea.classList.add('visible');
 
-      computeImgDisplay();
-      applyRatio(RATIOS[activeRatioIdx].ratio);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          const natW = cropImg.naturalWidth;
+          const natH = cropImg.naturalHeight;
+          const containerW = cropContainer.clientWidth;
+          const maxH = Math.min(window.innerHeight * 0.55, 460);
+          const rawH = containerW * (natH / natW);
+          const containerH = Math.min(rawH, maxH);
+          cropContainer.style.height = containerH + 'px';
+
+          requestAnimationFrame(() => {
+            computeImgDisplay();
+            applyRatio(RATIOS[activeRatioIdx].ratio);
+          });
+        });
+      });
     };
     cropImg.src = url;
   }
