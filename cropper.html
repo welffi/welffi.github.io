@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>welffi's image cropper</title>
+  <link rel="icon" type="image/png" href="https://i.imgur.com/c7moPaj.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,100;0,9..144,300;1,9..144,100;1,9..144,300&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:       #0a0908;
+      --surface:  #141210;
+      --surface2: #1a1714;
+      --border:   #241f1b;
+      --border2:  #2e2821;
+      --text:     #ede8e0;
+      --muted:    #4e463c;
+      --muted2:   #695e52;
+      --accent:   #d4a574;
+      --accent2:  #e8c49a;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: radial-gradient(circle, rgba(255,255,255,0.032) 1px, transparent 1px);
+      background-size: 24px 24px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 40% at 50% -5%, rgba(212,165,116,0.09) 0%, transparent 65%),
+        radial-gradient(ellipse 60% 30% at 50% 105%, rgba(180,130,80,0.05) 0%, transparent 65%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .page {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 3rem 1.5rem 7rem;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 560px;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    /* ── Header ── */
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding-bottom: 1.8rem;
+      margin-bottom: 1.8rem;
+      border-bottom: 1px solid var(--border);
+      animation: fadeUp 0.5s cubic-bezier(0.22,1,0.36,1) both;
+    }
+
+    .back-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      border: 1px solid var(--border2);
+      background: rgba(255,255,255,0.03);
+      cursor: pointer;
+      text-decoration: none;
+      color: var(--muted2);
+      transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.2s cubic-bezier(0.22,1,0.36,1);
+      flex-shrink: 0;
+    }
+    .back-btn:hover {
+      background: rgba(212,165,116,0.08);
+      border-color: rgba(212,165,116,0.25);
+      color: var(--accent);
+      transform: translateX(-2px);
+    }
+    .back-btn svg { width: 14px; height: 14px; }
+
+    .header-text { flex: 1; }
+    .header-title {
+      font-family: 'Fraunces', serif;
+      font-size: 1.4rem;
+      font-weight: 300;
+      letter-spacing: -0.01em;
+      line-height: 1;
+      color: var(--text);
+    }
+    .header-sub {
+      margin-top: 0.3rem;
+      font-size: 0.56rem;
+      letter-spacing: 0.18em;
+      color: var(--muted2);
+      font-weight: 300;
+      text-transform: lowercase;
+    }
+
+    /* ── Upload Drop Zone ── */
+    #upload-zone {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.9rem;
+      padding: 3rem 2rem;
+      border: 1px dashed var(--border2);
+      border-radius: 16px;
+      background: rgba(255,255,255,0.012);
+      cursor: pointer;
+      transition: border-color 0.25s, background 0.25s;
+      animation: fadeUp 0.55s 0.1s cubic-bezier(0.22,1,0.36,1) both;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    #upload-zone::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 60% 50% at 50% 50%, rgba(212,165,116,0.04) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    #upload-zone:hover, #upload-zone.drag-over {
+      border-color: rgba(212,165,116,0.4);
+      background: rgba(212,165,116,0.04);
+    }
+    #upload-zone svg {
+      width: 36px;
+      height: 36px;
+      color: var(--muted2);
+      transition: color 0.25s, transform 0.3s cubic-bezier(0.22,1,0.36,1);
+    }
+    #upload-zone:hover svg { color: var(--accent); transform: scale(1.1) translateY(-2px); }
+    .upload-label {
+      font-size: 0.72rem;
+      color: var(--text);
+      letter-spacing: 0.06em;
+    }
+    .upload-sub {
+      font-size: 0.58rem;
+      color: var(--muted2);
+      letter-spacing: 0.1em;
+    }
+    #file-input { display: none; }
+
+    /* ── Cropper Area ── */
+    #cropper-area {
+      display: none;
+      flex-direction: column;
+      gap: 1.2rem;
+      animation: fadeUp 0.45s cubic-bezier(0.22,1,0.36,1) both;
+    }
+    #cropper-area.visible { display: flex; }
+
+    /* Container holding the image + overlays */
+    #crop-container {
+      position: relative;
+      width: 100%;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #000;
+      cursor: grab;
+      user-select: none;
+      border: 1px solid var(--border);
+    }
+    #crop-container.dragging { cursor: grabbing; }
+
+    #crop-img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      pointer-events: none;
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+
+    /* The 4 darkening overlay panels */
+    .crop-overlay {
+      position: absolute;
+      background: rgba(10, 9, 8, 0.68);
+      pointer-events: none;
+      transition: none;
+    }
+
+    /* The crop box itself */
+    #crop-box {
+      position: absolute;
+      pointer-events: none;
+      box-shadow:
+        0 0 0 1px rgba(212,165,116,0.9),
+        0 0 0 2px rgba(0,0,0,0.4);
+    }
+    /* Rule-of-thirds grid lines */
+    #crop-box::before,
+    #crop-box::after {
+      content: '';
+      position: absolute;
+      pointer-events: none;
+    }
+    #crop-box::before {
+      inset: 0;
+      background:
+        linear-gradient(to right,
+          transparent calc(33.33% - 0.5px), rgba(212,165,116,0.25) calc(33.33% - 0.5px),
+          rgba(212,165,116,0.25) calc(33.33% + 0.5px), transparent calc(33.33% + 0.5px),
+          transparent calc(66.66% - 0.5px), rgba(212,165,116,0.25) calc(66.66% - 0.5px),
+          rgba(212,165,116,0.25) calc(66.66% + 0.5px), transparent calc(66.66% + 0.5px)
+        ),
+        linear-gradient(to bottom,
+          transparent calc(33.33% - 0.5px), rgba(212,165,116,0.25) calc(33.33% - 0.5px),
+          rgba(212,165,116,0.25) calc(33.33% + 0.5px), transparent calc(33.33% + 0.5px),
+          transparent calc(66.66% - 0.5px), rgba(212,165,116,0.25) calc(66.66% - 0.5px),
+          rgba(212,165,116,0.25) calc(66.66% + 0.5px), transparent calc(66.66% + 0.5px)
+        );
+    }
+    /* Corner handles */
+    #crop-box::after {
+      content: '';
+      position: absolute;
+      inset: -1px;
+      background:
+        /* TL */ linear-gradient(to right, var(--accent) 0px, var(--accent) 12px, transparent 12px) top left / 12px 2px no-repeat,
+        linear-gradient(to bottom, var(--accent) 0px, var(--accent) 12px, transparent 12px) top left / 2px 12px no-repeat,
+        /* TR */ linear-gradient(to left, var(--accent) 0px, var(--accent) 12px, transparent 12px) top right / 12px 2px no-repeat,
+        linear-gradient(to bottom, var(--accent) 0px, var(--accent) 12px, transparent 12px) top right / 2px 12px no-repeat,
+        /* BL */ linear-gradient(to right, var(--accent) 0px, var(--accent) 12px, transparent 12px) bottom left / 12px 2px no-repeat,
+        linear-gradient(to top, var(--accent) 0px, var(--accent) 12px, transparent 12px) bottom left / 2px 12px no-repeat,
+        /* BR */ linear-gradient(to left, var(--accent) 0px, var(--accent) 12px, transparent 12px) bottom right / 12px 2px no-repeat,
+        linear-gradient(to top, var(--accent) 0px, var(--accent) 12px, transparent 12px) bottom right / 2px 12px no-repeat;
+    }
+
+    /* ── Ratio Presets ── */
+    .section-label {
+      font-size: 0.56rem;
+      letter-spacing: 0.2em;
+      text-transform: lowercase;
+      color: var(--muted);
+      margin-bottom: 0.5rem;
+    }
+
+    .ratio-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .ratio-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      padding: 8px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border2);
+      background: rgba(255,255,255,0.018);
+      color: var(--muted2);
+      cursor: pointer;
+      font-family: 'DM Mono', monospace;
+      transition: background 0.2s, border-color 0.2s, color 0.2s, transform 0.2s cubic-bezier(0.22,1,0.36,1);
+    }
+    .ratio-btn:hover {
+      background: rgba(212,165,116,0.06);
+      border-color: rgba(212,165,116,0.2);
+      color: var(--text);
+      transform: translateY(-1px);
+    }
+    .ratio-btn.active {
+      background: rgba(212,165,116,0.1);
+      border-color: rgba(212,165,116,0.45);
+      color: var(--accent);
+    }
+
+    .ratio-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+    }
+    .ratio-icon-inner {
+      border: 1.5px solid currentColor;
+      border-radius: 2px;
+    }
+    .ratio-text {
+      font-size: 0.58rem;
+      letter-spacing: 0.08em;
+      line-height: 1;
+    }
+
+    /* ── Download / Reset ── */
+    .actions-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 0.3rem;
+    }
+
+    .btn-download {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      padding: 0.75rem 1.2rem;
+      border-radius: 12px;
+      border: 1px solid rgba(212,165,116,0.3);
+      background: rgba(212,165,116,0.08);
+      color: var(--accent);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      transition: background 0.25s, border-color 0.25s, transform 0.2s cubic-bezier(0.22,1,0.36,1), box-shadow 0.25s;
+      text-transform: lowercase;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-download::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.06) 50%, transparent 60%);
+      transform: translateX(-100%);
+      transition: transform 0.5s ease;
+    }
+    .btn-download:hover::before { transform: translateX(100%); }
+    .btn-download:hover {
+      background: rgba(212,165,116,0.14);
+      border-color: rgba(212,165,116,0.5);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 20px rgba(212,165,116,0.12);
+    }
+    .btn-download:active { transform: translateY(0); }
+    .btn-download svg { width: 14px; height: 14px; }
+
+    .btn-reset {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1rem;
+      border-radius: 12px;
+      border: 1px solid var(--border2);
+      background: rgba(255,255,255,0.02);
+      color: var(--muted2);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s, color 0.2s;
+      text-transform: lowercase;
+    }
+    .btn-reset:hover {
+      background: rgba(255,255,255,0.05);
+      border-color: var(--muted);
+      color: var(--text);
+    }
+    .btn-reset svg { width: 13px; height: 13px; }
+
+    /* Info bar */
+    .crop-info {
+      font-size: 0.55rem;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      text-align: center;
+      margin-top: -0.3rem;
+    }
+
+    /* ── Taskbar ── */
+    .taskbar {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      padding: 0 6px;
+      height: 52px;
+      background: rgba(20, 17, 14, 0.82);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border: 1px solid rgba(212,165,116,0.14);
+      border-radius: 18px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.03) inset, 0 1px 0 rgba(255,255,255,0.06) inset;
+      animation: dockSlideUp 0.7s 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    .taskbar-section { display: flex; align-items: center; gap: 2px; padding: 0 8px; }
+    .taskbar-divider { width: 1px; height: 24px; background: var(--border); flex-shrink: 0; margin: 0 2px; }
+    .taskbar-clock { padding: 0 10px; text-align: center; }
+    .clock-time { font-size: 0.72rem; font-weight: 400; color: var(--accent); letter-spacing: 0.08em; line-height: 1; }
+    .clock-date { font-size: 0.5rem; font-weight: 300; color: var(--muted2); letter-spacing: 0.12em; margin-top: 2px; text-transform: lowercase; }
+
+    .dock-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      position: relative;
+      transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), background 0.2s ease;
+      text-decoration: none;
+    }
+    .dock-btn:hover { background: rgba(212,165,116,0.08); transform: translateY(-4px) scale(1.08); }
+    .dock-btn svg { width: 16px; height: 16px; display: block; }
+    .dock-btn.active::after {
+      content: '';
+      position: absolute;
+      bottom: 1px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 3px;
+      height: 3px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+    .dock-btn .tooltip {
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%) translateY(4px);
+      background: rgba(20,17,14,0.95);
+      border: 1px solid var(--border2);
+      border-radius: 6px;
+      padding: 3px 8px;
+      font-size: 0.55rem;
+      letter-spacing: 0.1em;
+      color: var(--accent);
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.15s, transform 0.15s;
+    }
+    .dock-btn:hover .tooltip { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes dockSlideUp {
+      from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+      to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="page">
+  <div class="card">
+
+    <header class="header">
+      <a class="back-btn" href="index.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M19 12H5M12 5l-7 7 7 7"/>
+        </svg>
+      </a>
+      <div class="header-text">
+        <h1 class="header-title">image cropper</h1>
+        <p class="header-sub">upload · choose ratio · drag · download</p>
+      </div>
+    </header>
+
+    <!-- Upload Zone -->
+    <div id="upload-zone">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <rect x="3" y="3" width="18" height="18" rx="3"/>
+        <circle cx="8.5" cy="8.5" r="1.5"/>
+        <path d="M21 15l-5-5L5 21"/>
+      </svg>
+      <span class="upload-label">drop an image here or click to browse</span>
+      <span class="upload-sub">png · jpg · webp · gif</span>
+      <input type="file" id="file-input" accept="image/*" />
+    </div>
+
+    <!-- Cropper Area (hidden until image loaded) -->
+    <div id="cropper-area">
+
+      <div id="crop-container">
+        <img id="crop-img" src="" alt="crop target" draggable="false" />
+        <div class="crop-overlay" id="ov-top"></div>
+        <div class="crop-overlay" id="ov-bottom"></div>
+        <div class="crop-overlay" id="ov-left"></div>
+        <div class="crop-overlay" id="ov-right"></div>
+        <div id="crop-box"></div>
+      </div>
+
+      <p class="crop-info" id="crop-info">drag the image to reposition the crop area</p>
+
+      <!-- Ratio Presets -->
+      <div>
+        <p class="section-label">aspect ratio</p>
+        <div class="ratio-row" id="ratio-row"></div>
+      </div>
+
+      <!-- Actions -->
+      <div class="actions-row">
+        <button class="btn-download" id="btn-download">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          download crop
+        </button>
+        <button class="btn-reset" id="btn-reset">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+            <path d="M3 3v5h5"/>
+          </svg>
+          new image
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Taskbar -->
+<div class="taskbar">
+  <div class="taskbar-section">
+    <div class="taskbar-clock">
+      <div class="clock-time" id="clock-time">--:--</div>
+      <div class="clock-date" id="clock-date">--- --</div>
+    </div>
+  </div>
+  <div class="taskbar-divider"></div>
+  <div class="taskbar-section">
+    <a class="dock-btn" href="index.html">
+      <span class="tooltip">home</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="color:#d4a574">
+        <path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/>
+        <path d="M9 21V12h6v9"/>
+      </svg>
+    </a>
+    <button class="dock-btn active">
+      <span class="tooltip">crop image</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="color:#d4a574">
+        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+        <circle cx="12" cy="13" r="4"/>
+      </svg>
+    </button>
+  </div>
+</div>
+
+<script>
+  function updateClock() {
+    const now = new Date();
+    const h = String(now.getHours()).padStart(2,'0');
+    const m = String(now.getMinutes()).padStart(2,'0');
+    const s = String(now.getSeconds()).padStart(2,'0');
+    document.getElementById('clock-time').textContent = `${h}:${m}:${s}`;
+    const days = ['sun','mon','tue','wed','thu','fri','sat'];
+    const months = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+    document.getElementById('clock-date').textContent =
+      `${days[now.getDay()]} · ${months[now.getMonth()]} ${String(now.getDate()).padStart(2,'0')}`;
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  const RATIOS = [
+    { label: '1:1',  ratio: 1,        iw: 22, ih: 22 },
+    { label: '4:3',  ratio: 4/3,      iw: 26, ih: 20 },
+    { label: '3:4',  ratio: 3/4,      iw: 18, ih: 24 },
+    { label: '16:9', ratio: 16/9,     iw: 28, ih: 16 },
+    { label: '9:16', ratio: 9/16,     iw: 16, ih: 28 },
+    { label: '3:2',  ratio: 3/2,      iw: 26, ih: 17 },
+    { label: '2:3',  ratio: 2/3,      iw: 17, ih: 26 },
+  ];
+
+  const ratioRow = document.getElementById('ratio-row');
+  let activeRatioIdx = 0;
+
+  RATIOS.forEach((r, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'ratio-btn' + (idx === 0 ? ' active' : '');
+    btn.innerHTML = `
+      <span class="ratio-icon">
+        <span class="ratio-icon-inner" style="width:${r.iw}px;height:${r.ih}px"></span>
+      </span>
+      <span class="ratio-text">${r.label}</span>
+    `;
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.ratio-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeRatioIdx = idx;
+      applyRatio(RATIOS[idx].ratio);
+    });
+    ratioRow.appendChild(btn);
+  });
+
+  const uploadZone = document.getElementById('upload-zone');
+  const fileInput  = document.getElementById('file-input');
+  const cropperArea = document.getElementById('cropper-area');
+  const cropContainer = document.getElementById('crop-container');
+  const cropImg = document.getElementById('crop-img');
+  const cropBox = document.getElementById('crop-box');
+  const cropInfo = document.getElementById('crop-info');
+  const overlays = {
+    top:    document.getElementById('ov-top'),
+    bottom: document.getElementById('ov-bottom'),
+    left:   document.getElementById('ov-left'),
+    right:  document.getElementById('ov-right'),
+  };
+
+  let imgDisplay = { x: 0, y: 0, w: 0, h: 0, scale: 1 };
+  let crop = { x: 0, y: 0, w: 0, h: 0 };
+  let dragging = false;
+  let dragStart = null;
+  let cropStart = null;
+
+  uploadZone.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', e => {
+    if (e.target.files[0]) loadImage(e.target.files[0]);
+  });
+  uploadZone.addEventListener('dragover', e => {
+    e.preventDefault();
+    uploadZone.classList.add('drag-over');
+  });
+  uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+  uploadZone.addEventListener('drop', e => {
+    e.preventDefault();
+    uploadZone.classList.remove('drag-over');
+    if (e.dataTransfer.files[0]) loadImage(e.dataTransfer.files[0]);
+  });
+
+  function loadImage(file) {
+    const url = URL.createObjectURL(file);
+    cropImg.onload = () => {
+      const natW = cropImg.naturalWidth;
+      const natH = cropImg.naturalHeight;
+      const containerW = cropContainer.parentElement.clientWidth;
+      const maxH = Math.min(window.innerHeight * 0.55, 460);
+      const rawH = containerW * (natH / natW);
+      const containerH = Math.min(rawH, maxH);
+      cropContainer.style.height = containerH + 'px';
+
+      uploadZone.style.display = 'none';
+      cropperArea.classList.add('visible');
+
+      computeImgDisplay();
+      applyRatio(RATIOS[activeRatioIdx].ratio);
+    };
+    cropImg.src = url;
+  }
+
+  function computeImgDisplay() {
+    const cw = cropContainer.clientWidth;
+    const ch = cropContainer.clientHeight;
+    const iw = cropImg.naturalWidth;
+    const ih = cropImg.naturalHeight;
+    const scale = Math.min(cw / iw, ch / ih);
+    const dw = iw * scale;
+    const dh = ih * scale;
+    imgDisplay = {
+      x: (cw - dw) / 2,
+      y: (ch - dh) / 2,
+      w: dw,
+      h: dh,
+      scale
+    };
+  }
+
+  function applyRatio(ratio) {
+    computeImgDisplay();
+    const { x, y, w, h } = imgDisplay;
+    let cw, ch;
+    if (w / h >= ratio) {
+      ch = h;
+      cw = ch * ratio;
+    } else {
+      cw = w;
+      ch = cw / ratio;
+    }
+    crop = {
+      x: x + (w - cw) / 2,
+      y: y + (h - ch) / 2,
+      w: cw,
+      h: ch
+    };
+    renderCrop();
+  }
+
+  function renderCrop() {
+    const cw = cropContainer.clientWidth;
+    const ch = cropContainer.clientHeight;
+    const { x, y, w, h } = crop;
+
+    overlays.top.style.cssText    = `top:0;left:0;width:${cw}px;height:${Math.max(0,y)}px`;
+    overlays.bottom.style.cssText = `top:${y+h}px;left:0;width:${cw}px;height:${Math.max(0,ch-y-h)}px`;
+    overlays.left.style.cssText   = `top:${y}px;left:0;width:${Math.max(0,x)}px;height:${h}px`;
+    overlays.right.style.cssText  = `top:${y}px;left:${x+w}px;width:${Math.max(0,cw-x-w)}px;height:${h}px`;
+
+    cropBox.style.cssText = `left:${x}px;top:${y}px;width:${w}px;height:${h}px`;
+
+    const px = Math.round((x - imgDisplay.x) / imgDisplay.scale);
+    const py = Math.round((y - imgDisplay.y) / imgDisplay.scale);
+    const pw = Math.round(w / imgDisplay.scale);
+    const ph = Math.round(h / imgDisplay.scale);
+    cropInfo.textContent = `${pw} × ${ph} px  ·  drag to reposition`;
+  }
+
+  cropContainer.addEventListener('mousedown', startDrag);
+  cropContainer.addEventListener('touchstart', e => startDrag(e.touches[0]), { passive: true });
+
+  function startDrag(e) {
+    dragging = true;
+    cropContainer.classList.add('dragging');
+    dragStart = { x: e.clientX, y: e.clientY };
+    cropStart = { ...crop };
+  }
+
+  window.addEventListener('mousemove', onDrag);
+  window.addEventListener('touchmove', e => onDrag(e.touches[0]), { passive: true });
+  function onDrag(e) {
+    if (!dragging) return;
+    const dx = e.clientX - dragStart.x;
+    const dy = e.clientY - dragStart.y;
+    let nx = cropStart.x + dx;
+    let ny = cropStart.y + dy;
+    nx = Math.max(imgDisplay.x, Math.min(nx, imgDisplay.x + imgDisplay.w - crop.w));
+    ny = Math.max(imgDisplay.y, Math.min(ny, imgDisplay.y + imgDisplay.h - crop.h));
+    crop = { ...crop, x: nx, y: ny };
+    renderCrop();
+  }
+
+  window.addEventListener('mouseup', endDrag);
+  window.addEventListener('touchend', endDrag);
+  function endDrag() {
+    if (!dragging) return;
+    dragging = false;
+    cropContainer.classList.remove('dragging');
+  }
+
+  window.addEventListener('resize', () => {
+    if (!cropImg.src || cropImg.src === window.location.href) return;
+    const savedRatio = crop.w / crop.h;
+    computeImgDisplay();
+    applyRatio(savedRatio);
+  });
+
+  document.getElementById('btn-download').addEventListener('click', () => {
+    const canvas = document.createElement('canvas');
+    const sx = Math.round((crop.x - imgDisplay.x) / imgDisplay.scale);
+    const sy = Math.round((crop.y - imgDisplay.y) / imgDisplay.scale);
+    const sw = Math.round(crop.w / imgDisplay.scale);
+    const sh = Math.round(crop.h / imgDisplay.scale);
+    canvas.width  = sw;
+    canvas.height = sh;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(cropImg, sx, sy, sw, sh, 0, 0, sw, sh);
+    const link = document.createElement('a');
+    link.download = 'cropped.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  });
+
+  document.getElementById('btn-reset').addEventListener('click', () => {
+    cropperArea.classList.remove('visible');
+    uploadZone.style.display = '';
+    cropImg.src = '';
+    fileInput.value = '';
+  });
+</script>
+</body>
+</html>
