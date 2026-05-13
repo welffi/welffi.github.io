@@ -404,6 +404,129 @@
       line-height: 1;
     }
 
+    .fill-row {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+    }
+
+    .fill-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .toggle-track {
+      width: 32px;
+      height: 18px;
+      border-radius: 9px;
+      border: 1px solid var(--border2);
+      background: rgba(255,255,255,0.04);
+      position: relative;
+      transition: background 0.25s, border-color 0.25s;
+      flex-shrink: 0;
+    }
+    .toggle-track.on {
+      background: rgba(212,165,116,0.18);
+      border-color: rgba(212,165,116,0.45);
+    }
+    .toggle-thumb {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--muted2);
+      transition: transform 0.25s cubic-bezier(0.22,1,0.36,1), background 0.25s;
+    }
+    .toggle-track.on .toggle-thumb {
+      transform: translateX(14px);
+      background: var(--accent);
+    }
+
+    .toggle-label {
+      font-size: 0.6rem;
+      letter-spacing: 0.12em;
+      color: var(--muted2);
+      text-transform: lowercase;
+    }
+    .toggle-track.on + .toggle-label { color: var(--text); }
+
+    .fill-color-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      opacity: 0.35;
+      pointer-events: none;
+      transition: opacity 0.25s;
+    }
+    .fill-color-wrap.enabled {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .color-swatch {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      border: 1px solid var(--border2);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.2s, transform 0.2s;
+      flex-shrink: 0;
+    }
+    .color-swatch:hover {
+      border-color: rgba(212,165,116,0.4);
+      transform: scale(1.08);
+    }
+    .color-swatch input[type="color"] {
+      position: absolute;
+      inset: -4px;
+      width: calc(100% + 8px);
+      height: calc(100% + 8px);
+      opacity: 0;
+      cursor: pointer;
+      border: none;
+      padding: 0;
+    }
+
+    .fill-color-label {
+      font-size: 0.58rem;
+      letter-spacing: 0.1em;
+      color: var(--muted2);
+      text-transform: lowercase;
+    }
+
+    .auto-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      padding: 2px 7px;
+      border-radius: 5px;
+      background: rgba(212,165,116,0.1);
+      border: 1px solid rgba(212,165,116,0.2);
+      font-size: 0.5rem;
+      letter-spacing: 0.12em;
+      color: var(--accent2);
+      text-transform: lowercase;
+      transition: opacity 0.2s;
+    }
+    .auto-badge.hidden { opacity: 0; pointer-events: none; }
+
+    .fill-preview-swatch {
+      width: 14px;
+      height: 14px;
+      border-radius: 4px;
+      border: 1px solid rgba(255,255,255,0.1);
+      flex-shrink: 0;
+      transition: background 0.2s;
+    }
+
     .actions-row {
       display: flex;
       gap: 8px;
@@ -642,7 +765,7 @@
                 <line x1="5" y1="12" x2="19" y2="12"/>
               </svg>
             </button>
-            <input type="range" id="zoom-slider" min="100" max="500" value="100" step="1" />
+            <input type="range" id="zoom-slider" min="1" max="500" value="100" step="1" />
             <button class="zoom-btn" id="btn-zoom-in">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="11" height="11">
                 <line x1="12" y1="5" x2="12" y2="19"/>
@@ -655,6 +778,25 @@
           <div>
             <p class="section-label">aspect ratio</p>
             <div class="ratio-row" id="ratio-row"></div>
+          </div>
+
+          <div>
+            <p class="section-label">fill color</p>
+            <div class="fill-row">
+              <label class="fill-toggle" id="fill-toggle-label">
+                <div class="toggle-track" id="fill-toggle-track">
+                  <div class="toggle-thumb"></div>
+                </div>
+                <span class="toggle-label">extend beyond image</span>
+              </label>
+              <div class="fill-color-wrap" id="fill-color-wrap">
+                <div class="color-swatch" id="color-swatch">
+                  <input type="color" id="fill-color-input" value="#000000" />
+                </div>
+                <span class="fill-color-label" id="fill-color-hex">#000000</span>
+                <span class="auto-badge" id="auto-badge">auto</span>
+              </div>
+            </div>
           </div>
 
           <div class="actions-row">
@@ -740,18 +882,24 @@
       { id: 'pv-square',        label: 'square',          size: 88, shape: 'rect',      radius: 0,    bg: '#111',    border: '#241f1b' },
     ];
 
-    const ratioRow      = document.getElementById('ratio-row');
-    const previewsPanel = document.getElementById('previews-panel');
-    const uploadZone    = document.getElementById('upload-zone');
-    const fileInput     = document.getElementById('file-input');
-    const cropperArea   = document.getElementById('cropper-area');
-    const cropContainer = document.getElementById('crop-container');
-    const cropImg       = document.getElementById('crop-img');
-    const cropBox       = document.getElementById('crop-box');
-    const cropInfo      = document.getElementById('crop-info');
-    const zoomSlider    = document.getElementById('zoom-slider');
-    const zoomLabel     = document.getElementById('zoom-label');
-    const overlays      = {
+    const ratioRow       = document.getElementById('ratio-row');
+    const previewsPanel  = document.getElementById('previews-panel');
+    const uploadZone     = document.getElementById('upload-zone');
+    const fileInput      = document.getElementById('file-input');
+    const cropperArea    = document.getElementById('cropper-area');
+    const cropContainer  = document.getElementById('crop-container');
+    const cropImg        = document.getElementById('crop-img');
+    const cropBox        = document.getElementById('crop-box');
+    const cropInfo       = document.getElementById('crop-info');
+    const zoomSlider     = document.getElementById('zoom-slider');
+    const zoomLabel      = document.getElementById('zoom-label');
+    const fillToggleTrack  = document.getElementById('fill-toggle-track');
+    const fillColorWrap    = document.getElementById('fill-color-wrap');
+    const fillColorInput   = document.getElementById('fill-color-input');
+    const fillColorHex     = document.getElementById('fill-color-hex');
+    const colorSwatch      = document.getElementById('color-swatch');
+    const autoBadge        = document.getElementById('auto-badge');
+    const overlays = {
       top:    document.getElementById('ov-top'),
       bottom: document.getElementById('ov-bottom'),
       left:   document.getElementById('ov-left'),
@@ -760,6 +908,15 @@
 
     let activeRatioIdx = 0;
     let pvCanvases = {};
+
+    const state = {
+      panX: 0, panY: 0, zoom: 1, ratio: 1, loaded: false,
+      extendEnabled: false,
+      fillColor: '#000000',
+      autoColor: '#000000',
+      userPickedColor: false,
+    };
+
     RATIOS.forEach(function(r, idx) {
       const btn = document.createElement('button');
       btn.className = 'ratio-btn' + (idx === 0 ? ' active' : '');
@@ -800,7 +957,75 @@
       pvCanvases[p.id] = { canvas: canvas, config: p };
     });
 
-    const state = { panX: 0, panY: 0, zoom: 1, ratio: 1, loaded: false };
+    fillToggleTrack.addEventListener('click', function() {
+      state.extendEnabled = !state.extendEnabled;
+      fillToggleTrack.classList.toggle('on', state.extendEnabled);
+      fillColorWrap.classList.toggle('enabled', state.extendEnabled);
+      if (state.extendEnabled) {
+        zoomSlider.min = 1;
+      } else {
+        zoomSlider.min = 100;
+        if (state.zoom < 1) setZoom(1);
+      }
+      renderAll();
+    });
+
+    fillColorInput.addEventListener('input', function() {
+      state.fillColor = fillColorInput.value;
+      state.userPickedColor = true;
+      autoBadge.classList.add('hidden');
+      syncSwatchDisplay();
+      renderAll();
+    });
+
+    function syncSwatchDisplay() {
+      colorSwatch.style.background = state.fillColor;
+      fillColorHex.textContent = state.fillColor;
+      fillColorInput.value = state.fillColor;
+    }
+
+    function sampleAutoColor(img) {
+      const sampleCanvas = document.createElement('canvas');
+      sampleCanvas.width  = img.naturalWidth;
+      sampleCanvas.height = img.naturalHeight;
+      const ctx = sampleCanvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+
+      const w = img.naturalWidth;
+      const h = img.naturalHeight;
+      const samples = [];
+      const edgeWidth = Math.max(1, Math.floor(Math.min(w, h) * 0.03));
+
+      function addSample(x, y) {
+        try {
+          const d = ctx.getImageData(x, y, 1, 1).data;
+          samples.push([d[0], d[1], d[2]]);
+        } catch(e) {}
+      }
+
+      for (let x = 0; x < w; x += Math.max(1, Math.floor(w / 40))) {
+        for (let ey = 0; ey < edgeWidth; ey++) {
+          addSample(x, ey);
+          addSample(x, h - 1 - ey);
+        }
+      }
+      for (let y = 0; y < h; y += Math.max(1, Math.floor(h / 40))) {
+        for (let ex = 0; ex < edgeWidth; ex++) {
+          addSample(ex, y);
+          addSample(w - 1 - ex, y);
+        }
+      }
+
+      if (samples.length === 0) return '#000000';
+
+      let r = 0, g = 0, b = 0;
+      samples.forEach(function(s) { r += s[0]; g += s[1]; b += s[2]; });
+      r = Math.round(r / samples.length);
+      g = Math.round(g / samples.length);
+      b = Math.round(b / samples.length);
+
+      return '#' + [r,g,b].map(function(v) { return v.toString(16).padStart(2,'0'); }).join('');
+    }
 
     uploadZone.addEventListener('click', function() { fileInput.click(); });
     fileInput.addEventListener('change', function(e) {
@@ -823,6 +1048,12 @@
         uploadZone.style.display = 'none';
         cropperArea.classList.add('visible');
         state.loaded = true;
+        state.userPickedColor = false;
+        autoBadge.classList.remove('hidden');
+        const auto = sampleAutoColor(cropImg);
+        state.autoColor = auto;
+        state.fillColor = auto;
+        syncSwatchDisplay();
         resetView();
         requestAnimationFrame(function() {
           requestAnimationFrame(function() {
@@ -859,24 +1090,24 @@
       const cropX = (cw - cropW) / 2;
       const cropY = (ch - cropH) / 2;
 
-      const fitScale    = Math.max(cropW / nw, cropH / nh);
+      const fitScale     = Math.max(cropW / nw, cropH / nh);
       const displayScale = fitScale * state.zoom;
-      const displayW    = nw * displayScale;
-      const displayH    = nh * displayScale;
+      const displayW     = nw * displayScale;
+      const displayH     = nh * displayScale;
 
       let imgLeft = (cw - displayW) / 2 + state.panX;
       let imgTop  = (ch - displayH) / 2 + state.panY;
 
-      const minLeft = cropX + cropW - displayW;
-      const maxLeft = cropX;
-      const minTop  = cropY + cropH - displayH;
-      const maxTop  = cropY;
-
-      imgLeft = Math.max(minLeft, Math.min(maxLeft, imgLeft));
-      imgTop  = Math.max(minTop,  Math.min(maxTop,  imgTop));
-
-      state.panX = imgLeft - (cw - displayW) / 2;
-      state.panY = imgTop  - (ch - displayH) / 2;
+      if (!state.extendEnabled) {
+        const minLeft = cropX + cropW - displayW;
+        const maxLeft = cropX;
+        const minTop  = cropY + cropH - displayH;
+        const maxTop  = cropY;
+        imgLeft = Math.max(minLeft, Math.min(maxLeft, imgLeft));
+        imgTop  = Math.max(minTop,  Math.min(maxTop,  imgTop));
+        state.panX = imgLeft - (cw - displayW) / 2;
+        state.panY = imgTop  - (ch - displayH) / 2;
+      }
 
       return { cropX, cropY, cropW, cropH, imgLeft, imgTop, displayW, displayH, displayScale };
     }
@@ -903,6 +1134,12 @@
       overlays.bottom.style.cssText = 'top:' + (L.cropY + L.cropH) + 'px;left:0;width:' + cw + 'px;height:' + Math.max(0, ch - L.cropY - L.cropH) + 'px';
       overlays.left.style.cssText   = 'top:' + L.cropY + 'px;left:0;width:' + Math.max(0, L.cropX) + 'px;height:' + L.cropH + 'px';
       overlays.right.style.cssText  = 'top:' + L.cropY + 'px;left:' + (L.cropX + L.cropW) + 'px;width:' + Math.max(0, cw - L.cropX - L.cropW) + 'px;height:' + L.cropH + 'px';
+
+      if (state.extendEnabled) {
+        cropContainer.style.background = state.fillColor;
+      } else {
+        cropContainer.style.background = '#000';
+      }
 
       cropBox.style.cssText = 'left:' + L.cropX + 'px;top:' + L.cropY + 'px;width:' + L.cropW + 'px;height:' + L.cropH + 'px';
 
@@ -940,15 +1177,10 @@
     }
 
     function renderPreviews(L) {
-      const natSX = (L.cropX - L.imgLeft) / L.displayScale;
-      const natSY = (L.cropY - L.imgTop)  / L.displayScale;
-      const natSW = L.cropW / L.displayScale;
-      const natSH = L.cropH / L.displayScale;
-
-      const sx = Math.max(0, natSX);
-      const sy = Math.max(0, natSY);
-      const sw = Math.min(cropImg.naturalWidth  - sx, natSW);
-      const sh = Math.min(cropImg.naturalHeight - sy, natSH);
+      const natCropX = (L.cropX - L.imgLeft) / L.displayScale;
+      const natCropY = (L.cropY - L.imgTop)  / L.displayScale;
+      const natCropW = L.cropW / L.displayScale;
+      const natCropH = L.cropH / L.displayScale;
 
       Object.values(pvCanvases).forEach(function(entry) {
         const canvas = entry.canvas;
@@ -958,9 +1190,34 @@
         ctx.clearRect(0, 0, size, size);
         ctx.save();
         clipPath(ctx, size, config.shape, config.radius);
-        try {
-          ctx.drawImage(cropImg, sx, sy, sw, sh, 0, 0, size, size);
-        } catch(e) {}
+
+        if (state.extendEnabled) {
+          ctx.fillStyle = state.fillColor;
+          ctx.fillRect(0, 0, size, size);
+
+          const scaleX = size / natCropW;
+          const scaleY = size / natCropH;
+
+          const srcX = Math.max(0, natCropX);
+          const srcY = Math.max(0, natCropY);
+          const srcW = Math.min(cropImg.naturalWidth  - srcX, natCropX + natCropW - srcX);
+          const srcH = Math.min(cropImg.naturalHeight - srcY, natCropY + natCropH - srcY);
+
+          if (srcW > 0 && srcH > 0) {
+            const dstX = (srcX - natCropX) * scaleX;
+            const dstY = (srcY - natCropY) * scaleY;
+            const dstW = srcW * scaleX;
+            const dstH = srcH * scaleY;
+            try { ctx.drawImage(cropImg, srcX, srcY, srcW, srcH, dstX, dstY, dstW, dstH); } catch(e) {}
+          }
+        } else {
+          const sx = Math.max(0, natCropX);
+          const sy = Math.max(0, natCropY);
+          const sw = Math.min(cropImg.naturalWidth  - sx, natCropW);
+          const sh = Math.min(cropImg.naturalHeight - sy, natCropH);
+          try { ctx.drawImage(cropImg, sx, sy, sw, sh, 0, 0, size, size); } catch(e) {}
+        }
+
         ctx.restore();
       });
     }
@@ -1015,7 +1272,8 @@
     });
 
     function setZoom(z) {
-      state.zoom = Math.max(1, Math.min(5, z));
+      const minZoom = state.extendEnabled ? 0.01 : 1;
+      state.zoom = Math.max(minZoom, Math.min(5, z));
       zoomSlider.value = Math.round(state.zoom * 100);
       zoomLabel.textContent = parseFloat(state.zoom.toFixed(2)) + '×';
       renderAll();
@@ -1087,14 +1345,42 @@
 
     document.getElementById('btn-download').addEventListener('click', function() {
       const L = getLayout();
-      const natSX = Math.max(0, Math.round((L.cropX - L.imgLeft) / L.displayScale));
-      const natSY = Math.max(0, Math.round((L.cropY - L.imgTop)  / L.displayScale));
-      const natSW = Math.min(cropImg.naturalWidth  - natSX, Math.round(L.cropW / L.displayScale));
-      const natSH = Math.min(cropImg.naturalHeight - natSY, Math.round(L.cropH / L.displayScale));
+      const natCropX = (L.cropX - L.imgLeft) / L.displayScale;
+      const natCropY = (L.cropY - L.imgTop)  / L.displayScale;
+      const natCropW = L.cropW / L.displayScale;
+      const natCropH = L.cropH / L.displayScale;
+
+      const outW = Math.round(natCropW);
+      const outH = Math.round(natCropH);
       const canvas = document.createElement('canvas');
-      canvas.width  = natSW;
-      canvas.height = natSH;
-      canvas.getContext('2d').drawImage(cropImg, natSX, natSY, natSW, natSH, 0, 0, natSW, natSH);
+      canvas.width  = outW;
+      canvas.height = outH;
+      const ctx = canvas.getContext('2d');
+
+      if (state.extendEnabled) {
+        ctx.fillStyle = state.fillColor;
+        ctx.fillRect(0, 0, outW, outH);
+
+        const srcX = Math.max(0, natCropX);
+        const srcY = Math.max(0, natCropY);
+        const srcW = Math.min(cropImg.naturalWidth  - srcX, natCropX + natCropW - srcX);
+        const srcH = Math.min(cropImg.naturalHeight - srcY, natCropY + natCropH - srcY);
+
+        if (srcW > 0 && srcH > 0) {
+          const dstX = Math.round((srcX - natCropX) / natCropW * outW);
+          const dstY = Math.round((srcY - natCropY) / natCropH * outH);
+          const dstW = Math.round(srcW / natCropW * outW);
+          const dstH = Math.round(srcH / natCropH * outH);
+          ctx.drawImage(cropImg, srcX, srcY, srcW, srcH, dstX, dstY, dstW, dstH);
+        }
+      } else {
+        const natSX = Math.max(0, Math.round(natCropX));
+        const natSY = Math.max(0, Math.round(natCropY));
+        const natSW = Math.min(cropImg.naturalWidth  - natSX, Math.round(natCropW));
+        const natSH = Math.min(cropImg.naturalHeight - natSY, Math.round(natCropH));
+        ctx.drawImage(cropImg, natSX, natSY, natSW, natSH, 0, 0, outW, outH);
+      }
+
       const link = document.createElement('a');
       link.download = 'cropped.png';
       link.href = canvas.toDataURL('image/png');
@@ -1107,6 +1393,10 @@
       cropImg.src = '';
       fileInput.value = '';
       state.loaded = false;
+      state.extendEnabled = false;
+      state.userPickedColor = false;
+      fillToggleTrack.classList.remove('on');
+      fillColorWrap.classList.remove('enabled');
     });
   })();
 </script>
