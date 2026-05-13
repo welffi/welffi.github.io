@@ -1669,6 +1669,11 @@
       renderAll();
     });
 
+    new ResizeObserver(function() {
+      if (!state.loaded) return;
+      renderAll();
+    }).observe(cropContainer);
+
     document.getElementById('btn-download').addEventListener('click', function() {
       const L = getLayout();
       const natCropX = (L.cropX - L.imgLeft) / L.displayScale;
