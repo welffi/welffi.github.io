@@ -530,6 +530,14 @@
     .actions-row {
       display: flex;
       gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .download-group {
+      flex: 1;
+      display: flex;
+      min-width: 0;
+      position: relative;
     }
 
     .btn-download {
@@ -538,9 +546,10 @@
       align-items: center;
       justify-content: center;
       gap: 0.6rem;
-      padding: 0.75rem 1.2rem;
-      border-radius: 12px;
+      padding: 0.75rem 1rem;
+      border-radius: 12px 0 0 12px;
       border: 1px solid rgba(212,165,116,0.3);
+      border-right: none;
       background: rgba(212,165,116,0.08);
       color: var(--accent);
       font-family: 'DM Mono', monospace;
@@ -551,6 +560,7 @@
       text-transform: lowercase;
       position: relative;
       overflow: hidden;
+      min-width: 0;
     }
     .btn-download::before {
       content: '';
@@ -564,11 +574,111 @@
     .btn-download:hover {
       background: rgba(212,165,116,0.14);
       border-color: rgba(212,165,116,0.5);
-      transform: translateY(-1px);
-      box-shadow: 0 4px 20px rgba(212,165,116,0.12);
     }
     .btn-download:active { transform: translateY(0); }
-    .btn-download svg { width: 14px; height: 14px; }
+    .btn-download svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+    .format-picker {
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .btn-format {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.75rem 0.8rem;
+      border-radius: 0 12px 12px 0;
+      border: 1px solid rgba(212,165,116,0.3);
+      background: rgba(212,165,116,0.06);
+      color: var(--accent2);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+      text-transform: lowercase;
+      white-space: nowrap;
+      height: 100%;
+    }
+    .btn-format:hover, .btn-format.open {
+      background: rgba(212,165,116,0.12);
+      border-color: rgba(212,165,116,0.5);
+    }
+    .btn-format svg {
+      width: 10px;
+      height: 10px;
+      transition: transform 0.2s cubic-bezier(0.22,1,0.36,1);
+      flex-shrink: 0;
+    }
+    .btn-format.open svg { transform: rotate(180deg); }
+
+    .format-dropdown {
+      position: absolute;
+      bottom: calc(100% + 6px);
+      right: 0;
+      min-width: 160px;
+      background: rgba(20,17,14,0.97);
+      border: 1px solid var(--border2);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.03) inset;
+      opacity: 0;
+      transform: translateY(6px) scale(0.97);
+      pointer-events: none;
+      transition: opacity 0.18s, transform 0.18s cubic-bezier(0.22,1,0.36,1);
+      z-index: 50;
+    }
+    .format-dropdown.open {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+    }
+
+    .format-option {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.8rem;
+      padding: 0.65rem 0.9rem;
+      cursor: pointer;
+      transition: background 0.15s;
+      border-bottom: 1px solid var(--border);
+    }
+    .format-option:last-child { border-bottom: none; }
+    .format-option:hover { background: rgba(212,165,116,0.07); }
+    .format-option.selected { background: rgba(212,165,116,0.1); }
+
+    .format-option-left {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .format-tag {
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      color: var(--accent);
+      font-weight: 500;
+      min-width: 38px;
+    }
+    .format-option.selected .format-tag { color: var(--accent2); }
+
+    .format-desc {
+      font-size: 0.53rem;
+      letter-spacing: 0.08em;
+      color: var(--muted2);
+      text-transform: lowercase;
+    }
+
+    .format-check {
+      width: 14px;
+      height: 14px;
+      color: var(--accent);
+      flex-shrink: 0;
+      opacity: 0;
+    }
+    .format-option.selected .format-check { opacity: 1; }
 
     .btn-reset {
       display: flex;
@@ -800,14 +910,25 @@
           </div>
 
           <div class="actions-row">
-            <button class="btn-download" id="btn-download">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                <polyline points="7 10 12 15 17 10"/>
-                <line x1="12" y1="15" x2="12" y2="3"/>
-              </svg>
-              download crop
-            </button>
+            <div class="download-group">
+              <button class="btn-download" id="btn-download">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                download crop
+              </button>
+              <div class="format-picker" id="format-picker">
+                <button class="btn-format" id="btn-format">
+                  <span id="format-label">png</span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="6 9 12 15 18 9"/>
+                  </svg>
+                </button>
+                <div class="format-dropdown" id="format-dropdown"></div>
+              </div>
+            </div>
             <button class="btn-reset" id="btn-reset">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                 <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
@@ -882,6 +1003,15 @@
       { id: 'pv-square',        label: 'square',          size: 88, shape: 'rect',      radius: 0,    bg: '#111',    border: '#241f1b' },
     ];
 
+    const FORMATS = [
+      { id: 'png',  label: 'PNG',  desc: 'lossless · transparency', mime: 'image/png',  ext: 'png',  quality: null },
+      { id: 'jpg',  label: 'JPG',  desc: 'small · no transparency', mime: 'image/jpeg', ext: 'jpg',  quality: 0.92 },
+      { id: 'webp', label: 'WebP', desc: 'modern · great quality',  mime: 'image/webp', ext: 'webp', quality: 0.92 },
+      { id: 'avif', label: 'AVIF', desc: 'tiny · best compression', mime: 'image/avif', ext: 'avif', quality: 0.80 },
+    ];
+
+    let activeFormat = FORMATS[0];
+
     const ratioRow       = document.getElementById('ratio-row');
     const previewsPanel  = document.getElementById('previews-panel');
     const uploadZone     = document.getElementById('upload-zone');
@@ -898,6 +1028,56 @@
     const fillColorInput   = document.getElementById('fill-color-input');
     const fillColorHex     = document.getElementById('fill-color-hex');
     const colorSwatch      = document.getElementById('color-swatch');
+    const btnFormat        = document.getElementById('btn-format');
+    const formatDropdown   = document.getElementById('format-dropdown');
+    const formatLabel      = document.getElementById('format-label');
+
+    function buildFormatDropdown() {
+      formatDropdown.innerHTML = '';
+      FORMATS.forEach(function(f) {
+        const opt = document.createElement('div');
+        opt.className = 'format-option' + (f.id === activeFormat.id ? ' selected' : '');
+        opt.innerHTML =
+          '<div class="format-option-left">' +
+            '<span class="format-tag">' + f.label + '</span>' +
+            '<span class="format-desc">' + f.desc + '</span>' +
+          '</div>' +
+          '<svg class="format-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">' +
+            '<polyline points="20 6 9 17 4 12"/>' +
+          '</svg>';
+        opt.addEventListener('click', function() {
+          activeFormat = f;
+          formatLabel.textContent = f.label.toLowerCase();
+          closeFormatDropdown();
+          buildFormatDropdown();
+        });
+        formatDropdown.appendChild(opt);
+      });
+    }
+
+    function closeFormatDropdown() {
+      formatDropdown.classList.remove('open');
+      btnFormat.classList.remove('open');
+    }
+
+    btnFormat.addEventListener('click', function(e) {
+      e.stopPropagation();
+      const isOpen = formatDropdown.classList.contains('open');
+      if (isOpen) {
+        closeFormatDropdown();
+      } else {
+        formatDropdown.classList.add('open');
+        btnFormat.classList.add('open');
+      }
+    });
+
+    document.addEventListener('click', function(e) {
+      if (!document.getElementById('format-picker').contains(e.target)) {
+        closeFormatDropdown();
+      }
+    });
+
+    buildFormatDropdown();
     const autoBadge        = document.getElementById('auto-badge');
     const overlays = {
       top:    document.getElementById('ov-top'),
@@ -1382,8 +1562,10 @@
       }
 
       const link = document.createElement('a');
-      link.download = 'cropped.png';
-      link.href = canvas.toDataURL('image/png');
+      link.download = 'cropped.' + activeFormat.ext;
+      link.href = activeFormat.quality !== null
+        ? canvas.toDataURL(activeFormat.mime, activeFormat.quality)
+        : canvas.toDataURL(activeFormat.mime);
       link.click();
     });
 
