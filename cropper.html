@@ -284,6 +284,8 @@
       0%, 100% { opacity: 1; }
       50% { opacity: 0.3; }
     }
+
+    .crop-overlay {
       position: absolute;
       background: rgba(10, 9, 8, 0.68);
       pointer-events: none;
@@ -1019,6 +1021,12 @@
         <circle cx="12" cy="13" r="4"/>
       </svg>
     </button>
+    <a class="dock-btn" href="video-cutter.html">
+      <span class="tooltip">video cutter</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="color:#d4a574">
+        <path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/>
+      </svg>
+    </a>
   </div>
 </div>
 
@@ -1151,7 +1159,8 @@
     });
 
     buildFormatDropdown(IMAGE_FORMATS);
-    const autoBadge        = document.getElementById('auto-badge');
+
+    const autoBadge = document.getElementById('auto-badge');
     const overlays = {
       top:    document.getElementById('ov-top'),
       bottom: document.getElementById('ov-bottom'),
