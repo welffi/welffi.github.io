@@ -244,6 +244,56 @@
     }
     .icon-btn svg { width: 13px; height: 13px; }
 
+    #cred-form { display: flex; flex-direction: column; gap: 0.55rem; }
+
+    .cred-input.output {
+      background: rgba(212,165,116,0.04);
+      border-color: rgba(212,165,116,0.18);
+      color: var(--accent2);
+    }
+    .cred-input.output:focus { border-color: rgba(212,165,116,0.4); }
+
+    .settings-details {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .settings-details summary {
+      padding: 0.55rem 0.8rem;
+      cursor: pointer;
+      list-style: none;
+      font-size: 0.5rem;
+      letter-spacing: 0.18em;
+      color: var(--muted2);
+      text-transform: lowercase;
+      display: flex;
+      align-items: center;
+      user-select: none;
+      transition: color 0.15s, background 0.15s;
+    }
+    .settings-details summary::-webkit-details-marker { display: none; }
+    .settings-details summary::after {
+      content: '›';
+      margin-left: auto;
+      font-size: 0.85rem;
+      color: var(--muted);
+      transition: transform 0.2s cubic-bezier(0.22,1,0.36,1);
+      display: inline-block;
+      line-height: 1;
+    }
+    .settings-details[open] summary::after { transform: rotate(90deg); }
+    .settings-details summary:hover { color: var(--text); background: rgba(255,255,255,0.015); }
+    .settings-content {
+      padding: 0.8rem 0.75rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+      background: rgba(255,255,255,0.01);
+    }
+    .save-row { margin-top: 0.15rem; }
+    .save-row .btn { flex: 1; justify-content: center; }
+
     textarea, input[type="text"], input[type="number"] {
       width: 100%;
       background: rgba(255,255,255,0.03);
@@ -609,14 +659,9 @@
 
         <form id="cred-form" onsubmit="handleSave(event)" autocomplete="on">
 
-          <div class="cred-row site-row">
-            <span class="cred-label">site</span>
-            <input type="url" id="cred-site" class="cred-input" placeholder="https://example.com" autocomplete="off" spellcheck="false" />
-          </div>
-
           <div class="cred-row user-cred-row">
             <span class="cred-label">username</span>
-            <input type="text" id="cred-username" name="username" class="cred-input" autocomplete="username" placeholder="—" spellcheck="false" />
+            <input type="text" id="cred-username" name="username" class="cred-input output" autocomplete="username" placeholder="—" spellcheck="false" />
             <button type="button" class="btn icon-btn" onclick="generateUser()" title="regenerate">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
             </button>
@@ -627,7 +672,7 @@
 
           <div class="cred-row pass-cred-row">
             <span class="cred-label">password</span>
-            <input type="password" id="cred-password" name="password" class="cred-input" autocomplete="new-password" placeholder="—" spellcheck="false" />
+            <input type="password" id="cred-password" name="password" class="cred-input output" autocomplete="new-password" placeholder="—" spellcheck="false" />
             <button type="button" class="btn icon-btn" id="btn-vis" onclick="togglePassVis()" title="show/hide">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
             </button>
@@ -640,78 +685,84 @@
           </div>
 
           <div class="user-settings">
-            <div class="cred-divider"></div>
-            <p class="cred-section-label">username settings</p>
-            <div>
-              <p class="tool-sublabel">word pools</p>
-              <div class="options-row">
-                <div class="opt-toggle on" id="upool-adj"     onclick="togglePool(this)"><div class="opt-dot"></div>adjectives</div>
-                <div class="opt-toggle on" id="upool-animals" onclick="togglePool(this)"><div class="opt-dot"></div>animals</div>
-                <div class="opt-toggle"   id="upool-colors"  onclick="togglePool(this)"><div class="opt-dot"></div>colors</div>
-                <div class="opt-toggle"   id="upool-tech"    onclick="togglePool(this)"><div class="opt-dot"></div>tech</div>
-                <div class="opt-toggle"   id="upool-nature"  onclick="togglePool(this)"><div class="opt-dot"></div>nature</div>
-                <div class="opt-toggle"   id="upool-fantasy" onclick="togglePool(this)"><div class="opt-dot"></div>fantasy</div>
-              </div>
-            </div>
-            <div class="util-row">
-              <div class="util-group">
-                <p class="tool-sublabel">words</p>
-                <div class="options-row">
-                  <div class="opt-toggle"    id="uwc-1" onclick="setUserRadio('wc','uwc-1',1)"><div class="opt-dot"></div>1</div>
-                  <div class="opt-toggle on"  id="uwc-2" onclick="setUserRadio('wc','uwc-2',2)"><div class="opt-dot"></div>2</div>
-                  <div class="opt-toggle"    id="uwc-3" onclick="setUserRadio('wc','uwc-3',3)"><div class="opt-dot"></div>3</div>
+            <details class="settings-details">
+              <summary>username settings</summary>
+              <div class="settings-content">
+                <div>
+                  <p class="tool-sublabel">word pools</p>
+                  <div class="options-row">
+                    <div class="opt-toggle on" id="upool-adj"     onclick="togglePool(this)"><div class="opt-dot"></div>adjectives</div>
+                    <div class="opt-toggle on" id="upool-animals" onclick="togglePool(this)"><div class="opt-dot"></div>animals</div>
+                    <div class="opt-toggle"   id="upool-colors"  onclick="togglePool(this)"><div class="opt-dot"></div>colors</div>
+                    <div class="opt-toggle"   id="upool-tech"    onclick="togglePool(this)"><div class="opt-dot"></div>tech</div>
+                    <div class="opt-toggle"   id="upool-nature"  onclick="togglePool(this)"><div class="opt-dot"></div>nature</div>
+                    <div class="opt-toggle"   id="upool-fantasy" onclick="togglePool(this)"><div class="opt-dot"></div>fantasy</div>
+                  </div>
+                </div>
+                <div class="util-row">
+                  <div class="util-group">
+                    <p class="tool-sublabel">words</p>
+                    <div class="options-row">
+                      <div class="opt-toggle"    id="uwc-1" onclick="setUserRadio('wc','uwc-1',1)"><div class="opt-dot"></div>1</div>
+                      <div class="opt-toggle on"  id="uwc-2" onclick="setUserRadio('wc','uwc-2',2)"><div class="opt-dot"></div>2</div>
+                      <div class="opt-toggle"    id="uwc-3" onclick="setUserRadio('wc','uwc-3',3)"><div class="opt-dot"></div>3</div>
+                    </div>
+                  </div>
+                  <div class="util-group">
+                    <p class="tool-sublabel">separator</p>
+                    <div class="options-row">
+                      <div class="opt-toggle on" id="usep-none"  onclick="setUserRadio('sep','usep-none','')"><div class="opt-dot"></div>none</div>
+                      <div class="opt-toggle"   id="usep-under" onclick="setUserRadio('sep','usep-under','_')"><div class="opt-dot"></div>_</div>
+                      <div class="opt-toggle"   id="usep-dot"   onclick="setUserRadio('sep','usep-dot','.')"><div class="opt-dot"></div>.</div>
+                      <div class="opt-toggle"   id="usep-dash"  onclick="setUserRadio('sep','usep-dash','-')"><div class="opt-dot"></div>-</div>
+                    </div>
+                  </div>
+                  <div class="util-group">
+                    <p class="tool-sublabel">case</p>
+                    <div class="options-row">
+                      <div class="opt-toggle"   id="ucase-lower" onclick="setUserRadio('case','ucase-lower','lower')"><div class="opt-dot"></div>lower</div>
+                      <div class="opt-toggle on" id="ucase-title" onclick="setUserRadio('case','ucase-title','title')"><div class="opt-dot"></div>Title</div>
+                      <div class="opt-toggle"   id="ucase-upper" onclick="setUserRadio('case','ucase-upper','upper')"><div class="opt-dot"></div>UPPER</div>
+                      <div class="opt-toggle"   id="ucase-camel" onclick="setUserRadio('case','ucase-camel','camel')"><div class="opt-dot"></div>camel</div>
+                    </div>
+                  </div>
+                  <div class="util-group">
+                    <p class="tool-sublabel">numbers</p>
+                    <div class="options-row">
+                      <div class="opt-toggle on" id="unum-none"   onclick="setUserRadio('num','unum-none','none')"><div class="opt-dot"></div>none</div>
+                      <div class="opt-toggle"   id="unum-prefix" onclick="setUserRadio('num','unum-prefix','prefix')"><div class="opt-dot"></div>prefix</div>
+                      <div class="opt-toggle"   id="unum-suffix" onclick="setUserRadio('num','unum-suffix','suffix')"><div class="opt-dot"></div>suffix</div>
+                    </div>
+                  </div>
+                  <div class="util-group" id="udig-group" style="opacity:0.35;pointer-events:none;transition:opacity 0.2s">
+                    <p class="tool-sublabel">digits</p>
+                    <div class="options-row">
+                      <div class="opt-toggle"   id="udig-2" onclick="setUserRadio('dig','udig-2',2)"><div class="opt-dot"></div>2</div>
+                      <div class="opt-toggle on" id="udig-3" onclick="setUserRadio('dig','udig-3',3)"><div class="opt-dot"></div>3</div>
+                      <div class="opt-toggle"   id="udig-4" onclick="setUserRadio('dig','udig-4',4)"><div class="opt-dot"></div>4</div>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div class="util-group">
-                <p class="tool-sublabel">separator</p>
-                <div class="options-row">
-                  <div class="opt-toggle on" id="usep-none"  onclick="setUserRadio('sep','usep-none','')"><div class="opt-dot"></div>none</div>
-                  <div class="opt-toggle"   id="usep-under" onclick="setUserRadio('sep','usep-under','_')"><div class="opt-dot"></div>_</div>
-                  <div class="opt-toggle"   id="usep-dot"   onclick="setUserRadio('sep','usep-dot','.')"><div class="opt-dot"></div>.</div>
-                  <div class="opt-toggle"   id="usep-dash"  onclick="setUserRadio('sep','usep-dash','-')"><div class="opt-dot"></div>-</div>
-                </div>
-              </div>
-              <div class="util-group">
-                <p class="tool-sublabel">case</p>
-                <div class="options-row">
-                  <div class="opt-toggle"   id="ucase-lower" onclick="setUserRadio('case','ucase-lower','lower')"><div class="opt-dot"></div>lower</div>
-                  <div class="opt-toggle on" id="ucase-title" onclick="setUserRadio('case','ucase-title','title')"><div class="opt-dot"></div>Title</div>
-                  <div class="opt-toggle"   id="ucase-upper" onclick="setUserRadio('case','ucase-upper','upper')"><div class="opt-dot"></div>UPPER</div>
-                  <div class="opt-toggle"   id="ucase-camel" onclick="setUserRadio('case','ucase-camel','camel')"><div class="opt-dot"></div>camel</div>
-                </div>
-              </div>
-              <div class="util-group">
-                <p class="tool-sublabel">numbers</p>
-                <div class="options-row">
-                  <div class="opt-toggle on" id="unum-none"   onclick="setUserRadio('num','unum-none','none')"><div class="opt-dot"></div>none</div>
-                  <div class="opt-toggle"   id="unum-prefix" onclick="setUserRadio('num','unum-prefix','prefix')"><div class="opt-dot"></div>prefix</div>
-                  <div class="opt-toggle"   id="unum-suffix" onclick="setUserRadio('num','unum-suffix','suffix')"><div class="opt-dot"></div>suffix</div>
-                </div>
-              </div>
-              <div class="util-group" id="udig-group" style="opacity:0.35;pointer-events:none;transition:opacity 0.2s">
-                <p class="tool-sublabel">digits</p>
-                <div class="options-row">
-                  <div class="opt-toggle"   id="udig-2" onclick="setUserRadio('dig','udig-2',2)"><div class="opt-dot"></div>2</div>
-                  <div class="opt-toggle on" id="udig-3" onclick="setUserRadio('dig','udig-3',3)"><div class="opt-dot"></div>3</div>
-                  <div class="opt-toggle"   id="udig-4" onclick="setUserRadio('dig','udig-4',4)"><div class="opt-dot"></div>4</div>
-                </div>
-              </div>
-            </div>
+            </details>
           </div>
 
           <div class="pass-settings">
-            <div class="cred-divider"></div>
-            <p class="cred-section-label">password settings</p>
-            <div class="length-row">
-              <span class="length-label" id="pass-len-label">16</span>
-              <input type="range" id="pass-length" min="6" max="64" value="16" />
-            </div>
-            <div class="options-row">
-              <div class="opt-toggle on" id="opt-upper" onclick="toggleOpt(this)"><div class="opt-dot"></div>A–Z</div>
-              <div class="opt-toggle on" id="opt-lower" onclick="toggleOpt(this)"><div class="opt-dot"></div>a–z</div>
-              <div class="opt-toggle on" id="opt-nums"  onclick="toggleOpt(this)"><div class="opt-dot"></div>0–9</div>
-              <div class="opt-toggle on" id="opt-syms"  onclick="toggleOpt(this)"><div class="opt-dot"></div>!@#</div>
-            </div>
+            <details class="settings-details">
+              <summary>password settings</summary>
+              <div class="settings-content">
+                <div class="length-row">
+                  <span class="length-label" id="pass-len-label">16</span>
+                  <input type="range" id="pass-length" min="6" max="64" value="16" />
+                </div>
+                <div class="options-row">
+                  <div class="opt-toggle on" id="opt-upper" onclick="toggleOpt(this)"><div class="opt-dot"></div>A–Z</div>
+                  <div class="opt-toggle on" id="opt-lower" onclick="toggleOpt(this)"><div class="opt-dot"></div>a–z</div>
+                  <div class="opt-toggle on" id="opt-nums"  onclick="toggleOpt(this)"><div class="opt-dot"></div>0–9</div>
+                  <div class="opt-toggle on" id="opt-syms"  onclick="toggleOpt(this)"><div class="opt-dot"></div>!@#</div>
+                </div>
+              </div>
+            </details>
           </div>
 
           <div class="btn-row save-row">
@@ -785,9 +836,9 @@
   const MODE_SECTIONS = {
     username: ['user-cred-row', 'user-settings'],
     password: ['pass-cred-row', 'pass-settings'],
-    combined: ['site-row', 'user-cred-row', 'pass-cred-row', 'user-settings', 'pass-settings', 'save-row'],
+    combined: ['user-cred-row', 'pass-cred-row', 'user-settings', 'pass-settings', 'save-row'],
   };
-  const ALL_SECTIONS = ['site-row', 'user-cred-row', 'pass-cred-row', 'user-settings', 'pass-settings', 'save-row'];
+  const ALL_SECTIONS = ['user-cred-row', 'pass-cred-row', 'user-settings', 'pass-settings', 'save-row'];
 
   function setMode(mode) {
     document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
@@ -915,8 +966,17 @@
     else                           { input.type = 'password'; btn.innerHTML = eyeOn;  }
   }
 
-  function handleSave(e) {
+  async function handleSave(e) {
     e.preventDefault();
+    const username = document.getElementById('cred-username').value;
+    const password = document.getElementById('cred-password').value;
+    if (!username || !password) return;
+    if (window.PasswordCredential) {
+      try {
+        const cred = new PasswordCredential({ id: username, password });
+        await navigator.credentials.store(cred);
+      } catch(_) {}
+    }
     const btn = document.getElementById('btn-save');
     const orig = btn.innerHTML;
     btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> saved!';
