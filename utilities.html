@@ -153,6 +153,26 @@
       font-weight: 300;
     }
 
+    .tool-sublabel {
+      font-size: 0.5rem;
+      letter-spacing: 0.16em;
+      text-transform: lowercase;
+      color: var(--muted);
+      font-weight: 300;
+      margin-bottom: 0.35rem;
+    }
+
+    .util-row {
+      display: flex;
+      gap: 1.2rem;
+      flex-wrap: wrap;
+    }
+
+    .util-group {
+      display: flex;
+      flex-direction: column;
+    }
+
     textarea, input[type="text"], input[type="number"] {
       width: 100%;
       background: rgba(255,255,255,0.03);
@@ -564,14 +584,67 @@
       </div>
 
       <!-- Username Generator -->
-      <div class="tool-card" style="animation-delay:0.26s">
+      <div class="tool-card wide" style="animation-delay:0.26s">
         <span class="tool-title">username</span>
         <div class="pass-output" id="user-output">—</div>
-        <div class="options-row">
-          <div class="opt-toggle on" id="uopt-cap"  onclick="toggleUserOpt(this)"><div class="opt-dot"></div>Capitalize</div>
-          <div class="opt-toggle on" id="uopt-nums" onclick="toggleUserOpt(this)"><div class="opt-dot"></div>0–9 suffix</div>
-          <div class="opt-toggle"   id="uopt-sep"  onclick="toggleUserOpt(this)"><div class="opt-dot"></div>_ separator</div>
+
+        <div>
+          <p class="tool-sublabel">word pools</p>
+          <div class="options-row">
+            <div class="opt-toggle on" id="upool-adj"     onclick="togglePool(this)"><div class="opt-dot"></div>adjectives</div>
+            <div class="opt-toggle on" id="upool-animals" onclick="togglePool(this)"><div class="opt-dot"></div>animals</div>
+            <div class="opt-toggle"   id="upool-colors"  onclick="togglePool(this)"><div class="opt-dot"></div>colors</div>
+            <div class="opt-toggle"   id="upool-tech"    onclick="togglePool(this)"><div class="opt-dot"></div>tech</div>
+            <div class="opt-toggle"   id="upool-nature"  onclick="togglePool(this)"><div class="opt-dot"></div>nature</div>
+            <div class="opt-toggle"   id="upool-fantasy" onclick="togglePool(this)"><div class="opt-dot"></div>fantasy</div>
+          </div>
         </div>
+
+        <div class="util-row">
+          <div class="util-group">
+            <p class="tool-sublabel">words</p>
+            <div class="options-row">
+              <div class="opt-toggle"   id="uwc-1" onclick="setUserRadio('wc','uwc-1',1)"><div class="opt-dot"></div>1</div>
+              <div class="opt-toggle on" id="uwc-2" onclick="setUserRadio('wc','uwc-2',2)"><div class="opt-dot"></div>2</div>
+              <div class="opt-toggle"   id="uwc-3" onclick="setUserRadio('wc','uwc-3',3)"><div class="opt-dot"></div>3</div>
+            </div>
+          </div>
+          <div class="util-group">
+            <p class="tool-sublabel">separator</p>
+            <div class="options-row">
+              <div class="opt-toggle on" id="usep-none"  onclick="setUserRadio('sep','usep-none','')"><div class="opt-dot"></div>none</div>
+              <div class="opt-toggle"   id="usep-under" onclick="setUserRadio('sep','usep-under','_')"><div class="opt-dot"></div>_</div>
+              <div class="opt-toggle"   id="usep-dot"   onclick="setUserRadio('sep','usep-dot','.')"><div class="opt-dot"></div>.</div>
+              <div class="opt-toggle"   id="usep-dash"  onclick="setUserRadio('sep','usep-dash','-')"><div class="opt-dot"></div>-</div>
+            </div>
+          </div>
+          <div class="util-group">
+            <p class="tool-sublabel">case</p>
+            <div class="options-row">
+              <div class="opt-toggle"   id="ucase-lower" onclick="setUserRadio('case','ucase-lower','lower')"><div class="opt-dot"></div>lower</div>
+              <div class="opt-toggle on" id="ucase-title" onclick="setUserRadio('case','ucase-title','title')"><div class="opt-dot"></div>Title</div>
+              <div class="opt-toggle"   id="ucase-upper" onclick="setUserRadio('case','ucase-upper','upper')"><div class="opt-dot"></div>UPPER</div>
+              <div class="opt-toggle"   id="ucase-camel" onclick="setUserRadio('case','ucase-camel','camel')"><div class="opt-dot"></div>camel</div>
+            </div>
+          </div>
+          <div class="util-group">
+            <p class="tool-sublabel">numbers</p>
+            <div class="options-row">
+              <div class="opt-toggle on" id="unum-none"   onclick="setUserRadio('num','unum-none','none')"><div class="opt-dot"></div>none</div>
+              <div class="opt-toggle"   id="unum-prefix" onclick="setUserRadio('num','unum-prefix','prefix')"><div class="opt-dot"></div>prefix</div>
+              <div class="opt-toggle"   id="unum-suffix" onclick="setUserRadio('num','unum-suffix','suffix')"><div class="opt-dot"></div>suffix</div>
+            </div>
+          </div>
+          <div class="util-group" id="udig-group" style="opacity:0.35;pointer-events:none;transition:opacity 0.2s">
+            <p class="tool-sublabel">digits</p>
+            <div class="options-row">
+              <div class="opt-toggle"   id="udig-2" onclick="setUserRadio('dig','udig-2',2)"><div class="opt-dot"></div>2</div>
+              <div class="opt-toggle on" id="udig-3" onclick="setUserRadio('dig','udig-3',3)"><div class="opt-dot"></div>3</div>
+              <div class="opt-toggle"   id="udig-4" onclick="setUserRadio('dig','udig-4',4)"><div class="opt-dot"></div>4</div>
+            </div>
+          </div>
+        </div>
+
         <div class="btn-row">
           <button class="btn accent" onclick="generateUser()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
@@ -798,30 +871,77 @@
   generatePass();
 
   // Username Generator
-  const adjectives = ['silent','cosmic','golden','phantom','crystal','swift','wild','lunar','solar','neon','cyber','frozen','shadow','crimson','hollow','ancient','blazing','iron','velvet','ashen','stormy','lost','bright','dark','bold','jade','free','calm','epic','void','nova','zen','mystic','astro','echo','apex','prime','feral','obsidian','amber'];
-  const nouns = ['wolf','fox','hawk','eagle','bear','tiger','shark','raven','viper','phoenix','dragon','panda','lynx','owl','crow','blade','stone','flash','arrow','spark','wave','peak','orbit','nexus','pulse','forge','crest','drift','surge','flare','comet','dusk','reef','wraith','specter','cipher','nomad','ranger','herald','warden'];
+  const USER_POOLS = {
+    adj:     ['silent','cosmic','swift','wild','phantom','crystal','hollow','ancient','blazing','frozen','stormy','bold','calm','feral','amber','ashen','velvet','iron','bright','dark','clever','nimble','fierce','lunar','solar','neon','lost','golden','sly','grim','keen','vague','wired','lucky','odd','grave','heavy','sharp','sleek','stark'],
+    animals: ['wolf','fox','hawk','eagle','bear','tiger','shark','raven','viper','phoenix','dragon','panda','lynx','owl','crow','cobra','falcon','hyena','jackal','mantis','mamba','osprey','wolverine','bison','gecko','moose','pelican','weasel','badger','otter','ibis','kestrel','marmot','narwhal','quokka','tapir'],
+    colors:  ['crimson','azure','scarlet','indigo','violet','amber','ivory','cobalt','teal','jade','onyx','silver','golden','obsidian','sapphire','coral','magenta','turquoise','emerald','maroon','lavender','vermillion','charcoal','ochre','umber','sienna','cerulean','viridian'],
+    tech:    ['cyber','pixel','neon','binary','vector','codec','matrix','kernel','daemon','flux','nexus','cipher','proxy','quantum','node','byte','hex','nano','grid','core','mesh','sync','signal','pulse','data','bit','stack','cache','socket','shader','tensor','voxel','drone','router','lambda'],
+    nature:  ['storm','river','peak','forest','ocean','crater','dusk','dawn','frost','ember','glacier','canyon','mesa','delta','summit','vale','ridge','reef','tundra','geyser','lagoon','torrent','cavern','boulder','thicket','squall','cinder','marsh','hollow','rapids'],
+    fantasy: ['mystic','arcane','rune','shadow','wraith','specter','astral','ethereal','oracle','druid','sorcerer','paladin','ranger','warden','herald','sentinel','vanguard','revenant','eldritch','abyssal','cursed','gilded','hallowed','forsaken','omen','sigil','grimoire','hex','banshee','golem'],
+  };
 
-  function toggleUserOpt(el) {
+  const userState = { pools: new Set(['adj','animals']), wc: 2, sep: '', caseStyle: 'title', num: 'none', dig: 3 };
+
+  const userRadioGroups = {
+    wc:   ['uwc-1','uwc-2','uwc-3'],
+    sep:  ['usep-none','usep-under','usep-dot','usep-dash'],
+    case: ['ucase-lower','ucase-title','ucase-upper','ucase-camel'],
+    num:  ['unum-none','unum-prefix','unum-suffix'],
+    dig:  ['udig-2','udig-3','udig-4'],
+  };
+
+  function togglePool(el) {
+    const key = el.id.replace('upool-', '');
     el.classList.toggle('on');
+    if (el.classList.contains('on')) userState.pools.add(key);
+    else userState.pools.delete(key);
+    generateUser();
+  }
+
+  function setUserRadio(group, activeId, value) {
+    userRadioGroups[group].forEach(id => document.getElementById(id).classList.remove('on'));
+    document.getElementById(activeId).classList.add('on');
+    if (group === 'wc')   userState.wc        = value;
+    if (group === 'sep')  userState.sep       = value;
+    if (group === 'case') userState.caseStyle = value;
+    if (group === 'num')  {
+      userState.num = value;
+      const digGroup = document.getElementById('udig-group');
+      digGroup.style.opacity      = value === 'none' ? '0.35' : '1';
+      digGroup.style.pointerEvents = value === 'none' ? 'none' : 'auto';
+    }
+    if (group === 'dig')  userState.dig       = value;
     generateUser();
   }
 
   function generateUser() {
-    const capitalize = document.getElementById('uopt-cap').classList.contains('on');
-    const addNums    = document.getElementById('uopt-nums').classList.contains('on');
-    const addSep     = document.getElementById('uopt-sep').classList.contains('on');
+    let pool = [];
+    userState.pools.forEach(k => pool = pool.concat(USER_POOLS[k]));
+    if (!pool.length) { document.getElementById('user-output').textContent = '—'; return; }
 
-    const adj  = adjectives[Math.floor(Math.random() * adjectives.length)];
-    const noun = nouns[Math.floor(Math.random() * nouns.length)];
+    const rnd = new Uint32Array(userState.wc);
+    crypto.getRandomValues(rnd);
+    const words = Array.from(rnd, v => pool[v % pool.length]);
 
-    const fmt = w => capitalize ? w.charAt(0).toUpperCase() + w.slice(1) : w;
-    const sep = addSep ? '_' : '';
-    let name = fmt(adj) + sep + fmt(noun);
+    const fmt = (w, i) => {
+      if (userState.caseStyle === 'upper') return w.toUpperCase();
+      if (userState.caseStyle === 'lower') return w.toLowerCase();
+      if (userState.caseStyle === 'title') return w[0].toUpperCase() + w.slice(1).toLowerCase();
+      if (userState.caseStyle === 'camel') return i === 0 ? w.toLowerCase() : w[0].toUpperCase() + w.slice(1).toLowerCase();
+      return w;
+    };
 
-    if (addNums) {
-      const arr = new Uint32Array(1);
-      crypto.getRandomValues(arr);
-      name += (arr[0] % 9000) + 100;
+    let name = words.map(fmt).join(userState.sep);
+
+    if (userState.num !== 'none') {
+      const na = new Uint32Array(1);
+      crypto.getRandomValues(na);
+      const max = Math.pow(10, userState.dig);
+      const min = Math.pow(10, userState.dig - 1);
+      const num = (na[0] % (max - min)) + min;
+      name = userState.num === 'prefix'
+        ? num + userState.sep + name
+        : name + userState.sep + num;
     }
 
     document.getElementById('user-output').textContent = name;
