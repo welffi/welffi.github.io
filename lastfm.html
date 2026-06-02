@@ -756,6 +756,7 @@
     const avatarUrl   = img(u.image, 'large') || img(u.image, 'medium');
 
     const weekTotal  = parseInt(week.recenttracks['@attr'].total);
+    const estHours   = (weekTotal * 3.5) / 60;
     const avgPerDay  = (weekTotal / 7).toFixed(1);
 
     let hoursDisplay, hoursUnit;
