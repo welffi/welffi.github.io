@@ -843,9 +843,9 @@
 
       <div class="stat-grid">
         <div class="stat-card hero">
-          <div class="hero-number">${hoursDisplay}</div>
-          <div class="hero-unit">${hoursUnit}</div>
-          <div class="hero-sub">${fmt(weekTotal)} scrobbles · ~${avgPerDay}/day</div>
+          <div class="hero-number" id="hero-number">${hoursDisplay}</div>
+          <div class="hero-unit" id="hero-unit">${hoursUnit}</div>
+          <div class="hero-sub" id="hero-sub">${fmt(weekTotal)} scrobbles · ~${avgPerDay}/day · calculating exact hours...</div>
         </div>
         <div class="stat-card">
           <div class="stat-number">${fmt(weekTotal)}</div>
@@ -963,8 +963,23 @@
 
     updateBanCard(totalListenSecs, all.length, tracksWithRealDur);
 
-    // ── Integrity check: look at 7-day scrobbles sorted oldest → newest ──
+    // ── Update hero card with real 7-day listening time ──
     const week = all.filter(t => parseInt(t.date.uts) >= weekAgo);
+
+    let weekListenSecs = 0;
+    week.forEach(t => {
+      const dur = uniq[`${t.artist['#text']}|||${t.name}`]?.duration;
+      weekListenSecs += dur ?? FALLBACK_SECS;
+    });
+    const realWeekHrs = weekListenSecs / 3600;
+    const heroNum  = document.getElementById('hero-number');
+    const heroUnit = document.getElementById('hero-unit');
+    const heroSub  = document.getElementById('hero-sub');
+    if (heroNum) heroNum.textContent = realWeekHrs < 10 ? realWeekHrs.toFixed(1) : Math.round(realWeekHrs);
+    if (heroUnit) heroUnit.textContent = realWeekHrs >= 1 ? 'listening hours this week' : 'listening minutes this week';
+    if (heroSub) heroSub.textContent = `${fmt(week.length)} scrobbles · ~${(week.length / 7).toFixed(1)}/day`;
+
+    // ── Integrity check: sorted oldest → newest ──
     week.sort((a, b) => parseInt(a.date.uts) - parseInt(b.date.uts));
 
     const suspicious = [];
