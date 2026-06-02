@@ -678,7 +678,7 @@
 
   // Auto-load from ?user= param
   const _paramUser = new URLSearchParams(location.search).get('user');
-  if (_paramUser) { inpUser.value = _paramUser; setTimeout(handleSearch, 0); }
+  if (_paramUser) inpUser.value = _paramUser;
 
   function getRecents() { return JSON.parse(localStorage.getItem('lfm_recents') || '[]'); }
   function saveRecent(user) {
@@ -1203,6 +1203,9 @@
       </div>
       `;
   }
+
+  // ── Auto-load from URL param (runs after all functions defined) ──
+  if (_paramUser) handleSearch();
 </script>
 </body>
 </html>
