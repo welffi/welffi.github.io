@@ -499,6 +499,59 @@
     .suspicious-row { display: flex; flex-direction: column; gap: 0.1rem; }
     .suspicious-track { font-size: 0.67rem; color: var(--text); }
     .suspicious-detail { font-size: 0.56rem; color: var(--muted2); letter-spacing: 0.06em; }
+
+    /* ── Ban risk card ── */
+    .ban-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem 1rem 0.9rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+    }
+    .ban-card.danger  { border-color: rgba(232,114,111,0.3); background: rgba(232,114,111,0.04); }
+    .ban-card.warning { border-color: rgba(212,165,116,0.3); background: rgba(212,165,116,0.04); }
+
+    .ban-header { display: flex; align-items: baseline; gap: 0.6rem; }
+    .ban-pct {
+      font-family: 'Fraunces', serif;
+      font-size: 2.6rem;
+      font-weight: 100;
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+    .ban-pct-sub { font-size: 0.58rem; letter-spacing: 0.14em; color: var(--muted2); text-transform: lowercase; }
+
+    .ban-bar-wrap {
+      height: 5px;
+      background: var(--border2);
+      border-radius: 3px;
+      overflow: hidden;
+      position: relative;
+    }
+    .ban-bar {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .ban-details { display: flex; flex-direction: column; gap: 0.25rem; }
+    .ban-detail-row { display: flex; justify-content: space-between; align-items: center; }
+    .ban-detail-label { font-size: 0.56rem; color: var(--muted2); letter-spacing: 0.1em; text-transform: lowercase; }
+    .ban-detail-val   { font-size: 0.62rem; color: var(--text); letter-spacing: 0.06em; }
+    .ban-status {
+      font-size: 0.58rem;
+      letter-spacing: 0.12em;
+      padding: 0.25rem 0.6rem;
+      border-radius: 6px;
+      text-transform: lowercase;
+      align-self: flex-start;
+    }
+    .ban-status.safe     { color: #4ade80; background: rgba(74,222,128,0.08); border: 1px solid rgba(74,222,128,0.18); }
+    .ban-status.caution  { color: var(--accent2); background: rgba(212,165,116,0.08); border: 1px solid rgba(212,165,116,0.2); }
+    .ban-status.danger   { color: var(--red); background: rgba(232,114,111,0.08); border: 1px solid rgba(232,114,111,0.2); }
+    .ban-status.banned   { color: var(--red); background: rgba(232,114,111,0.12); border: 1px solid rgba(232,114,111,0.3); font-weight: 500; }
   </style>
 </head>
 <body>
@@ -647,8 +700,9 @@
   }
 
   async function loadStats(user) {
-    const now     = Math.floor(Date.now() / 1000);
-    const weekAgo = now - 7 * 24 * 60 * 60;
+    const now      = Math.floor(Date.now() / 1000);
+    const weekAgo  = now - 7 * 24 * 60 * 60;
+    const eightAgo = now - 8 * 24 * 60 * 60;
 
     const [info, week, topArtists, topTracks, topAlbums, recent] = await Promise.all([
       lfm('user.getInfo',         API_KEY, { user }),
@@ -662,10 +716,12 @@
     renderResults({ info, week, topArtists, topTracks, topAlbums, recent });
     show('page-results');
 
-    // Run integrity check in the background — updates badge when done
-    runIntegrityCheck(user).catch(() => {
+    // Background analysis: fetches real durations, updates ban card + integrity badge
+    runAnalysis(user).catch(() => {
       const b = document.querySelector('.integrity-badge');
       if (b) b.innerHTML = `<span class="badge badge-error">~ couldn't check</span>`;
+      const bc = document.getElementById('ban-card');
+      if (bc) bc.querySelector('.ban-pct-sub').textContent = 'calculation failed';
     });
   }
 
@@ -700,7 +756,6 @@
     const avatarUrl   = img(u.image, 'large') || img(u.image, 'medium');
 
     const weekTotal  = parseInt(week.recenttracks['@attr'].total);
-    const estHours   = (weekTotal * 3.5) / 60;
     const avgPerDay  = (weekTotal / 7).toFixed(1);
 
     let hoursDisplay, hoursUnit;
@@ -789,7 +844,7 @@
         <div class="stat-card hero">
           <div class="hero-number">${hoursDisplay}</div>
           <div class="hero-unit">${hoursUnit}</div>
-          <div class="hero-sub">${fmt(weekTotal)} scrobbles · ~${avgPerDay}/day · est. at 3.5 min avg</div>
+          <div class="hero-sub">${fmt(weekTotal)} scrobbles · ~${avgPerDay}/day</div>
         </div>
         <div class="stat-card">
           <div class="stat-number">${fmt(weekTotal)}</div>
@@ -802,6 +857,19 @@
         <div class="stat-card">
           <div class="stat-number">${fmt(totalPlays)}</div>
           <div class="stat-label">all-time<br>scrobbles</div>
+        </div>
+      </div>
+
+      <div class="ban-card" id="ban-card" style="animation-delay:0.08s">
+        <div class="section-head" style="margin-bottom:0">
+          <span class="section-label">leaderboard ban risk · 8-day rolling window</span>
+        </div>
+        <div class="ban-header">
+          <span class="ban-pct" style="color:var(--muted2)">—</span>
+          <span class="ban-pct-sub" style="animation:blink 2s ease infinite">fetching real track durations...</span>
+        </div>
+        <div class="ban-bar-wrap">
+          <div class="ban-bar" style="width:0%;background:var(--muted)"></div>
         </div>
       </div>
 
@@ -831,35 +899,28 @@
     `;
   }
 
-  // ── Integrity check ──
-  async function runIntegrityCheck(user) {
-    const now     = Math.floor(Date.now() / 1000);
-    const weekAgo = now - 7 * 24 * 60 * 60;
+  // ── Background analysis: real durations → ban risk + integrity check ──
+  async function runAnalysis(user) {
+    const now      = Math.floor(Date.now() / 1000);
+    const eightAgo = now - 8 * 24 * 60 * 60;
+    const weekAgo  = now - 7 * 24 * 60 * 60;
 
-    // Fetch page 1 to learn total pages
+    // Fetch all 8-day scrobbles (paginated, cap 10 pages = 2000 tracks)
     const page1 = await lfm('user.getRecentTracks', API_KEY, {
-      user, from: weekAgo, to: now, limit: 200, page: 1
+      user, from: eightAgo, to: now, limit: 200, page: 1
     });
-    const attr       = page1.recenttracks['@attr'];
-    const totalPages = Math.min(parseInt(attr.totalPages), 10); // cap at 2000 scrobbles
-
+    const totalPages = Math.min(parseInt(page1.recenttracks['@attr'].totalPages), 10);
     let all = toArr(page1.recenttracks.track).filter(t => t.date);
 
-    // Fetch remaining pages in parallel
     if (totalPages > 1) {
       const rest = await Promise.all(
         Array.from({ length: totalPages - 1 }, (_, i) =>
           lfm('user.getRecentTracks', API_KEY, {
-            user, from: weekAgo, to: now, limit: 200, page: i + 2
+            user, from: eightAgo, to: now, limit: 200, page: i + 2
           })
         )
       );
       rest.forEach(p => all = all.concat(toArr(p.recenttracks.track).filter(t => t.date)));
-    }
-
-    if (all.length < 2) {
-      setBadgeClean(all.length);
-      return;
     }
 
     // Build unique track map
@@ -869,8 +930,8 @@
       if (!uniq[key]) uniq[key] = { artist: t.artist['#text'], name: t.name, duration: null };
     });
 
-    // Batch-fetch durations (track.getInfo returns ms)
-    const keys = Object.keys(uniq).slice(0, 200);
+    // Batch-fetch actual durations from Last.fm (returns milliseconds)
+    const keys = Object.keys(uniq).slice(0, 300);
     const BATCH = 8;
     for (let i = 0; i < keys.length; i += BATCH) {
       await Promise.all(
@@ -881,42 +942,47 @@
               track:  uniq[key].name
             });
             const ms = parseInt(d.track?.duration);
-            if (ms > 0) uniq[key].duration = ms / 1000; // → seconds
-          } catch { /* ignore missing tracks */ }
+            if (ms > 0) uniq[key].duration = ms / 1000; // ms → seconds
+          } catch {}
         })
       );
     }
 
-    // Sort scrobbles oldest → newest
-    all.sort((a, b) => parseInt(a.date.uts) - parseInt(b.date.uts));
+    // ── Ban risk: sum real durations over 8-day window ──
+    const FALLBACK_SECS = 210; // only used for tracks with no duration in Last.fm db
+    const BAN_LIMIT_SECS = 6 * 24 * 3600; // 144 hours
 
-    // Check consecutive gaps
+    let totalListenSecs = 0;
+    let tracksWithRealDur = 0;
+    all.forEach(t => {
+      const dur = uniq[`${t.artist['#text']}|||${t.name}`]?.duration;
+      if (dur) { totalListenSecs += dur; tracksWithRealDur++; }
+      else      { totalListenSecs += FALLBACK_SECS; }
+    });
+
+    updateBanCard(totalListenSecs, all.length, tracksWithRealDur);
+
+    // ── Integrity check: look at 7-day scrobbles sorted oldest → newest ──
+    const week = all.filter(t => parseInt(t.date.uts) >= weekAgo);
+    week.sort((a, b) => parseInt(a.date.uts) - parseInt(b.date.uts));
+
     const suspicious = [];
-    for (let i = 1; i < all.length; i++) {
-      const prev    = all[i - 1];
-      const curr    = all[i];
-      const gap     = parseInt(curr.date.uts) - parseInt(prev.date.uts); // seconds
+    for (let i = 1; i < week.length; i++) {
+      const prev    = week[i - 1];
+      const curr    = week[i];
+      const gap     = parseInt(curr.date.uts) - parseInt(prev.date.uts);
       const prevDur = uniq[`${prev.artist['#text']}|||${prev.name}`]?.duration;
       const currDur = uniq[`${curr.artist['#text']}|||${curr.name}`]?.duration;
 
-      // A scrobble fires at the 50% mark (or 4 min, whichever is sooner).
-      // So for curr to have legitimately scrobbled, it must have played for
-      // at least min(currDur * 0.5, 240) seconds ≥ 30s minimum.
-      // If gap is smaller than that, it's impossible.
       const minGap = currDur
         ? Math.max(Math.min(currDur * 0.5, 240), 30)
         : (prevDur ? Math.min(prevDur * 0.4, 90) : 30);
 
       if (gap < minGap) {
         suspicious.push({
-          prevTrack:  prev.name,
-          prevArtist: prev.artist['#text'],
-          currTrack:  curr.name,
-          currArtist: curr.artist['#text'],
-          gap,
-          currDur,
-          prevDur,
-          ts: parseInt(curr.date.uts)
+          prevTrack: prev.name, prevArtist: prev.artist['#text'],
+          currTrack: curr.name, currArtist: curr.artist['#text'],
+          gap, currDur, prevDur
         });
       }
     }
@@ -925,47 +991,107 @@
     if (!badge) return;
 
     if (suspicious.length === 0) {
-      setBadgeClean(all.length);
-    } else {
-      // Deduplicate (same pair can appear multiple times)
-      const seen = new Set();
-      const unique = suspicious.filter(s => {
-        const k = `${s.prevTrack}|${s.currTrack}`;
-        if (seen.has(k)) return false;
-        seen.add(k);
-        return true;
-      });
+      badge.innerHTML = `<span class="badge badge-clean">✓ clean · ${week.length} scrobbles checked</span>`;
+      return;
+    }
 
-      function fmtSecs(s) {
-        if (!s) return '?';
-        return s >= 60 ? `${Math.floor(s/60)}m ${Math.round(s%60)}s` : `${Math.round(s)}s`;
-      }
+    // Deduplicate
+    const seen = new Set();
+    const uniqSusp = suspicious.filter(s => {
+      const k = `${s.prevTrack}|${s.currTrack}`;
+      return seen.has(k) ? false : (seen.add(k), true);
+    });
 
-      const rows = unique.slice(0, 5).map(s => `
-        <div class="suspicious-row">
-          <div class="suspicious-track">${s.currTrack} <span style="color:var(--muted2)">by ${s.currArtist}</span></div>
-          <div class="suspicious-detail">
-            scrobbled ${fmtSecs(s.gap)} after "${s.prevTrack}"
-            ${s.currDur ? `· needs ≥ ${fmtSecs(Math.min(s.currDur * 0.5, 240))} to scrobble legitimately` : ''}
-          </div>
-        </div>`).join('');
+    function fmtSecs(s) {
+      if (!s) return '?';
+      return s >= 60 ? `${Math.floor(s/60)}m ${Math.round(s%60)}s` : `${Math.round(s)}s`;
+    }
 
-      const extra = unique.length > 5 ? `<div class="suspicious-detail" style="margin-top:0.2rem">+ ${unique.length - 5} more</div>` : '';
+    const rows = uniqSusp.slice(0, 5).map(s => `
+      <div class="suspicious-row">
+        <div class="suspicious-track">${s.currTrack} <span style="color:var(--muted2)">by ${s.currArtist}</span></div>
+        <div class="suspicious-detail">
+          scrobbled ${fmtSecs(s.gap)} after "${s.prevTrack}"
+          ${s.currDur ? `· needs ≥ ${fmtSecs(Math.min(s.currDur * 0.5, 240))} to scrobble legitimately` : ''}
+        </div>
+      </div>`).join('');
 
-      badge.innerHTML = `
-        <span class="badge badge-cheater" onclick="this.closest('.integrity-badge').querySelector('.suspicious-list').classList.toggle('hidden')">
-          ⚠ cheater · ${suspicious.length} impossible scrobble${suspicious.length !== 1 ? 's' : ''}
-        </span>
-        <div class="suspicious-list hidden">
-          ${rows}
-          ${extra}
-        </div>`;
+    const extra = uniqSusp.length > 5
+      ? `<div class="suspicious-detail" style="margin-top:0.2rem">+ ${uniqSusp.length - 5} more</div>` : '';
+
+    badge.innerHTML = `
+      <span class="badge badge-cheater" onclick="this.closest('.integrity-badge').querySelector('.suspicious-list').classList.toggle('hidden')">
+        ⚠ cheater · ${suspicious.length} impossible scrobble${suspicious.length !== 1 ? 's' : ''}
+      </span>
+      <div class="suspicious-list hidden">
+        ${rows}
+        ${extra}
+      </div>`;
     }
   }
 
-  function setBadgeClean(count) {
-    const badge = document.querySelector('.integrity-badge');
-    if (badge) badge.innerHTML = `<span class="badge badge-clean">✓ clean · ${count} scrobbles checked</span>`;
+  function updateBanCard(totalSecs, scrobbleCount, realDurCount) {
+    const card = document.getElementById('ban-card');
+    if (!card) return;
+
+    const BAN_LIMIT_SECS = 6 * 24 * 3600; // 144 hrs
+    const banPct   = (totalSecs / BAN_LIMIT_SECS) * 100;
+    const barPct   = Math.min(banPct, 100);
+    const listenHrs  = (totalSecs / 3600).toFixed(1);
+    const remainHrs  = Math.max((BAN_LIMIT_SECS - totalSecs) / 3600, 0).toFixed(1);
+    const overHrs    = ((totalSecs - BAN_LIMIT_SECS) / 3600).toFixed(1);
+    const coverage   = Math.round((realDurCount / scrobbleCount) * 100);
+
+    let banColor, cardExtra, statusClass, statusText, banDisplay;
+    if (banPct >= 100) {
+      banColor = '#e8726f'; cardExtra = 'danger';
+      statusClass = 'banned'; statusText = '⚠ would be banned';
+      banDisplay = banPct > 999 ? '999+%' : banPct.toFixed(1) + '%';
+    } else if (banPct >= 75) {
+      banColor = '#e8a46f'; cardExtra = 'warning';
+      statusClass = 'danger'; statusText = 'approaching limit';
+      banDisplay = banPct.toFixed(1) + '%';
+    } else if (banPct >= 40) {
+      banColor = '#d4a574'; cardExtra = '';
+      statusClass = 'caution'; statusText = 'worth watching';
+      banDisplay = banPct.toFixed(1) + '%';
+    } else {
+      banColor = '#4ade80'; cardExtra = '';
+      statusClass = 'safe'; statusText = 'safe';
+      banDisplay = banPct.toFixed(1) + '%';
+    }
+
+    card.className = `ban-card ${cardExtra}`;
+    card.innerHTML = `
+      <div class="section-head" style="margin-bottom:0">
+        <span class="section-label">leaderboard ban risk · 8-day rolling window</span>
+      </div>
+      <div class="ban-header">
+        <span class="ban-pct" style="color:${banColor}">${banDisplay}</span>
+        <span class="ban-pct-sub">of ban threshold</span>
+      </div>
+      <div class="ban-bar-wrap">
+        <div class="ban-bar" style="width:${barPct}%;background:${banColor}"></div>
+      </div>
+      <div class="ban-details">
+        <div class="ban-detail-row">
+          <span class="ban-detail-label">actual listening (8 days)</span>
+          <span class="ban-detail-val">${listenHrs} hrs / 144 hr limit</span>
+        </div>
+        <div class="ban-detail-row">
+          <span class="ban-detail-label">${banPct >= 100 ? 'over limit by' : 'headroom remaining'}</span>
+          <span class="ban-detail-val" style="color:${banColor}">${banPct >= 100 ? '+' + overHrs : remainHrs} hrs</span>
+        </div>
+        <div class="ban-detail-row">
+          <span class="ban-detail-label">scrobbles counted</span>
+          <span class="ban-detail-val">${fmt(scrobbleCount)} tracks · ${coverage}% had real durations</span>
+        </div>
+        <div class="ban-detail-row">
+          <span class="ban-detail-label">window type</span>
+          <span class="ban-detail-val">rolling · drops off as scrobbles age out</span>
+        </div>
+      </div>
+      <span class="ban-status ${statusClass}">${statusText}</span>`;
   }
 </script>
 </body>
