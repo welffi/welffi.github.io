@@ -561,16 +561,12 @@
     .ban-status.danger   { color: var(--red); background: rgba(232,114,111,0.08); border: 1px solid rgba(232,114,111,0.2); }
     .ban-status.banned   { color: var(--red); background: rgba(232,114,111,0.12); border: 1px solid rgba(232,114,111,0.3); font-weight: 500; }
 
-    /* ── Skeleton ── */
-    .skel {
-      background: var(--surface2);
-      border-radius: 4px;
-      animation: skelPulse 1.6s ease-in-out infinite;
+    /* ── Slot-in animation ── */
+    @keyframes slotIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
-    @keyframes skelPulse {
-      0%, 100% { opacity: 0.35; }
-      50%       { opacity: 0.7; }
-    }
+    .slot-in { animation: slotIn 0.4s cubic-bezier(0.22,1,0.36,1) both; }
 
     /* ── Recent searches ── */
     .recent-searches { display: flex; flex-direction: column; gap: 0.5rem; }
@@ -760,11 +756,14 @@
   }
   function toArr(v) { if (!v) return []; return Array.isArray(v) ? v : [v]; }
 
-  function listItem(rank, imgUrl, name, sub, count, pct) {
+  function listItem(rank, imgUrl, name, sub, count, pct, imgId = null) {
+    const imgHtml = imgUrl
+      ? `<img class="list-img" src="${imgUrl}" alt="" onerror="this.outerHTML='<div class=list-img-ph></div>'" />`
+      : `<div class="list-img-ph"${imgId ? ` id="${imgId}"` : ''}></div>`;
     return `
       <div class="list-item">
         <span class="list-rank">${rank}</span>
-        ${imgUrl ? `<img class="list-img" src="${imgUrl}" alt="" onerror="this.outerHTML='<div class=list-img-ph></div>'" />` : `<div class="list-img-ph"></div>`}
+        ${imgHtml}
         <div class="list-body">
           <div class="list-name">${name}</div>
           ${sub ? `<div class="list-sub">${sub}</div>` : ''}
@@ -774,74 +773,31 @@
       </div>`;
   }
 
-  // ── Skeleton ──
-  function skelCard(h = '1.4rem', w = '55px') {
-    return `<div class="skel" style="height:${h};width:${w};border-radius:5px;margin:0 auto"></div>`;
-  }
-
-  function buildSkeleton() {
-    return `
-      <div class="profile-row" id="section-profile">
-        <div class="skel" style="width:50px;height:50px;border-radius:50%;flex-shrink:0"></div>
-        <div style="flex:1;display:flex;flex-direction:column;gap:0.5rem">
-          <div class="skel" style="width:130px;height:14px"></div>
-          <div class="skel" style="width:195px;height:10px"></div>
-        </div>
-      </div>
-
-      <div class="stat-grid" id="section-stats">
-        <div class="stat-card hero" style="display:flex;flex-direction:column;align-items:center;gap:0.8rem;justify-content:center">
-          <div class="skel" style="width:90px;height:3.6rem;border-radius:6px"></div>
-          <div class="skel" style="width:155px;height:9px"></div>
-          <div class="skel" style="width:190px;height:8px"></div>
-        </div>
-        <div class="stat-card" style="display:flex;flex-direction:column;align-items:center;gap:0.5rem;justify-content:center">
-          ${skelCard()} ${skelCard('8px','45px')}
-        </div>
-        <div class="stat-card" style="display:flex;flex-direction:column;align-items:center;gap:0.5rem;justify-content:center">
-          ${skelCard()} ${skelCard('8px','40px')}
-        </div>
-        <div class="stat-card" style="display:flex;flex-direction:column;align-items:center;gap:0.5rem;justify-content:center">
-          ${skelCard('1.4rem','65px')} ${skelCard('8px','45px')}
-        </div>
-      </div>
-
-      <div class="ban-card" id="ban-card">
-        <div class="section-head" style="margin-bottom:0">
-          <span class="section-label">leaderboard ban risk · 8-day rolling window</span>
-        </div>
-        <div class="ban-header">
-          <span class="ban-pct" style="color:var(--muted2)">—</span>
-          <span class="ban-pct-sub" style="animation:blink 2s ease infinite">fetching real track durations...</span>
-        </div>
-        <div class="ban-bar-wrap">
-          <div class="ban-bar" style="width:0%;background:var(--muted)"></div>
-        </div>
-      </div>
-
-      <div id="section-artists"></div>
-      <div id="section-tracks"></div>
-      <div id="section-albums"></div>
-      <div id="section-recent"></div>`;
-  }
-
-  // ── Fade a section in ──
-  function fadeIn(el, html) {
+  // ── Slot a section in ──
+  function slotIn(el, html) {
     el.innerHTML = html;
-    el.style.animation = 'none';
+    el.classList.remove('slot-in');
     void el.offsetHeight;
-    el.style.animation = 'fadeUp 0.45s cubic-bezier(0.22,1,0.36,1) both';
+    el.classList.add('slot-in');
   }
 
   // ── Progressive load ──
   function loadStats(user) {
-    document.getElementById('results-card').innerHTML = buildSkeleton();
+    // Empty card — sections append themselves as data arrives
+    const card = document.getElementById('results-card');
+    card.innerHTML = `
+      <div id="section-profile"></div>
+      <div id="section-stats"></div>
+      <div id="ban-card"></div>
+      <div id="section-artists"></div>
+      <div id="section-tracks"></div>
+      <div id="section-albums"></div>
+      <div id="section-recent"></div>`;
     show('page-results');
 
     const now     = Math.floor(Date.now() / 1000);
     const weekAgo = now - 7 * 24 * 60 * 60;
 
-    // Fire all requests simultaneously
     const infoP    = lfm('user.getInfo',         API_KEY, { user });
     const weekP    = lfm('user.getRecentTracks', API_KEY, { user, from: weekAgo, to: now, limit: 1 });
     const artistsP = lfm('user.getTopArtists',   API_KEY, { user, period: '7day', limit: 5 });
@@ -849,29 +805,31 @@
     const albumsP  = lfm('user.getTopAlbums',    API_KEY, { user, period: '7day', limit: 5 });
     const recentP  = lfm('user.getRecentTracks', API_KEY, { user, limit: 6 });
 
-    // Profile — if this fails the user doesn't exist, go back
     infoP.then(info => populateProfile(info)).catch(e => {
       show('page-input');
       showErr(e.message || 'user not found');
     });
 
-    // Hero stat grid needs both info + week count
     Promise.all([infoP, weekP])
       .then(([info, week]) => populateHero(info, week))
       .catch(() => {});
 
-    // Each section independently
     artistsP.then(d => populateSection('section-artists', 'top artists · 7 days', buildArtistRows(d))).catch(() => {});
-    tracksP .then(d => populateSection('section-tracks',  'top tracks · 7 days',  buildTrackRows(d))).catch(() => {});
+
+    tracksP.then(d => {
+      const { rows, tracks } = buildTrackRows(d);
+      if (!rows) return;
+      populateSection('section-tracks', 'top tracks · 7 days', rows);
+      loadTrackImages(tracks);
+    }).catch(() => {});
+
     albumsP .then(d => populateSection('section-albums',  'top albums · 7 days',  buildAlbumRows(d))).catch(() => {});
     recentP .then(d => populateRecent(d)).catch(() => {});
 
-    // Background analysis (duration fetching — updates ban card + hero + integrity)
+    // Background analysis — ban card slots in only when fully ready
     runAnalysis(user).catch(() => {
       const b = document.querySelector('.integrity-badge');
       if (b) b.innerHTML = `<span class="badge badge-error">~ couldn't check</span>`;
-      const bc = document.getElementById('ban-card');
-      if (bc) bc.querySelector?.('.ban-pct-sub')?.textContent && (bc.querySelector('.ban-pct-sub').textContent = 'calculation failed');
     });
   }
 
@@ -883,7 +841,7 @@
     const avatarUrl   = img(u.image, 'large') || img(u.image, 'medium');
     const el = document.getElementById('section-profile');
     if (!el) return;
-    fadeIn(el, `
+    slotIn(el, `
       ${avatarUrl
         ? `<img class="profile-avatar" src="${avatarUrl}" alt="${u.name}" />`
         : `<div class="profile-avatar-ph">♪</div>`}
@@ -912,7 +870,7 @@
     }
     const el = document.getElementById('section-stats');
     if (!el) return;
-    fadeIn(el, `
+    slotIn(el, `
       <div class="stat-card hero">
         <div class="hero-number" id="hero-number">${hoursDisplay}</div>
         <div class="hero-unit"   id="hero-unit">${hoursUnit}</div>
@@ -945,13 +903,26 @@
 
   function buildTrackRows(data) {
     const tracks = toArr(data.toptracks?.track);
-    if (!tracks.length) return null;
+    if (!tracks.length) return { rows: null, tracks: [] };
     const max = parseInt(tracks[0].playcount);
-    return tracks.map((t, i) => {
-      const cover = img(t.image,'small') || img(t.image,'medium');
-      return listItem(i+1, cover, t.name, t.artist.name, `${fmt(t.playcount)} plays`,
-        Math.round((parseInt(t.playcount)/max)*100));
-    }).join('');
+    const rows = tracks.map((t, i) =>
+      // Placeholder image with unique id — loadTrackImages() fills it in
+      listItem(i+1, null, t.name, t.artist.name, `${fmt(t.playcount)} plays`,
+        Math.round((parseInt(t.playcount)/max)*100), `timg-${i}`)
+    ).join('');
+    return { rows, tracks };
+  }
+
+  async function loadTrackImages(tracks) {
+    await Promise.all(tracks.map(async (t, i) => {
+      try {
+        const d = await lfm('track.getInfo', API_KEY, { artist: t.artist.name, track: t.name });
+        const albumImg = img(d.track?.album?.image, 'small') || img(d.track?.album?.image, 'medium');
+        if (!albumImg) return;
+        const ph = document.getElementById(`timg-${i}`);
+        if (ph) ph.outerHTML = `<img class="list-img" src="${albumImg}" alt="" onerror="this.outerHTML='<div class=list-img-ph></div>'" />`;
+      } catch {}
+    }));
   }
 
   function buildAlbumRows(data) {
@@ -969,7 +940,7 @@
     if (!rows) return;
     const el = document.getElementById(id);
     if (!el) return;
-    fadeIn(el, `
+    slotIn(el, `
       <div class="section-head"><span class="section-label">${label}</span></div>
       ${rows}`);
   }
@@ -1172,7 +1143,7 @@
     }
 
     card.className = `ban-card ${cardExtra}`;
-    card.innerHTML = `
+    slotIn(card, `
       <div class="section-head" style="margin-bottom:0">
         <span class="section-label">leaderboard ban risk · 8-day rolling window</span>
       </div>
@@ -1201,7 +1172,7 @@
           <span class="ban-detail-val">rolling · drops off as scrobbles age out</span>
         </div>
       </div>
-      `;
+      `);
   }
 
   // ── Auto-load from URL param (runs after all functions defined) ──
