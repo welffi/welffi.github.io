@@ -742,7 +742,12 @@
     url.searchParams.set('format', 'json');
     for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
     const r = await fetch(url);
-    if (!r.ok) throw new Error(`network error (${r.status})`);
+    if (!r.ok) {
+      if (r.status === 403) throw new Error('access denied — this profile may be private or suspended (403)');
+      if (r.status === 429) throw new Error('rate limited — too many requests, try again in a moment (429)');
+      if (r.status === 404) throw new Error('not found (404)');
+      throw new Error(`network error (${r.status})`);
+    }
     const d = await r.json();
     if (d.error) throw new Error(d.message);
     return d;
