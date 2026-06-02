@@ -4,6 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>last.fm stats · welffi</title>
+  <meta name="description" content="Look up Last.fm listening stats — hours this week, ban risk, top artists, tracks, and albums." />
+  <meta property="og:type"        content="website" />
+  <meta property="og:url"         content="https://welffi.github.io/lastfm.html" />
+  <meta property="og:site_name"   content="welffi" />
+  <meta property="og:title"       content="last.fm stats" />
+  <meta property="og:description" content="listening hours · ban risk · top artists, tracks &amp; albums · impossible scrobble check" />
+  <meta property="og:image"       content="https://i.imgur.com/c7moPaj.png" />
+  <meta name="theme-color"        content="#d4a574" />
   <link rel="icon" type="image/png" href="https://i.imgur.com/c7moPaj.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -668,6 +676,10 @@
   const inpUser = document.getElementById('inp-user');
   inpUser.value = localStorage.getItem('lfm_user') || '';
 
+  // Auto-load from ?user= param
+  const _paramUser = new URLSearchParams(location.search).get('user');
+  if (_paramUser) { inpUser.value = _paramUser; }
+
   function getRecents() { return JSON.parse(localStorage.getItem('lfm_recents') || '[]'); }
   function saveRecent(user) {
     const list = [user, ...getRecents().filter(u => u !== user)].slice(0, 6);
@@ -692,6 +704,7 @@
     ['page-input','page-results'].forEach(p =>
       document.getElementById(p).classList.toggle('hidden', p !== id)
     );
+    if (id === 'page-input') history.replaceState(null, '', location.pathname);
   }
   function showErr(msg) {
     const b = document.getElementById('err-box');
@@ -707,6 +720,7 @@
     localStorage.setItem('lfm_user', user);
     saveRecent(user);
     renderRecents();
+    history.replaceState(null, '', `?user=${encodeURIComponent(user)}`);
     loadStats(user);
   }
   document.getElementById('btn-search').addEventListener('click', handleSearch);
@@ -1187,7 +1201,7 @@
           <span class="ban-detail-val">rolling · drops off as scrobbles age out</span>
         </div>
       </div>
-      <span class="ban-status ${statusClass}">${statusText}</span>`;
+      `;
   }
 </script>
 </body>
