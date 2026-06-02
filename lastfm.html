@@ -611,6 +611,14 @@
   </div>
 </div>
 
+<!-- LOADING PAGE -->
+<div class="page hidden" id="page-loading">
+  <div class="loading-wrap">
+    <div class="spinner"></div>
+    <p class="loading-label">fetching stats...</p>
+  </div>
+</div>
+
 <!-- RESULTS PAGE -->
 <div class="page hidden" id="page-results">
   <div class="results-card" id="results-card"></div>
@@ -697,7 +705,7 @@
 
   // ── Pages ──
   function show(id) {
-    ['page-input','page-results'].forEach(p =>
+    ['page-input','page-loading','page-results'].forEach(p =>
       document.getElementById(p).classList.toggle('hidden', p !== id)
     );
     if (id === 'page-input') history.replaceState(null, '', location.pathname);
@@ -773,121 +781,94 @@
       </div>`;
   }
 
-  // ── Slot a section in ──
-  function slotIn(el, html) {
-    el.innerHTML = html;
-    el.classList.remove('slot-in');
-    void el.offsetHeight;
-    el.classList.add('slot-in');
-  }
-
-  // ── Progressive load ──
-  function loadStats(user) {
-    // Empty card — sections append themselves as data arrives
-    const card = document.getElementById('results-card');
-    card.innerHTML = `
-      <div id="section-profile"></div>
-      <div id="section-stats"></div>
-      <div id="ban-card"></div>
-      <div id="section-artists"></div>
-      <div id="section-tracks"></div>
-      <div id="section-albums"></div>
-      <div id="section-recent"></div>`;
-    show('page-results');
-
+  // ── Load & render ──
+  async function loadStats(user) {
+    show('page-loading');
     const now     = Math.floor(Date.now() / 1000);
     const weekAgo = now - 7 * 24 * 60 * 60;
-
-    const infoP    = lfm('user.getInfo',         API_KEY, { user });
-    const weekP    = lfm('user.getRecentTracks', API_KEY, { user, from: weekAgo, to: now, limit: 1 });
-    const artistsP = lfm('user.getTopArtists',   API_KEY, { user, period: '7day', limit: 5 });
-    const tracksP  = lfm('user.getTopTracks',    API_KEY, { user, period: '7day', limit: 5 });
-    const albumsP  = lfm('user.getTopAlbums',    API_KEY, { user, period: '7day', limit: 5 });
-    const recentP  = lfm('user.getRecentTracks', API_KEY, { user, limit: 6 });
-
-    infoP.then(info => populateProfile(info)).catch(e => {
+    try {
+      const [info, week, topArtists, topTracks, topAlbums, recent] = await Promise.all([
+        lfm('user.getInfo',         API_KEY, { user }),
+        lfm('user.getRecentTracks', API_KEY, { user, from: weekAgo, to: now, limit: 1 }),
+        lfm('user.getTopArtists',   API_KEY, { user, period: '7day', limit: 5 }),
+        lfm('user.getTopTracks',    API_KEY, { user, period: '7day', limit: 5 }),
+        lfm('user.getTopAlbums',    API_KEY, { user, period: '7day', limit: 5 }),
+        lfm('user.getRecentTracks', API_KEY, { user, limit: 6 }),
+      ]);
+      renderResults({ info, week, topArtists, topTracks, topAlbums, recent });
+      show('page-results');
+      runAnalysis(user).catch(() => {
+        const b = document.querySelector('.integrity-badge');
+        if (b) b.innerHTML = `<span class="badge badge-error">~ couldn't check</span>`;
+      });
+    } catch(e) {
       show('page-input');
       showErr(e.message || 'user not found');
-    });
-
-    Promise.all([infoP, weekP])
-      .then(([info, week]) => populateHero(info, week))
-      .catch(() => {});
-
-    artistsP.then(d => populateSection('section-artists', 'top artists · 7 days', buildArtistRows(d))).catch(() => {});
-
-    tracksP.then(d => {
-      const { rows, tracks } = buildTrackRows(d);
-      if (!rows) return;
-      populateSection('section-tracks', 'top tracks · 7 days', rows);
-      loadTrackImages(tracks);
-    }).catch(() => {});
-
-    albumsP .then(d => populateSection('section-albums',  'top albums · 7 days',  buildAlbumRows(d))).catch(() => {});
-    recentP .then(d => populateRecent(d)).catch(() => {});
-
-    // Background analysis — ban card slots in only when fully ready
-    runAnalysis(user).catch(() => {
-      const b = document.querySelector('.integrity-badge');
-      if (b) b.innerHTML = `<span class="badge badge-error">~ couldn't check</span>`;
-    });
+    }
   }
 
-  function populateProfile(info) {
-    const u = info.user;
+  function renderResults({ info, week, topArtists, topTracks, topAlbums, recent }) {
+    const u           = info.user;
     const totalPlays  = parseInt(u.playcount);
     const regDate     = new Date(parseInt(u.registered.unixtime) * 1000);
     const memberYears = ((Date.now() - regDate) / (1000*60*60*24*365)).toFixed(1);
     const avatarUrl   = img(u.image, 'large') || img(u.image, 'medium');
-    const el = document.getElementById('section-profile');
-    if (!el) return;
-    slotIn(el, `
-      ${avatarUrl
-        ? `<img class="profile-avatar" src="${avatarUrl}" alt="${u.name}" />`
-        : `<div class="profile-avatar-ph">♪</div>`}
-      <div class="profile-info">
-        <div class="profile-name">${u.name}</div>
-        <div class="profile-meta">${fmt(totalPlays)} total scrobbles · member for ${memberYears}y</div>
-        <div class="integrity-badge">
-          <span class="badge badge-checking">⟳ checking integrity...</span>
-        </div>
-      </div>
-      <button class="back-btn" onclick="show('page-input')">← back</button>`);
-  }
+    const weekTotal   = parseInt(week.recenttracks['@attr'].total);
+    const avgPerDay   = (weekTotal / 7).toFixed(1);
 
-  function populateHero(info, week) {
-    const weekTotal = parseInt(week.recenttracks['@attr'].total);
-    const estHours  = (weekTotal * 3.5) / 60;
-    const avgPerDay = (weekTotal / 7).toFixed(1);
-    const totalPlays = parseInt(info.user.playcount);
-    let hoursDisplay, hoursUnit;
-    if (estHours >= 1) {
-      hoursDisplay = estHours < 10 ? estHours.toFixed(1) : Math.round(estHours);
-      hoursUnit = 'listening hours this week';
-    } else {
-      hoursDisplay = Math.round(estHours * 60);
-      hoursUnit = 'listening minutes this week';
-    }
-    const el = document.getElementById('section-stats');
-    if (!el) return;
-    slotIn(el, `
-      <div class="stat-card hero">
-        <div class="hero-number" id="hero-number">${hoursDisplay}</div>
-        <div class="hero-unit"   id="hero-unit">${hoursUnit}</div>
-        <div class="hero-sub"    id="hero-sub">${fmt(weekTotal)} scrobbles · ~${avgPerDay}/day · calculating exact hours...</div>
+    const artistRows = buildArtistRows(topArtists);
+    const { rows: trackRows, tracks: trackList } = buildTrackRows(topTracks);
+    const albumRows  = buildAlbumRows(topAlbums);
+    const recents    = toArr(recent.recenttracks?.track).slice(0, 6);
+
+    const recentRows = recents.map(t => {
+      const isNow = t['@attr']?.nowplaying === 'true';
+      const cover = img(t.image,'small') || img(t.image,'medium');
+      const sub   = [t.artist['#text'], t.album?.['#text']].filter(Boolean).join(' · ');
+      return `
+        <div class="list-item${isNow ? ' nowplaying' : ''}">
+          ${isNow ? `<div class="nowplaying-dot"></div>` : `<span class="list-rank">♪</span>`}
+          ${cover ? `<img class="list-img" src="${cover}" alt="" onerror="this.outerHTML='<div class=list-img-ph></div>'" />` : `<div class="list-img-ph"></div>`}
+          <div class="list-body">
+            <div class="list-name">${t.name}</div>
+            <div class="list-sub">${sub}</div>
+          </div>
+          <div class="list-count">${isNow ? `<span style="color:var(--accent)">now</span>` : timeAgo(t.date?.uts)}</div>
+        </div>`;
+    }).join('');
+
+    document.getElementById('results-card').innerHTML = `
+      <div class="profile-row">
+        ${avatarUrl ? `<img class="profile-avatar" src="${avatarUrl}" alt="${u.name}" />` : `<div class="profile-avatar-ph">♪</div>`}
+        <div class="profile-info">
+          <div class="profile-name">${u.name}</div>
+          <div class="profile-meta">${fmt(totalPlays)} total scrobbles · member for ${memberYears}y</div>
+          <div class="integrity-badge"><span class="badge badge-checking">⟳ checking integrity...</span></div>
+        </div>
+        <button class="back-btn" onclick="show('page-input')">← back</button>
       </div>
-      <div class="stat-card">
-        <div class="stat-number">${fmt(weekTotal)}</div>
-        <div class="stat-label">scrobbles<br>this week</div>
+
+      <div class="stat-grid">
+        <div class="stat-card hero">
+          <div class="hero-number" id="hero-number" style="color:var(--muted2)">—</div>
+          <div class="hero-unit"   id="hero-unit"   style="animation:blink 2s ease infinite">calculating hours...</div>
+          <div class="hero-sub"    id="hero-sub">${fmt(weekTotal)} scrobbles · ~${avgPerDay}/day</div>
+        </div>
+        <div class="stat-card"><div class="stat-number">${fmt(weekTotal)}</div><div class="stat-label">scrobbles<br>this week</div></div>
+        <div class="stat-card"><div class="stat-number">${avgPerDay}</div><div class="stat-label">avg tracks<br>per day</div></div>
+        <div class="stat-card"><div class="stat-number">${fmt(totalPlays)}</div><div class="stat-label">all-time<br>scrobbles</div></div>
       </div>
-      <div class="stat-card">
-        <div class="stat-number">${avgPerDay}</div>
-        <div class="stat-label">avg tracks<br>per day</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-number">${fmt(totalPlays)}</div>
-        <div class="stat-label">all-time<br>scrobbles</div>
-      </div>`);
+
+      <div class="ban-card" id="ban-card"></div>
+
+      ${artistRows ? `<div class="section"><div class="section-head"><span class="section-label">top artists · 7 days</span></div>${artistRows}</div>` : ''}
+      ${trackRows  ? `<div class="section"><div class="section-head"><span class="section-label">top tracks · 7 days</span></div>${trackRows}</div>`  : ''}
+      ${albumRows  ? `<div class="section"><div class="section-head"><span class="section-label">top albums · 7 days</span></div>${albumRows}</div>`   : ''}
+      ${recentRows ? `<div class="section"><div class="section-head"><span class="section-label">recently played</span></div>${recentRows}</div>`      : ''}
+    `;
+
+    // Fetch real album art for top tracks
+    if (trackList.length) loadTrackImages(trackList);
   }
 
   function buildArtistRows(data) {
@@ -934,36 +915,6 @@
       return listItem(i+1, cover, a.name, a.artist.name, `${fmt(a.playcount)} plays`,
         Math.round((parseInt(a.playcount)/max)*100));
     }).join('');
-  }
-
-  function populateSection(id, label, rows) {
-    if (!rows) return;
-    const el = document.getElementById(id);
-    if (!el) return;
-    slotIn(el, `
-      <div class="section-head"><span class="section-label">${label}</span></div>
-      ${rows}`);
-  }
-
-  function populateRecent(data) {
-    const recents = toArr(data.recenttracks?.track).slice(0, 6);
-    if (!recents.length) return;
-    const rows = recents.map(t => {
-      const isNow = t['@attr']?.nowplaying === 'true';
-      const cover = img(t.image,'small') || img(t.image,'medium');
-      const sub   = [t.artist['#text'], t.album?.['#text']].filter(Boolean).join(' · ');
-      return `
-        <div class="list-item${isNow ? ' nowplaying' : ''}">
-          ${isNow ? `<div class="nowplaying-dot"></div>` : `<span class="list-rank">♪</span>`}
-          ${cover ? `<img class="list-img" src="${cover}" alt="" onerror="this.outerHTML='<div class=list-img-ph></div>'" />` : `<div class="list-img-ph"></div>`}
-          <div class="list-body">
-            <div class="list-name">${t.name}</div>
-            <div class="list-sub">${sub}</div>
-          </div>
-          <div class="list-count">${isNow ? `<span style="color:var(--accent)">now</span>` : timeAgo(t.date?.uts)}</div>
-        </div>`;
-    }).join('');
-    populateSection('section-recent', 'recently played', rows);
   }
 
   // ── Background analysis: real durations → ban risk + integrity check ──
@@ -1143,7 +1094,7 @@
     }
 
     card.className = `ban-card ${cardExtra}`;
-    slotIn(card, `
+    card.innerHTML = `
       <div class="section-head" style="margin-bottom:0">
         <span class="section-label">leaderboard ban risk · 8-day rolling window</span>
       </div>
@@ -1172,7 +1123,7 @@
           <span class="ban-detail-val">rolling · drops off as scrobbles age out</span>
         </div>
       </div>
-      `);
+      `;
   }
 
   // ── Auto-load from URL param (runs after all functions defined) ──
