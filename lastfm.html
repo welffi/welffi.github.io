@@ -561,6 +561,69 @@
     .ban-status.danger   { color: var(--red); background: rgba(232,114,111,0.08); border: 1px solid rgba(232,114,111,0.2); }
     .ban-status.banned   { color: var(--red); background: rgba(232,114,111,0.12); border: 1px solid rgba(232,114,111,0.3); font-weight: 500; }
 
+    /* ── Input note ── */
+    .input-note {
+      font-size: 0.52rem;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      text-align: center;
+      text-transform: lowercase;
+      line-height: 1.7;
+    }
+
+    /* ── Tabs card ── */
+    .tabs-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .tabs-header {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      padding: 0 0.4rem;
+    }
+    .tab-btn {
+      background: none;
+      border: none;
+      padding: 0.7rem 0.85rem;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.58rem;
+      letter-spacing: 0.15em;
+      color: var(--muted2);
+      cursor: pointer;
+      text-transform: lowercase;
+      position: relative;
+      transition: color 0.2s;
+    }
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active { color: var(--accent); }
+    .tab-btn.active::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0.5rem;
+      right: 0.5rem;
+      height: 1px;
+      background: var(--accent);
+    }
+    .tab-content { display: none; padding: 0.3rem 0; }
+    .tab-content.active { display: block; }
+
+    /* ── Artist rank number ── */
+    .artist-rank {
+      font-family: 'Fraunces', serif;
+      font-size: 1.4rem;
+      font-weight: 100;
+      color: var(--muted);
+      width: 38px;
+      text-align: right;
+      flex-shrink: 0;
+      letter-spacing: -0.02em;
+      line-height: 1;
+      padding-right: 2px;
+    }
+
     /* ── Slot-in animation ── */
     @keyframes slotIn {
       from { opacity: 0; transform: translateY(-10px); }
@@ -608,6 +671,7 @@
     <button class="btn-primary" id="btn-search">look up stats →</button>
 
     <div id="recent-searches"></div>
+    <p class="input-note">some profiles are private · heavy use may trigger rate limits</p>
   </div>
 </div>
 
@@ -791,25 +855,40 @@
     show('page-loading');
     const now     = Math.floor(Date.now() / 1000);
     const weekAgo = now - 7 * 24 * 60 * 60;
+
+    // Profile is required — fail fast if it errors
+    let info;
     try {
-      const [info, week, topArtists, topTracks, topAlbums, recent] = await Promise.all([
-        lfm('user.getInfo',         API_KEY, { user }),
-        lfm('user.getRecentTracks', API_KEY, { user, from: weekAgo, to: now, limit: 1 }),
-        lfm('user.getTopArtists',   API_KEY, { user, period: '7day', limit: 5 }),
-        lfm('user.getTopTracks',    API_KEY, { user, period: '7day', limit: 5 }),
-        lfm('user.getTopAlbums',    API_KEY, { user, period: '7day', limit: 5 }),
-        lfm('user.getRecentTracks', API_KEY, { user, limit: 6 }),
-      ]);
-      renderResults({ info, week, topArtists, topTracks, topAlbums, recent });
-      show('page-results');
-      runAnalysis(user).catch(() => {
-        const b = document.querySelector('.integrity-badge');
-        if (b) b.innerHTML = `<span class="badge badge-error">~ couldn't check</span>`;
-      });
+      info = await lfm('user.getInfo', API_KEY, { user });
     } catch(e) {
       show('page-input');
       showErr(e.message || 'user not found');
+      return;
     }
+
+    // Everything else loads gracefully — private or failed sections just show nothing
+    const settled = await Promise.allSettled([
+      lfm('user.getRecentTracks', API_KEY, { user, from: weekAgo, to: now, limit: 1 }),
+      lfm('user.getTopArtists',   API_KEY, { user, period: '7day', limit: 5 }),
+      lfm('user.getTopTracks',    API_KEY, { user, period: '7day', limit: 5 }),
+      lfm('user.getTopAlbums',    API_KEY, { user, period: '7day', limit: 5 }),
+      lfm('user.getRecentTracks', API_KEY, { user, limit: 6 }),
+    ]);
+    const ok = r => r.status === 'fulfilled' ? r.value : null;
+
+    renderResults({
+      info,
+      week:       ok(settled[0]),
+      topArtists: ok(settled[1]),
+      topTracks:  ok(settled[2]),
+      topAlbums:  ok(settled[3]),
+      recent:     ok(settled[4]),
+    });
+    show('page-results');
+    runAnalysis(user).catch(() => {
+      const b = document.querySelector('.integrity-badge');
+      if (b) b.innerHTML = `<span class="badge badge-error">~ couldn't check</span>`;
+    });
   }
 
   function renderResults({ info, week, topArtists, topTracks, topAlbums, recent }) {
@@ -818,13 +897,13 @@
     const regDate     = new Date(parseInt(u.registered.unixtime) * 1000);
     const memberYears = ((Date.now() - regDate) / (1000*60*60*24*365)).toFixed(1);
     const avatarUrl   = img(u.image, 'large') || img(u.image, 'medium');
-    const weekTotal   = parseInt(week.recenttracks['@attr'].total);
-    const avgPerDay   = (weekTotal / 7).toFixed(1);
+    const weekTotal   = week ? parseInt(week.recenttracks['@attr'].total) : null;
+    const avgPerDay   = weekTotal ? (weekTotal / 7).toFixed(1) : '—';
 
     const artistRows = buildArtistRows(topArtists);
     const { rows: trackRows, tracks: trackList } = buildTrackRows(topTracks);
     const albumRows  = buildAlbumRows(topAlbums);
-    const recents    = toArr(recent.recenttracks?.track).slice(0, 6);
+    const recents    = toArr(recent?.recenttracks?.track).slice(0, 6);
 
     const recentRows = recents.map(t => {
       const isNow = t['@attr']?.nowplaying === 'true';
@@ -842,6 +921,10 @@
         </div>`;
     }).join('');
 
+    const hasTabs = artistRows || trackRows || albumRows;
+    // Default active tab: first available
+    const firstTab = artistRows ? 'artists' : trackRows ? 'tracks' : 'albums';
+
     document.getElementById('results-card').innerHTML = `
       <div class="profile-row">
         ${avatarUrl ? `<img class="profile-avatar" src="${avatarUrl}" alt="${u.name}" />` : `<div class="profile-avatar-ph">♪</div>`}
@@ -857,38 +940,60 @@
         <div class="stat-card hero">
           <div class="hero-number" id="hero-number" style="color:var(--muted2)">—</div>
           <div class="hero-unit"   id="hero-unit"   style="animation:blink 2s ease infinite">calculating hours...</div>
-          <div class="hero-sub"    id="hero-sub">${fmt(weekTotal)} scrobbles · ~${avgPerDay}/day</div>
+          <div class="hero-sub"    id="hero-sub">${weekTotal ? `${fmt(weekTotal)} scrobbles · ~${avgPerDay}/day` : 'recent tracks private'}</div>
         </div>
-        <div class="stat-card"><div class="stat-number">${fmt(weekTotal)}</div><div class="stat-label">scrobbles<br>this week</div></div>
+        <div class="stat-card"><div class="stat-number">${weekTotal ? fmt(weekTotal) : '—'}</div><div class="stat-label">scrobbles<br>this week</div></div>
         <div class="stat-card"><div class="stat-number">${avgPerDay}</div><div class="stat-label">avg tracks<br>per day</div></div>
         <div class="stat-card"><div class="stat-number">${fmt(totalPlays)}</div><div class="stat-label">all-time<br>scrobbles</div></div>
       </div>
 
       <div class="ban-card" id="ban-card"></div>
 
-      ${artistRows ? `<div class="section"><div class="section-head"><span class="section-label">top artists · 7 days</span></div>${artistRows}</div>` : ''}
-      ${trackRows  ? `<div class="section"><div class="section-head"><span class="section-label">top tracks · 7 days</span></div>${trackRows}</div>`  : ''}
-      ${albumRows  ? `<div class="section"><div class="section-head"><span class="section-label">top albums · 7 days</span></div>${albumRows}</div>`   : ''}
-      ${recentRows ? `<div class="section"><div class="section-head"><span class="section-label">recently played</span></div>${recentRows}</div>`      : ''}
+      ${hasTabs ? `
+      <div class="tabs-card">
+        <div class="tabs-header">
+          ${artistRows ? `<button class="tab-btn${firstTab==='artists'?' active':''}" onclick="switchTab('artists')">artists</button>` : ''}
+          ${trackRows  ? `<button class="tab-btn${firstTab==='tracks' ?' active':''}" onclick="switchTab('tracks')">tracks</button>`   : ''}
+          ${albumRows  ? `<button class="tab-btn${firstTab==='albums' ?' active':''}" onclick="switchTab('albums')">albums</button>`   : ''}
+        </div>
+        ${artistRows ? `<div class="tab-content${firstTab==='artists'?' active':''}" id="tab-artists">${artistRows}</div>` : ''}
+        ${trackRows  ? `<div class="tab-content${firstTab==='tracks' ?' active':''}" id="tab-tracks">${trackRows}</div>`   : ''}
+        ${albumRows  ? `<div class="tab-content${firstTab==='albums' ?' active':''}" id="tab-albums">${albumRows}</div>`   : ''}
+      </div>` : ''}
+
+      ${recentRows.length ? `<div class="section"><div class="section-head"><span class="section-label">recently played</span></div>${recentRows}</div>` : ''}
+      ${!recent ? `<div class="section"><div class="section-head"><span class="section-label">recently played</span></div><p style="font-size:0.62rem;color:var(--muted2);padding:0.8rem 0.7rem">recent tracks are private</p></div>` : ''}
     `;
 
-    // Fetch real album art for top tracks
     if (trackList.length) loadTrackImages(trackList);
   }
 
+  function switchTab(name) {
+    ['artists','tracks','albums'].forEach(t => {
+      const content = document.getElementById(`tab-${t}`);
+      const btn = document.querySelector(`.tab-btn[onclick="switchTab('${t}')"]`);
+      if (content) content.classList.toggle('active', t === name);
+      if (btn)     btn.classList.toggle('active', t === name);
+    });
+  }
+
   function buildArtistRows(data) {
-    const artists = toArr(data.topartists?.artist);
+    const artists = toArr(data?.topartists?.artist);
     if (!artists.length) return null;
     const max = parseInt(artists[0].playcount);
-    return artists.map((a, i) => {
-      const cover = img(a.image,'small') || img(a.image,'medium');
-      return listItem(i+1, cover, a.name, null, `${fmt(a.playcount)} plays`,
-        Math.round((parseInt(a.playcount)/max)*100));
-    }).join('');
+    return artists.map((a, i) => `
+      <div class="list-item">
+        <span class="artist-rank">${String(i+1).padStart(2,'0')}</span>
+        <div class="list-body">
+          <div class="list-name">${a.name}</div>
+          <div class="bar-wrap"><div class="bar" style="width:${Math.round((parseInt(a.playcount)/max)*100)}%"></div></div>
+        </div>
+        <div class="list-count">${fmt(a.playcount)} plays</div>
+      </div>`).join('');
   }
 
   function buildTrackRows(data) {
-    const tracks = toArr(data.toptracks?.track);
+    const tracks = toArr(data?.toptracks?.track);
     if (!tracks.length) return { rows: null, tracks: [] };
     const max = parseInt(tracks[0].playcount);
     const rows = tracks.map((t, i) =>
@@ -912,7 +1017,7 @@
   }
 
   function buildAlbumRows(data) {
-    const albums = toArr(data.topalbums?.album);
+    const albums = toArr(data?.topalbums?.album);
     if (!albums.length) return null;
     const max = parseInt(albums[0].playcount);
     return albums.map((a, i) => {
