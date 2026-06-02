@@ -483,7 +483,7 @@
     }
     .badge-checking { color: var(--muted2); background: rgba(105,94,82,0.1); border: 1px solid var(--border2); animation: blink 2s ease infinite; }
     .badge-clean    { color: #4ade80; background: rgba(74,222,128,0.08); border: 1px solid rgba(74,222,128,0.2); }
-    .badge-cheater  { color: var(--red); background: rgba(232,114,111,0.09); border: 1px solid rgba(232,114,111,0.25); cursor: pointer; }
+    .badge-caution  { color: var(--accent2); background: rgba(212,165,116,0.08); border: 1px solid rgba(212,165,116,0.22); cursor: pointer; }
     .badge-error    { color: var(--muted2); background: transparent; border: 1px solid var(--border2); }
 
     .suspicious-list {
@@ -910,7 +910,7 @@
     const page1 = await lfm('user.getRecentTracks', API_KEY, {
       user, from: eightAgo, to: now, limit: 200, page: 1
     });
-    const totalPages = Math.min(parseInt(page1.recenttracks['@attr'].totalPages), 10);
+    const totalPages = parseInt(page1.recenttracks['@attr'].totalPages);
     let all = toArr(page1.recenttracks.track).filter(t => t.date);
 
     if (totalPages > 1) {
@@ -932,8 +932,8 @@
     });
 
     // Batch-fetch actual durations from Last.fm (returns milliseconds)
-    const keys = Object.keys(uniq).slice(0, 300);
-    const BATCH = 8;
+    const keys = Object.keys(uniq);
+    const BATCH = 15;
     for (let i = 0; i < keys.length; i += BATCH) {
       await Promise.all(
         keys.slice(i, i + BATCH).map(async key => {
@@ -1036,8 +1036,8 @@
       ? `<div class="suspicious-detail" style="margin-top:0.2rem">+ ${uniqSusp.length - 5} more</div>` : '';
 
     badge.innerHTML = `
-      <span class="badge badge-cheater" onclick="this.closest('.integrity-badge').querySelector('.suspicious-list').classList.toggle('hidden')">
-        ⚠ cheater · ${suspicious.length} impossible scrobble${suspicious.length !== 1 ? 's' : ''}
+      <span class="badge badge-caution" onclick="this.closest('.integrity-badge').querySelector('.suspicious-list').classList.toggle('hidden')">
+        ${suspicious.length} impossible scrobble${suspicious.length !== 1 ? 's' : ''} · click to expand
       </span>
       <div class="suspicious-list hidden">
         ${rows}
