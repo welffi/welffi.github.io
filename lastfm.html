@@ -466,6 +466,39 @@
       0%, 100% { opacity: 1; }
       50% { opacity: 0.4; }
     }
+
+    /* ── Integrity badge ── */
+    .integrity-badge { display: flex; align-items: center; gap: 0.4rem; margin-top: 0.35rem; flex-wrap: wrap; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-size: 0.52rem;
+      letter-spacing: 0.12em;
+      padding: 0.18rem 0.5rem;
+      border-radius: 5px;
+      font-weight: 400;
+      text-transform: lowercase;
+      cursor: default;
+    }
+    .badge-checking { color: var(--muted2); background: rgba(105,94,82,0.1); border: 1px solid var(--border2); animation: blink 2s ease infinite; }
+    .badge-clean    { color: #4ade80; background: rgba(74,222,128,0.08); border: 1px solid rgba(74,222,128,0.2); }
+    .badge-cheater  { color: var(--red); background: rgba(232,114,111,0.09); border: 1px solid rgba(232,114,111,0.25); cursor: pointer; }
+    .badge-error    { color: var(--muted2); background: transparent; border: 1px solid var(--border2); }
+
+    .suspicious-list {
+      margin-top: 0.4rem;
+      padding: 0.7rem 0.8rem;
+      background: rgba(232,114,111,0.05);
+      border: 1px solid rgba(232,114,111,0.15);
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .suspicious-row { display: flex; flex-direction: column; gap: 0.1rem; }
+    .suspicious-track { font-size: 0.67rem; color: var(--text); }
+    .suspicious-detail { font-size: 0.56rem; color: var(--muted2); letter-spacing: 0.06em; }
   </style>
 </head>
 <body>
@@ -628,6 +661,12 @@
 
     renderResults({ info, week, topArtists, topTracks, topAlbums, recent });
     show('page-results');
+
+    // Run integrity check in the background — updates badge when done
+    runIntegrityCheck(user).catch(() => {
+      const b = document.querySelector('.integrity-badge');
+      if (b) b.innerHTML = `<span class="badge badge-error">~ couldn't check</span>`;
+    });
   }
 
   // ── Helpers ──
@@ -739,6 +778,9 @@
         <div class="profile-info">
           <div class="profile-name">${u.name}</div>
           <div class="profile-meta">${fmt(totalPlays)} total scrobbles · member for ${memberYears}y</div>
+          <div class="integrity-badge">
+            <span class="badge badge-checking">⟳ checking integrity...</span>
+          </div>
         </div>
         <button class="back-btn" onclick="show('page-input')">← back</button>
       </div>
@@ -787,6 +829,143 @@
         ${recentRows}
       </div>` : ''}
     `;
+  }
+
+  // ── Integrity check ──
+  async function runIntegrityCheck(user) {
+    const now     = Math.floor(Date.now() / 1000);
+    const weekAgo = now - 7 * 24 * 60 * 60;
+
+    // Fetch page 1 to learn total pages
+    const page1 = await lfm('user.getRecentTracks', API_KEY, {
+      user, from: weekAgo, to: now, limit: 200, page: 1
+    });
+    const attr       = page1.recenttracks['@attr'];
+    const totalPages = Math.min(parseInt(attr.totalPages), 10); // cap at 2000 scrobbles
+
+    let all = toArr(page1.recenttracks.track).filter(t => t.date);
+
+    // Fetch remaining pages in parallel
+    if (totalPages > 1) {
+      const rest = await Promise.all(
+        Array.from({ length: totalPages - 1 }, (_, i) =>
+          lfm('user.getRecentTracks', API_KEY, {
+            user, from: weekAgo, to: now, limit: 200, page: i + 2
+          })
+        )
+      );
+      rest.forEach(p => all = all.concat(toArr(p.recenttracks.track).filter(t => t.date)));
+    }
+
+    if (all.length < 2) {
+      setBadgeClean(all.length);
+      return;
+    }
+
+    // Build unique track map
+    const uniq = {};
+    all.forEach(t => {
+      const key = `${t.artist['#text']}|||${t.name}`;
+      if (!uniq[key]) uniq[key] = { artist: t.artist['#text'], name: t.name, duration: null };
+    });
+
+    // Batch-fetch durations (track.getInfo returns ms)
+    const keys = Object.keys(uniq).slice(0, 200);
+    const BATCH = 8;
+    for (let i = 0; i < keys.length; i += BATCH) {
+      await Promise.all(
+        keys.slice(i, i + BATCH).map(async key => {
+          try {
+            const d = await lfm('track.getInfo', API_KEY, {
+              artist: uniq[key].artist,
+              track:  uniq[key].name
+            });
+            const ms = parseInt(d.track?.duration);
+            if (ms > 0) uniq[key].duration = ms / 1000; // → seconds
+          } catch { /* ignore missing tracks */ }
+        })
+      );
+    }
+
+    // Sort scrobbles oldest → newest
+    all.sort((a, b) => parseInt(a.date.uts) - parseInt(b.date.uts));
+
+    // Check consecutive gaps
+    const suspicious = [];
+    for (let i = 1; i < all.length; i++) {
+      const prev    = all[i - 1];
+      const curr    = all[i];
+      const gap     = parseInt(curr.date.uts) - parseInt(prev.date.uts); // seconds
+      const prevDur = uniq[`${prev.artist['#text']}|||${prev.name}`]?.duration;
+      const currDur = uniq[`${curr.artist['#text']}|||${curr.name}`]?.duration;
+
+      // A scrobble fires at the 50% mark (or 4 min, whichever is sooner).
+      // So for curr to have legitimately scrobbled, it must have played for
+      // at least min(currDur * 0.5, 240) seconds ≥ 30s minimum.
+      // If gap is smaller than that, it's impossible.
+      const minGap = currDur
+        ? Math.max(Math.min(currDur * 0.5, 240), 30)
+        : (prevDur ? Math.min(prevDur * 0.4, 90) : 30);
+
+      if (gap < minGap) {
+        suspicious.push({
+          prevTrack:  prev.name,
+          prevArtist: prev.artist['#text'],
+          currTrack:  curr.name,
+          currArtist: curr.artist['#text'],
+          gap,
+          currDur,
+          prevDur,
+          ts: parseInt(curr.date.uts)
+        });
+      }
+    }
+
+    const badge = document.querySelector('.integrity-badge');
+    if (!badge) return;
+
+    if (suspicious.length === 0) {
+      setBadgeClean(all.length);
+    } else {
+      // Deduplicate (same pair can appear multiple times)
+      const seen = new Set();
+      const unique = suspicious.filter(s => {
+        const k = `${s.prevTrack}|${s.currTrack}`;
+        if (seen.has(k)) return false;
+        seen.add(k);
+        return true;
+      });
+
+      function fmtSecs(s) {
+        if (!s) return '?';
+        return s >= 60 ? `${Math.floor(s/60)}m ${Math.round(s%60)}s` : `${Math.round(s)}s`;
+      }
+
+      const rows = unique.slice(0, 5).map(s => `
+        <div class="suspicious-row">
+          <div class="suspicious-track">${s.currTrack} <span style="color:var(--muted2)">by ${s.currArtist}</span></div>
+          <div class="suspicious-detail">
+            scrobbled ${fmtSecs(s.gap)} after "${s.prevTrack}"
+            ${s.currDur ? `· needs ≥ ${fmtSecs(Math.min(s.currDur * 0.5, 240))} to scrobble legitimately` : ''}
+          </div>
+        </div>`).join('');
+
+      const extra = unique.length > 5 ? `<div class="suspicious-detail" style="margin-top:0.2rem">+ ${unique.length - 5} more</div>` : '';
+
+      badge.innerHTML = `
+        <span class="badge badge-cheater" onclick="this.closest('.integrity-badge').querySelector('.suspicious-list').classList.toggle('hidden')">
+          ⚠ cheater · ${suspicious.length} impossible scrobble${suspicious.length !== 1 ? 's' : ''}
+        </span>
+        <div class="suspicious-list hidden">
+          ${rows}
+          ${extra}
+        </div>`;
+    }
+  }
+
+  function setBadgeClean(count) {
+    const badge = document.querySelector('.integrity-badge');
+    if (badge) badge.innerHTML = `<span class="badge badge-clean">✓ clean · ${count} scrobbles checked</span>`;
   }
 </script>
 </body>
