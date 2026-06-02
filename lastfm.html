@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>last.fm stats · welffi</title>
   <link rel="icon" type="image/png" href="https://i.imgur.com/c7moPaj.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -750,7 +750,7 @@
     return `
       <div class="list-item">
         <span class="list-rank">${rank}</span>
-        ${imgUrl ? `<img class="list-img" src="${imgUrl}" alt="" />` : `<div class="list-img-ph"></div>`}
+        ${imgUrl ? `<img class="list-img" src="${imgUrl}" alt="" onerror="this.outerHTML='<div class=list-img-ph></div>'" />` : `<div class="list-img-ph"></div>`}
         <div class="list-body">
           <div class="list-name">${name}</div>
           ${sub ? `<div class="list-sub">${sub}</div>` : ''}
@@ -922,10 +922,11 @@
     const artists = toArr(data.topartists?.artist);
     if (!artists.length) return null;
     const max = parseInt(artists[0].playcount);
-    return artists.map((a, i) =>
-      listItem(i+1, null, a.name, null, `${fmt(a.playcount)} plays`,
-        Math.round((parseInt(a.playcount)/max)*100))
-    ).join('');
+    return artists.map((a, i) => {
+      const cover = img(a.image,'small') || img(a.image,'medium');
+      return listItem(i+1, cover, a.name, null, `${fmt(a.playcount)} plays`,
+        Math.round((parseInt(a.playcount)/max)*100));
+    }).join('');
   }
 
   function buildTrackRows(data) {
@@ -969,7 +970,7 @@
       return `
         <div class="list-item${isNow ? ' nowplaying' : ''}">
           ${isNow ? `<div class="nowplaying-dot"></div>` : `<span class="list-rank">♪</span>`}
-          ${cover ? `<img class="list-img" src="${cover}" alt="" />` : `<div class="list-img-ph"></div>`}
+          ${cover ? `<img class="list-img" src="${cover}" alt="" onerror="this.outerHTML='<div class=list-img-ph></div>'" />` : `<div class="list-img-ph"></div>`}
           <div class="list-body">
             <div class="list-name">${t.name}</div>
             <div class="list-sub">${sub}</div>
