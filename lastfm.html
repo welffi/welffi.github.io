@@ -191,6 +191,22 @@
     /* Placeholders that fill in async — collapse while empty so no stray gap */
     #ban-card:empty, #patterns-card:empty { display: none; }
 
+    /* Lower content: single column on mobile, two columns on desktop */
+    .results-grid { display: flex; flex-direction: column; gap: 1.2rem; }
+    .results-col  { display: flex; flex-direction: column; gap: 1.2rem; min-width: 0; }
+
+    @media (min-width: 800px) {
+      .results-card { max-width: 880px; }
+      .results-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.2rem;
+        align-items: start;
+      }
+      .stat-card.hero { padding: 2.4rem 1rem 2rem; }
+      .hero-number { font-size: 5rem; }
+    }
+
     .profile-row {
       display: flex;
       align-items: center;
@@ -1028,24 +1044,28 @@
         <div class="stat-card"><div class="stat-number">${fmt(totalPlays)}</div><div class="stat-label">all-time<br>scrobbles</div></div>
       </div>
 
-      <div class="ban-card" id="ban-card"></div>
-
-      <div id="patterns-card"></div>
-
-      ${hasTabs ? `
-      <div class="tabs-card">
-        <div class="tabs-header">
-          ${artistRows ? `<button class="tab-btn${firstTab==='artists'?' active':''}" onclick="switchTab('artists')">artists</button>` : ''}
-          ${trackRows  ? `<button class="tab-btn${firstTab==='tracks' ?' active':''}" onclick="switchTab('tracks')">tracks</button>`   : ''}
-          ${albumRows  ? `<button class="tab-btn${firstTab==='albums' ?' active':''}" onclick="switchTab('albums')">albums</button>`   : ''}
+      <div class="results-grid">
+        <div class="results-col">
+          <div class="ban-card" id="ban-card"></div>
+          <div id="patterns-card"></div>
         </div>
-        ${artistRows ? `<div class="tab-content${firstTab==='artists'?' active':''}" id="tab-artists">${artistRows}</div>` : ''}
-        ${trackRows  ? `<div class="tab-content${firstTab==='tracks' ?' active':''}" id="tab-tracks">${trackRows}</div>`   : ''}
-        ${albumRows  ? `<div class="tab-content${firstTab==='albums' ?' active':''}" id="tab-albums">${albumRows}</div>`   : ''}
-      </div>` : ''}
+        <div class="results-col">
+          ${hasTabs ? `
+          <div class="tabs-card">
+            <div class="tabs-header">
+              ${artistRows ? `<button class="tab-btn${firstTab==='artists'?' active':''}" onclick="switchTab('artists')">artists</button>` : ''}
+              ${trackRows  ? `<button class="tab-btn${firstTab==='tracks' ?' active':''}" onclick="switchTab('tracks')">tracks</button>`   : ''}
+              ${albumRows  ? `<button class="tab-btn${firstTab==='albums' ?' active':''}" onclick="switchTab('albums')">albums</button>`   : ''}
+            </div>
+            ${artistRows ? `<div class="tab-content${firstTab==='artists'?' active':''}" id="tab-artists">${artistRows}</div>` : ''}
+            ${trackRows  ? `<div class="tab-content${firstTab==='tracks' ?' active':''}" id="tab-tracks">${trackRows}</div>`   : ''}
+            ${albumRows  ? `<div class="tab-content${firstTab==='albums' ?' active':''}" id="tab-albums">${albumRows}</div>`   : ''}
+          </div>` : ''}
 
-      ${recentRows.length ? `<div class="section"><div class="section-head"><span class="section-label">recently played</span></div>${recentRows}</div>` : ''}
-      ${!recent ? `<div class="section"><div class="section-head"><span class="section-label">recently played</span></div><p style="font-size:0.62rem;color:var(--muted2);padding:0.8rem 0.7rem">recent tracks are private</p></div>` : ''}
+          ${recentRows.length ? `<div class="section"><div class="section-head"><span class="section-label">recently played</span></div>${recentRows}</div>` : ''}
+          ${!recent ? `<div class="section"><div class="section-head"><span class="section-label">recently played</span></div><p style="font-size:0.62rem;color:var(--muted2);padding:0.8rem 0.7rem">recent tracks are private</p></div>` : ''}
+        </div>
+      </div>
     `;
 
     if (trackList.length) loadTrackImages(trackList);
@@ -1326,14 +1346,14 @@
 
     const todPct = k => total ? Math.round((tod[k] / total) * 100) : 0;
     const legendItems = [
-      ['morning', '🌅', 'morning'],
-      ['afternoon', '☀️', 'afternoon'],
-      ['evening', '🌆', 'evening'],
-      ['night', '🌙', 'night'],
-    ].map(([k, icon, lbl]) => `
+      ['morning', 'morning', '6a–12p'],
+      ['afternoon', 'afternoon', '12p–6p'],
+      ['evening', 'evening', '6p–12a'],
+      ['night', 'night', '12a–6a'],
+    ].map(([k, lbl, range]) => `
       <div class="clock-legend-item">
         <span class="clock-legend-val">${todPct(k)}%</span>
-        <span class="clock-legend-label">${icon} ${lbl}</span>
+        <span class="clock-legend-label">${lbl} <span style="color:var(--muted);opacity:0.7">${range}</span></span>
       </div>`).join('');
 
     const dayCols = dayBuckets.map((b, i) => `
@@ -1353,17 +1373,14 @@
 
       <div class="insight-row">
         <div class="insight">
-          <span class="insight-icon">🎤</span>
           <span class="insight-val">${fmt(uniqArtists.size)}</span>
           <span class="insight-label">unique artists</span>
         </div>
         <div class="insight">
-          <span class="insight-icon">🎵</span>
           <span class="insight-val">${fmt(uniqTracks.size)}</span>
           <span class="insight-label">unique tracks</span>
         </div>
         <div class="insight" style="grid-column:1 / -1">
-          <span class="insight-icon">🔥</span>
           <span class="insight-val">${dayBuckets[peakDay].label} · ${dayBuckets[peakDay].count}</span>
           <span class="insight-label">most active day</span>
         </div>
