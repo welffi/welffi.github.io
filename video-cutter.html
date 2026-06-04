@@ -746,10 +746,48 @@
   });
 
   // ── Export → MP4 via ffmpeg.wasm ──
-  // Each kept clip is re-encoded (frame-accurate) to an mpegts segment, then the
-  // segments are losslessly concatenated into the final mp4. Audio is handled
-  // automatically — videos without an audio track export fine too.
+  // The whole cut is done in ONE ffmpeg pass with a trim+concat filtergraph.
+  // (ffmpeg.wasm 0.11 is unreliable across multiple runs, so a single command
+  //  is the robust approach.) We try with audio first; videos with no audio
+  //  track fail that attempt, so we reload and retry video-only.
   document.getElementById('btn-export').addEventListener('click', exportVideo);
+
+  function buildFilter(withAudio) {
+    const parts = [];
+    let cat = '';
+    clips.forEach((c, i) => {
+      const s = c.srcStart.toFixed(3), e = c.srcEnd.toFixed(3);
+      parts.push(`[0:v]trim=start=${s}:end=${e},setpts=PTS-STARTPTS[v${i}]`);
+      if (withAudio) parts.push(`[0:a]atrim=start=${s}:end=${e},asetpts=PTS-STARTPTS[a${i}]`);
+      cat += withAudio ? `[v${i}][a${i}]` : `[v${i}]`;
+    });
+    const n = clips.length;
+    if (withAudio) return parts.join(';') + ';' + cat + `concat=n=${n}:v=1:a=1[outv][outa]`;
+    return parts.join(';') + ';' + cat + `concat=n=${n}:v=1:a=0[outv]`;
+  }
+
+  async function encodeOnce(withAudio) {
+    const ff = ffmpeg;
+    const { fetchFile } = FFmpeg;
+    const ext = (currentFile.name.split('.').pop() || 'mp4').toLowerCase().replace(/[^a-z0-9]/g, '') || 'mp4';
+    const inName = 'input.' + ext;
+    ff.FS('writeFile', inName, await fetchFile(currentFile));
+
+    const filter = buildFilter(withAudio);
+    const args = ['-i', inName, '-filter_complex', filter, '-map', '[outv]'];
+    if (withAudio) args.push('-map', '[outa]', '-c:a', 'aac');
+    args.push('-c:v', 'libx264', '-preset', 'veryfast', '-crf', '20', '-pix_fmt', 'yuv420p');
+    if (!withAudio) args.push('-an');
+    args.push('cut.mp4');
+
+    stageLabel = withAudio ? 'encoding' : 'encoding (no audio track)';
+    setStatus(stageLabel + '…', 'busy');
+    await ff.run(...args);
+
+    const data = ff.FS('readFile', 'cut.mp4');  // throws if ffmpeg produced nothing
+    try { ff.FS('unlink', inName); ff.FS('unlink', 'cut.mp4'); } catch (_) {}
+    return new Blob([data.buffer], { type: 'video/mp4' });
+  }
 
   async function exportVideo() {
     if (!clips.length || exporting || !currentFile) return;
@@ -758,54 +796,21 @@
     pausePlay();
     btn.disabled = true;
 
-    let ff;
     try {
       setStatus('loading video engine (~25 MB, first time only)…', 'busy');
-      ff = await loadFFmpeg();
-    } catch (e) {
-      setStatus('couldn\'t load the video engine — check your connection', 'err');
-      exporting = false; btn.disabled = false;
-      return;
-    }
+      await loadFFmpeg();
 
-    const { fetchFile } = FFmpeg;
-    const ext = (currentFile.name.split('.').pop() || 'mp4').toLowerCase().replace(/[^a-z0-9]/g, '') || 'mp4';
-    const inName = 'input.' + ext;
-    const segNames = [];
-
-    try {
-      setStatus('reading file…', 'busy');
-      ff.FS('writeFile', inName, await fetchFile(currentFile));
-
-      // 1) Re-encode each clip to a frame-accurate mpegts segment
-      for (let i = 0; i < clips.length; i++) {
-        const c = clips[i];
-        const dur = (c.srcEnd - c.srcStart).toFixed(3);
-        const seg = `seg${i}.ts`;
-        stageLabel = `encoding clip ${i + 1}/${clips.length}`;
-        setStatus(stageLabel + '…', 'busy');
-        await ff.run(
-          '-ss', c.srcStart.toFixed(3), '-i', inName, '-t', dur,
-          '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '20', '-pix_fmt', 'yuv420p',
-          '-c:a', 'aac', '-ar', '44100',
-          '-f', 'mpegts', seg
-        );
-        segNames.push(seg);
+      let blob;
+      try {
+        blob = await encodeOnce(true);          // assume the video has audio
+      } catch (e) {
+        // most likely: no audio stream — reset to a clean instance and retry video-only
+        console.warn('audio export failed, retrying without audio:', e);
+        ffmpeg = null;
+        setStatus('no audio track found — retrying…', 'busy');
+        await loadFFmpeg();
+        blob = await encodeOnce(false);
       }
-
-      // 2) Concatenate the segments losslessly into the final mp4
-      stageLabel = 'joining clips';
-      setStatus(stageLabel + '…', 'busy');
-      const outName = 'cut.mp4';
-      const concatInput = 'concat:' + segNames.join('|');
-      await ff.run('-i', concatInput, '-c', 'copy', '-bsf:a', 'aac_adtstoasc', outName);
-      stageLabel = '';
-
-      const data = ff.FS('readFile', outName);
-      const blob = new Blob([data.buffer], { type: 'video/mp4' });
-
-      // cleanup the in-memory filesystem
-      try { ff.FS('unlink', inName); segNames.forEach(s => ff.FS('unlink', s)); ff.FS('unlink', outName); } catch (e) {}
 
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -815,8 +820,8 @@
       setStatus(`exported ✓ · ${(blob.size / 1048576).toFixed(1)} MB · saved as cut.mp4`);
     } catch (e) {
       console.error(e);
-      try { ff.FS('unlink', inName); segNames.forEach(s => ff.FS('unlink', s)); } catch (_) {}
-      setStatus('export failed — the video may be too large for the browser\'s memory', 'err');
+      setStatus('export failed: ' + (e && e.message ? e.message : 'unknown error'), 'err');
+      ffmpeg = null;  // instance may be in a bad state — force a fresh load next time
     } finally {
       stageLabel = '';
       exporting = false;
