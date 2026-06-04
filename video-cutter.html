@@ -472,10 +472,7 @@
   let srcURL = null;
   let currentFile = null;
 
-  // ── ffmpeg.wasm 0.12 — uses toBlobURL so no SharedArrayBuffer / special headers needed ──
-  let ffmpeg = null;
-  let stageLabel = '';
-
+  // ── mp4box.js — pure JS, no workers, no WASM, no CORS issues ──
   function loadScript(src) {
     return new Promise((res, rej) => {
       const s = document.createElement('script');
@@ -485,32 +482,9 @@
     });
   }
 
-  async function loadFFmpeg() {
-    if (ffmpeg) return;
-    setStatus('downloading video engine (~25 MB, cached after first use)…', 'busy');
-    if (!window.FFmpegWASM) await loadScript('https://unpkg.com/@ffmpeg/ffmpeg@0.12.6/dist/umd/ffmpeg.js');
-    if (!window.FFmpegUtil)  await loadScript('https://unpkg.com/@ffmpeg/util@0.12.1/dist/umd/index.js');
-
-    const { FFmpeg }           = window.FFmpegWASM;
-    const { toBlobURL }        = window.FFmpegUtil;
-
-    const inst = new FFmpeg();
-    inst.on('progress', ({ progress }) => {
-      if (!stageLabel) return;
-      const p = Math.round((progress || 0) * 100);
-      setStatus(`${stageLabel} · ${clamp(p, 0, 100)}%`, 'busy');
-    });
-
-    // toBlobURL fetches cross-origin then creates a same-origin blob: URL —
-    // this is how ffmpeg.wasm 0.12 avoids SharedArrayBuffer on GitHub Pages.
-    const base = 'https://unpkg.com/@ffmpeg/core@0.12.3/dist/umd';
-    await inst.load({
-      coreURL: await toBlobURL(`${base}/ffmpeg-core.js`,   'text/javascript'),
-      wasmURL: await toBlobURL(`${base}/ffmpeg-core.wasm`, 'application/wasm'),
-      // no workerURL → single-thread mode
-    });
-
-    ffmpeg = inst;
+  async function ensureMp4Box() {
+    if (!window.MP4Box)
+      await loadScript('https://cdn.jsdelivr.net/npm/mp4box@0.5.2/dist/mp4box.all.min.js');
   }
 
   // ── Helpers ──
@@ -758,71 +732,21 @@
     }
   });
 
-  // ── Export → MP4 via ffmpeg.wasm ──
-  // The whole cut is done in ONE ffmpeg pass with a trim+concat filtergraph.
-  // (ffmpeg.wasm 0.11 is unreliable across multiple runs, so a single command
-  //  is the robust approach.) We try with audio first; videos with no audio
-  //  track fail that attempt, so we reload and retry video-only.
-  document.getElementById('btn-export').addEventListener('click', exportVideo);
+  // ── Export → MP4 via mp4box.js (remux only, no re-encode) ──
+  // Cuts snap to the nearest keyframe — fast, lossless, zero CORS issues.
+  document.getElementById('btn-export').addEventListener('click', doExport);
 
-  function buildFilter(withAudio) {
-    const parts = [];
-    let cat = '';
-    clips.forEach((c, i) => {
-      const s = c.srcStart.toFixed(3), e = c.srcEnd.toFixed(3);
-      parts.push(`[0:v]trim=start=${s}:end=${e},setpts=PTS-STARTPTS[v${i}]`);
-      if (withAudio) parts.push(`[0:a]atrim=start=${s}:end=${e},asetpts=PTS-STARTPTS[a${i}]`);
-      cat += withAudio ? `[v${i}][a${i}]` : `[v${i}]`;
-    });
-    const n = clips.length;
-    if (withAudio) return parts.join(';') + ';' + cat + `concat=n=${n}:v=1:a=1[outv][outa]`;
-    return parts.join(';') + ';' + cat + `concat=n=${n}:v=1:a=0[outv]`;
-  }
-
-  async function encodeOnce(withAudio) {
-    const { fetchFile } = window.FFmpegUtil;
-    const ext = (currentFile.name.split('.').pop() || 'mp4').toLowerCase().replace(/[^a-z0-9]/g, '') || 'mp4';
-    const inName = 'input.' + ext;
-
-    await ffmpeg.writeFile(inName, await fetchFile(currentFile));
-
-    const filter = buildFilter(withAudio);
-    const args = ['-i', inName, '-filter_complex', filter, '-map', '[outv]'];
-    if (withAudio) args.push('-map', '[outa]', '-c:a', 'aac');
-    args.push('-c:v', 'libx264', '-preset', 'veryfast', '-crf', '20', '-pix_fmt', 'yuv420p');
-    if (!withAudio) args.push('-an');
-    args.push('cut.mp4');
-
-    stageLabel = withAudio ? 'encoding' : 'encoding (no audio track)';
-    setStatus(stageLabel + '…', 'busy');
-    const ret = await ffmpeg.exec(args);
-    if (ret !== 0) throw new Error(`ffmpeg exited with code ${ret}`);
-
-    const data = await ffmpeg.readFile('cut.mp4');
-    try { await ffmpeg.deleteFile(inName); await ffmpeg.deleteFile('cut.mp4'); } catch (_) {}
-    return new Blob([data.buffer], { type: 'video/mp4' });
-  }
-
-  async function exportVideo() {
+  async function doExport() {
     if (!clips.length || exporting || !currentFile) return;
     const btn = document.getElementById('btn-export');
-    exporting = true;
-    pausePlay();
-    btn.disabled = true;
-
+    exporting = true; pausePlay(); btn.disabled = true;
     try {
-      await loadFFmpeg();
-
-      let blob;
-      try {
-        blob = await encodeOnce(true);           // try with audio first
-      } catch (e) {
-        // no audio stream in the source — retry video-only (same instance is fine in 0.12)
-        console.warn('audio encode failed, retrying video-only:', e);
-        setStatus('no audio track — retrying…', 'busy');
-        blob = await encodeOnce(false);
-      }
-
+      setStatus('loading mp4 engine…', 'busy');
+      await ensureMp4Box();
+      setStatus('reading file…', 'busy');
+      const buf = await currentFile.arrayBuffer();
+      setStatus('trimming…', 'busy');
+      const blob = await trimMP4(buf, clips);
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url; a.download = 'cut.mp4';
@@ -831,13 +755,120 @@
       setStatus(`exported ✓ · ${(blob.size / 1048576).toFixed(1)} MB · saved as cut.mp4`);
     } catch (e) {
       console.error(e);
-      setStatus('export failed: ' + (e && e.message ? e.message : 'unknown error'), 'err');
-      ffmpeg = null;  // discard on unknown failure so next export gets a clean instance
+      setStatus('export failed: ' + (e && e.message ? e.message : String(e)), 'err');
     } finally {
-      stageLabel = '';
       exporting = false;
-      btn.disabled = (clips.length === 0);
+      btn.disabled = clips.length === 0;
     }
+  }
+
+  function trimMP4(arrayBuffer, clips) {
+    return new Promise((resolve, reject) => {
+      arrayBuffer.fileStart = 0;
+      const inFile = MP4Box.createFile();
+      const allSamples = {};
+      let fileInfo = null;
+
+      inFile.onReady = (info) => {
+        fileInfo = info;
+        info.tracks.forEach(track => {
+          allSamples[track.id] = [];
+          inFile.setExtractionOptions(track.id, null, { nbSamples: Infinity });
+        });
+        inFile.start();
+      };
+
+      inFile.onSamples = (id, user, samples) => {
+        allSamples[id] = allSamples[id].concat(Array.from(samples));
+      };
+
+      inFile.onFlush = () => {
+        try { resolve(assembleMP4(fileInfo, allSamples, clips)); }
+        catch (e) { reject(e); }
+      };
+
+      inFile.onError = (e) => reject(new Error(String(e)));
+      inFile.appendBuffer(arrayBuffer);
+      inFile.flush();
+    });
+  }
+
+  function assembleMP4(info, allSamples, clips) {
+    const outFile = MP4Box.createFile();
+
+    info.tracks.forEach(track => {
+      const src = allSamples[track.id] || [];
+      if (!src.length) return;
+      const ts = track.timescale;
+
+      // Collect samples per clip, snapping each clip start back to the previous keyframe
+      const chosen = [];
+      let cursor = 0;
+
+      for (const clip of clips) {
+        const s0 = clip.srcStart * ts;
+        const s1 = clip.srcEnd   * ts;
+
+        // Find last sync sample at or before s0
+        let snapTo = s0;
+        for (const s of src) {
+          if (s.is_sync && s.dts <= s0) snapTo = s.dts;
+        }
+
+        const seg = src.filter(s => s.dts >= snapTo && s.dts < s1);
+        if (!seg.length) continue;
+
+        const base = seg[0].dts;
+        for (const s of seg) {
+          chosen.push({
+            data: s.data, duration: s.duration,
+            cts:  s.cts,  is_sync:  s.is_sync,
+            dts:  cursor + (s.dts - base),
+            description: s.description,
+          });
+        }
+        cursor += seg[seg.length - 1].dts - base + seg[seg.length - 1].duration;
+      }
+
+      if (!chosen.length) return;
+
+      // Build addTrack options using the first sample's description
+      const desc = chosen[0].description;
+      const opts  = { timescale: ts, duration: cursor, language: track.language || 'und' };
+
+      if (track.type === 'video') {
+        opts.type   = desc.type;
+        opts.width  = track.video.width;
+        opts.height = track.video.height;
+        // H.264: copy SPS + PPS from the avcC box
+        if (desc.avcC) {
+          opts.sps = desc.avcC.SPS.map(s => s.nalu);
+          opts.pps = desc.avcC.PPS.map(p => p.nalu);
+        }
+      } else if (track.type === 'audio') {
+        opts.type          = desc.type;
+        opts.channel_count = track.audio.channel_count;
+        opts.sample_rate   = track.audio.sample_rate;
+        opts.sample_size   = track.audio.sample_size || 16;
+        if (desc.esds)   opts.esds   = desc.esds;
+        if (desc.mp4a) {
+          const mp4a = desc.mp4a || desc;
+          if (mp4a.esds) opts.esds = mp4a.esds;
+        }
+      } else {
+        return; // skip subtitle/metadata tracks
+      }
+
+      const tid = outFile.addTrack(opts);
+      for (const s of chosen) {
+        outFile.addSample(tid, s.data, {
+          duration: s.duration, cts: s.cts, dts: s.dts,
+          is_sync: s.is_sync,  description: s.description,
+        });
+      }
+    });
+
+    return new Blob([outFile.getBuffer()], { type: 'video/mp4' });
   }
 </script>
 </body>
