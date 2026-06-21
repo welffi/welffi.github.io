@@ -746,6 +746,64 @@
     .clock-legend-label { font-size: 0.5rem; letter-spacing: 0.12em; color: var(--muted2); text-transform: lowercase; }
 
     .pattern-sub { font-size: 0.5rem; letter-spacing: 0.13em; color: var(--muted); text-transform: lowercase; }
+
+    .heatmap-grid {
+      display: grid;
+      grid-template-columns: 28px repeat(7, 1fr);
+      gap: 2px;
+    }
+    .hm-spacer { height: 14px; }
+    .hm-day-label {
+      font-size: 0.44rem;
+      color: var(--muted);
+      text-align: center;
+      height: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      letter-spacing: 0.05em;
+    }
+    .hm-hour-label {
+      font-size: 0.42rem;
+      color: var(--muted);
+      text-align: right;
+      padding-right: 4px;
+      height: 11px;
+      line-height: 11px;
+    }
+    .hm-cell {
+      height: 11px;
+      border-radius: 2px;
+      background: rgba(212,165,116,var(--hm-a, 0));
+    }
+    .hm-cell.hm-empty { background: var(--surface2); }
+    .hm-cell.hm-sleep { background: rgba(140,120,200,var(--hm-a, 0)); }
+    .hm-cell.hm-sleep.hm-empty { background: rgba(140,120,200,0.07); }
+    .hm-legend {
+      display: flex;
+      gap: 0.9rem;
+      flex-wrap: wrap;
+      margin-top: 0.25rem;
+    }
+    .hm-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-size: 0.46rem;
+      color: var(--muted2);
+      letter-spacing: 0.07em;
+      text-transform: lowercase;
+    }
+    .hm-legend-swatch {
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+    .sleep-insight {
+      background: rgba(140,120,200,0.06) !important;
+      border-color: rgba(140,120,200,0.22) !important;
+    }
   </style>
 </head>
 <body>
@@ -1278,7 +1336,6 @@
       </div>`;
   }
 
-  // ── Listening patterns: per-day chart + 24h radial clock ──
   function renderPatterns(week, uniq) {
     const card = document.getElementById('patterns-card');
     if (!card || !week.length) return;
@@ -1286,7 +1343,6 @@
     const dayNames = ['sun','mon','tue','wed','thu','fri','sat'];
     const now = new Date();
 
-    // 7 calendar-day buckets (local time)
     const dayBuckets = [];
     const keyIndex = {};
     for (let i = 6; i >= 0; i--) {
@@ -1300,45 +1356,62 @@
     const tod = { morning: 0, afternoon: 0, evening: 0, night: 0 };
     const uniqArtists = new Set();
     const uniqTracks  = new Set();
+    let sleepScrobbles = 0;
+
+    const matrix = {};
+    for (let d = 0; d < 7; d++)
+      for (let h = 0; h < 24; h++)
+        matrix[`${d}_${h}`] = 0;
 
     week.forEach(t => {
       const dt = new Date(parseInt(t.date.uts) * 1000);
       const dk = dt.toDateString();
-      if (dk in keyIndex) dayBuckets[keyIndex[dk]].count++;
-      const h = dt.getHours();
+      const di = keyIndex[dk];
+      const h  = dt.getHours();
+      if (di !== undefined) { dayBuckets[di].count++; matrix[`${di}_${h}`]++; }
       hourCounts[h]++;
       if (h >= 6 && h <= 11)       tod.morning++;
       else if (h >= 12 && h <= 17) tod.afternoon++;
       else if (h >= 18 && h <= 23) tod.evening++;
       else                          tod.night++;
+      if (h >= 1 && h <= 6)        sleepScrobbles++;
       uniqArtists.add(t.artist['#text']);
       uniqTracks.add(`${t.artist['#text']}|||${t.name}`);
     });
 
-    const total   = week.length;
-    const maxDay  = Math.max(...dayBuckets.map(b => b.count), 1);
-    const peakDay = dayBuckets.reduce((mi, b, i, a) => b.count > a[mi].count ? i : mi, 0);
-    const maxHour = Math.max(...hourCounts, 1);
-    const peakHour = hourCounts.reduce((mi, c, i) => c > hourCounts[mi] ? i : mi, 0);
+    const total       = week.length;
+    const activeDays  = dayBuckets.filter(b => b.count > 0).length;
+    const repeatRatio = uniqTracks.size > 0 ? (total / uniqTracks.size).toFixed(1) : '—';
+    const sleepPct    = total > 0 ? Math.round((sleepScrobbles / total) * 100) : 0;
+    const maxDay      = Math.max(...dayBuckets.map(b => b.count), 1);
+    const peakDay     = dayBuckets.reduce((mi, b, i, a) => b.count > a[mi].count ? i : mi, 0);
+    const maxHour     = Math.max(...hourCounts, 1);
+    const peakHour    = hourCounts.reduce((mi, c, i) => c > hourCounts[mi] ? i : mi, 0);
+    const maxCell     = Math.max(...Object.values(matrix), 1);
 
-    const fmtHour = h =>{ const ap = h < 12 ? 'am' : 'pm'; let hr = h % 12 || 12; return `${hr}${ap}`; };
+    const fmtHour = h => { const ap = h < 12 ? 'am' : 'pm'; const hr = h % 12 || 12; return `${hr}${ap}`; };
 
-    // Radial clock SVG (viewBox 200x200)
     const cx = 100, cy = 100, rIn = 34, rMax = 80;
     let spokes = '';
     for (let h = 0; h < 24; h++) {
-      const ang = (h / 24) * 2 * Math.PI - Math.PI / 2;
-      const len = rIn + (hourCounts[h] / maxHour) * (rMax - rIn);
-      const x1 = cx + Math.cos(ang) * rIn,  y1 = cy + Math.sin(ang) * rIn;
-      const x2 = cx + Math.cos(ang) * len,  y2 = cy + Math.sin(ang) * len;
+      const ang   = (h / 24) * 2 * Math.PI - Math.PI / 2;
+      const len   = rIn + (hourCounts[h] / maxHour) * (rMax - rIn);
+      const x1    = cx + Math.cos(ang) * rIn, y1 = cy + Math.sin(ang) * rIn;
+      const x2    = cx + Math.cos(ang) * len, y2 = cy + Math.sin(ang) * len;
       const inten = hourCounts[h] / maxHour;
-      const isP = h === peakHour && hourCounts[h] > 0;
-      const col = isP ? '#f0d9bb' : `rgba(212,165,116,${(0.22 + inten * 0.68).toFixed(2)})`;
+      const isP   = h === peakHour && hourCounts[h] > 0;
+      const isSleepH = h >= 1 && h <= 6;
+      let col;
+      if (isSleepH && hourCounts[h] > 0)
+        col = isP ? '#c4b8f0' : `rgba(140,120,200,${(0.22 + inten * 0.68).toFixed(2)})`;
+      else
+        col = isP ? '#f0d9bb' : `rgba(212,165,116,${(0.22 + inten * 0.68).toFixed(2)})`;
       spokes += `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${col}" stroke-width="${isP ? 5 : 3.6}" stroke-linecap="round"/>`;
     }
-    const ticks = [[0,'12a'],[6,'6a'],[12,'12p'],[18,'6p']];
+
+    const tickDefs = [[0,'12a'],[6,'6a'],[12,'12p'],[18,'6p']];
     let tickLabels = '';
-    ticks.forEach(([h, txt]) => {
+    tickDefs.forEach(([h, txt]) => {
       const ang = (h / 24) * 2 * Math.PI - Math.PI / 2;
       const x = cx + Math.cos(ang) * 92, y = cy + Math.sin(ang) * 92;
       tickLabels += `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="middle" dominant-baseline="central" class="clock-tick-label">${txt}</text>`;
@@ -1346,10 +1419,10 @@
 
     const todPct = k => total ? Math.round((tod[k] / total) * 100) : 0;
     const legendItems = [
-      ['morning', 'morning', '6a–12p'],
-      ['afternoon', 'afternoon', '12p–6p'],
-      ['evening', 'evening', '6p–12a'],
-      ['night', 'night', '12a–6a'],
+      ['morning',   'morning',    '6a–12p'],
+      ['afternoon', 'afternoon',  '12p–6p'],
+      ['evening',   'evening',    '6p–12a'],
+      ['night',     'late night', '12a–6a'],
     ].map(([k, lbl, range]) => `
       <div class="clock-legend-item">
         <span class="clock-legend-val">${todPct(k)}%</span>
@@ -1364,6 +1437,19 @@
         </div>
         <span class="day-bar-label">${b.label}</span>
       </div>`).join('');
+
+    let hmHtml = `<div class="hm-spacer"></div>`;
+    dayBuckets.forEach(b => { hmHtml += `<div class="hm-day-label">${b.label}</div>`; });
+    for (let h = 0; h < 24; h++) {
+      const isSleepHour = h >= 1 && h <= 6;
+      hmHtml += `<div class="hm-hour-label">${h % 6 === 0 ? fmtHour(h) : ''}</div>`;
+      for (let d = 0; d < 7; d++) {
+        const count = matrix[`${d}_${h}`];
+        const alpha = count > 0 ? (0.15 + (count / maxCell) * 0.85).toFixed(2) : '0';
+        const cls   = `hm-cell${isSleepHour ? ' hm-sleep' : ''}${count === 0 ? ' hm-empty' : ''}`;
+        hmHtml += `<div class="${cls}" style="--hm-a:${alpha}"></div>`;
+      }
+    }
 
     card.className = 'patterns-card slot-in';
     card.innerHTML = `
@@ -1380,10 +1466,27 @@
           <span class="insight-val">${fmt(uniqTracks.size)}</span>
           <span class="insight-label">unique tracks</span>
         </div>
-        <div class="insight" style="grid-column:1 / -1">
-          <span class="insight-val">${dayBuckets[peakDay].label} · ${dayBuckets[peakDay].count}</span>
-          <span class="insight-label">most active day</span>
+        <div class="insight">
+          <span class="insight-val">${activeDays}<span style="font-size:0.75em;color:var(--muted2)">/7</span></span>
+          <span class="insight-label">active days</span>
         </div>
+        <div class="insight">
+          <span class="insight-val">${repeatRatio}×</span>
+          <span class="insight-label">repeat ratio</span>
+        </div>
+        <div class="insight">
+          <span class="insight-val">${dayBuckets[peakDay].label}</span>
+          <span class="insight-label">peak day · ${dayBuckets[peakDay].count}</span>
+        </div>
+        <div class="insight">
+          <span class="insight-val">${fmtHour(peakHour)}</span>
+          <span class="insight-label">peak hour · ${hourCounts[peakHour]} plays</span>
+        </div>
+        ${sleepScrobbles > 0 ? `
+        <div class="insight sleep-insight" style="grid-column:1 / -1">
+          <span class="insight-val">🌙 ${fmt(sleepScrobbles)} sleep scrobbles</span>
+          <span class="insight-label">${sleepPct}% of this week · 1am – 6am · your local timezone</span>
+        </div>` : ''}
       </div>
 
       <div class="chart-block">
@@ -1404,9 +1507,23 @@
           <div class="clock-legend">${legendItems}</div>
         </div>
       </div>
+
+      <div class="chart-block">
+        <span class="pattern-sub">activity heatmap · day × hour <span style="color:var(--muted);font-size:0.9em">(local time)</span></span>
+        <div class="heatmap-grid">${hmHtml}</div>
+        <div class="hm-legend">
+          <div class="hm-legend-item">
+            <div class="hm-legend-swatch" style="background:rgba(212,165,116,0.7)"></div>
+            <span>regular hours</span>
+          </div>
+          <div class="hm-legend-item">
+            <div class="hm-legend-swatch" style="background:rgba(140,120,200,0.7)"></div>
+            <span>sleep hours · 1am – 6am</span>
+          </div>
+        </div>
+      </div>
     `;
 
-    // Grow the day bars up after paint
     requestAnimationFrame(() => {
       card.querySelectorAll('.day-bar').forEach(b => { b.style.height = b.dataset.h + '%'; });
     });
