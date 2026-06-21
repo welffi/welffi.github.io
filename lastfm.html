@@ -180,52 +180,67 @@
     }
     .loading-label { font-size: 0.6rem; letter-spacing: 0.18em; color: var(--muted2); text-transform: lowercase; }
 
-    /* ── Results ── */
     .results-card {
       width: 100%;
-      max-width: 480px;
+      max-width: 560px;
       display: flex;
       flex-direction: column;
-      gap: 1.2rem;
+      gap: 1rem;
     }
-    /* Placeholders that fill in async — collapse while empty so no stray gap */
     #ban-card:empty, #patterns-card:empty { display: none; }
 
-    /* Lower content: single column on mobile, two columns on desktop */
-    .results-grid { display: flex; flex-direction: column; gap: 1.2rem; }
-    .results-col  { display: flex; flex-direction: column; gap: 1.2rem; min-width: 0; }
-
-    @media (min-width: 800px) {
-      .results-card { max-width: 880px; }
-      .results-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1.2rem;
-        align-items: start;
-      }
-      .stat-card.hero { padding: 2.4rem 1rem 2rem; }
-      .hero-number { font-size: 5rem; }
-    }
-
-    .profile-row {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      padding-bottom: 1.2rem;
-      border-bottom: 1px solid var(--border);
+    .profile-banner {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
       animation: fadeUp 0.5s ease both;
     }
+    .profile-top {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      padding: 0.95rem 1.1rem;
+    }
+    .stat-strip {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      border-top: 1px solid var(--border);
+    }
+    .stat-strip-item {
+      padding: 0.55rem 0.4rem;
+      text-align: center;
+      border-right: 1px solid var(--border);
+    }
+    .stat-strip-item:last-child { border-right: none; }
+    .strip-num {
+      font-family: 'Fraunces', serif;
+      font-size: 1.1rem;
+      font-weight: 100;
+      color: var(--accent);
+      line-height: 1;
+      display: block;
+    }
+    .strip-lbl {
+      font-size: 0.44rem;
+      letter-spacing: 0.12em;
+      color: var(--muted2);
+      text-transform: lowercase;
+      margin-top: 0.22rem;
+      display: block;
+      line-height: 1.5;
+    }
     .profile-avatar {
-      width: 50px;
-      height: 50px;
+      width: 42px;
+      height: 42px;
       border-radius: 50%;
       object-fit: cover;
       border: 1px solid rgba(212,165,116,0.22);
       flex-shrink: 0;
     }
     .profile-avatar-ph {
-      width: 50px;
-      height: 50px;
+      width: 42px;
+      height: 42px;
       border-radius: 50%;
       background: var(--surface);
       border: 1px solid var(--border2);
@@ -239,7 +254,7 @@
     .profile-info { flex: 1; min-width: 0; }
     .profile-name {
       font-family: 'Fraunces', serif;
-      font-size: 1.35rem;
+      font-size: 1.2rem;
       font-weight: 300;
       color: var(--text);
       line-height: 1;
@@ -260,76 +275,6 @@
       flex-shrink: 0;
     }
     .back-btn:hover { color: var(--text); border-color: var(--muted2); }
-
-    /* Stat grid */
-    .stat-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-      animation: fadeUp 0.5s 0.05s ease both;
-    }
-
-    .stat-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1rem 0.8rem;
-      text-align: center;
-    }
-
-    .stat-card.hero {
-      grid-column: 1 / -1;
-      background: rgba(212,165,116,0.04);
-      border-color: rgba(212,165,116,0.18);
-      padding: 1.8rem 1rem 1.4rem;
-      position: relative;
-      overflow: hidden;
-    }
-    .stat-card.hero::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(ellipse 70% 60% at 50% 0%, rgba(212,165,116,0.07) 0%, transparent 70%);
-      pointer-events: none;
-    }
-
-    .hero-number {
-      font-family: 'Fraunces', serif;
-      font-size: 4rem;
-      font-weight: 100;
-      color: var(--accent);
-      line-height: 1;
-      letter-spacing: -0.02em;
-    }
-    .hero-unit {
-      font-size: 0.62rem;
-      letter-spacing: 0.2em;
-      color: var(--accent2);
-      text-transform: lowercase;
-      margin-top: 0.35rem;
-    }
-    .hero-sub {
-      font-size: 0.53rem;
-      letter-spacing: 0.1em;
-      color: var(--muted2);
-      margin-top: 0.7rem;
-    }
-
-    .stat-number {
-      font-family: 'Fraunces', serif;
-      font-size: 1.55rem;
-      font-weight: 100;
-      color: var(--text);
-      line-height: 1;
-    }
-    .stat-label {
-      font-size: 0.5rem;
-      letter-spacing: 0.16em;
-      color: var(--muted2);
-      text-transform: lowercase;
-      margin-top: 0.35rem;
-      line-height: 1.5;
-    }
 
     /* Sections */
     .section {
@@ -531,23 +476,23 @@
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 1rem 1rem 0.9rem;
+      padding: 0.85rem 1rem;
       display: flex;
       flex-direction: column;
-      gap: 0.65rem;
+      gap: 0.45rem;
     }
     .ban-card.danger  { border-color: rgba(232,114,111,0.3); background: rgba(232,114,111,0.04); }
     .ban-card.warning { border-color: rgba(212,165,116,0.3); background: rgba(212,165,116,0.04); }
 
-    .ban-header { display: flex; align-items: baseline; gap: 0.6rem; }
+    .ban-header { display: flex; align-items: center; gap: 0.75rem; }
     .ban-pct {
       font-family: 'Fraunces', serif;
-      font-size: 2.6rem;
+      font-size: 1.8rem;
       font-weight: 100;
       line-height: 1;
       letter-spacing: -0.02em;
+      flex-shrink: 0;
     }
-    .ban-pct-sub { font-size: 0.58rem; letter-spacing: 0.14em; color: var(--muted2); text-transform: lowercase; }
 
     .ban-bar-wrap {
       height: 5px;
@@ -562,10 +507,8 @@
       transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
-    .ban-details { display: flex; flex-direction: column; gap: 0.25rem; }
-    .ban-detail-row { display: flex; justify-content: space-between; align-items: center; }
-    .ban-detail-label { font-size: 0.56rem; color: var(--muted2); letter-spacing: 0.1em; text-transform: lowercase; }
-    .ban-detail-val   { font-size: 0.62rem; color: var(--text); letter-spacing: 0.06em; }
+    .ban-detail-label { font-size: 0.54rem; color: var(--muted2); letter-spacing: 0.1em; text-transform: lowercase; }
+    .ban-detail-val   { font-size: 0.6rem; color: var(--text); letter-spacing: 0.06em; }
     .ban-status {
       font-size: 0.58rem;
       letter-spacing: 0.12em;
@@ -682,8 +625,8 @@
     /* insight pills */
     .insight-row {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 8px;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 7px;
     }
     .insight {
       background: rgba(212,165,116,0.04);
@@ -711,7 +654,7 @@
       align-items: flex-end;
       justify-content: space-between;
       gap: 5px;
-      height: 110px;
+      height: 72px;
     }
     .day-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 0.4rem; height: 100%; justify-content: flex-end; min-width: 0; }
     .day-bar-track { width: 100%; flex: 1; display: flex; align-items: flex-end; }
@@ -750,14 +693,14 @@
     .heatmap-grid {
       display: grid;
       grid-template-columns: 28px repeat(7, 1fr);
-      gap: 2px;
+      gap: 1px;
     }
-    .hm-spacer { height: 14px; }
+    .hm-spacer { height: 12px; }
     .hm-day-label {
       font-size: 0.44rem;
       color: var(--muted);
       text-align: center;
-      height: 14px;
+      height: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -768,11 +711,11 @@
       color: var(--muted);
       text-align: right;
       padding-right: 4px;
-      height: 11px;
-      line-height: 11px;
+      height: 8px;
+      line-height: 8px;
     }
     .hm-cell {
-      height: 11px;
+      height: 8px;
       border-radius: 2px;
       background: rgba(212,165,116,var(--hm-a, 0));
     }
@@ -1058,7 +1001,7 @@
     const artistRows = buildArtistRows(topArtists);
     const { rows: trackRows, tracks: trackList } = buildTrackRows(topTracks);
     const albumRows  = buildAlbumRows(topAlbums);
-    const recents    = toArr(recent?.recenttracks?.track).slice(0, 6);
+    const recents    = toArr(recent?.recenttracks?.track).slice(0, 4);
 
     const recentRows = recents.map(t => {
       const isNow = t['@attr']?.nowplaying === 'true';
@@ -1081,49 +1024,54 @@
     const firstTab = artistRows ? 'artists' : trackRows ? 'tracks' : 'albums';
 
     document.getElementById('results-card').innerHTML = `
-      <div class="profile-row">
-        ${avatarUrl ? `<img class="profile-avatar" src="${avatarUrl}" alt="${u.name}" />` : `<div class="profile-avatar-ph">♪</div>`}
-        <div class="profile-info">
-          <div class="profile-name">${u.name}</div>
-          <div class="profile-meta">${fmt(totalPlays)} total scrobbles · member for ${memberYears}y</div>
-          <div class="integrity-badge"><span class="badge badge-checking">⟳ checking integrity...</span></div>
+      <div class="profile-banner">
+        <div class="profile-top">
+          ${avatarUrl ? `<img class="profile-avatar" src="${avatarUrl}" alt="${u.name}" />` : `<div class="profile-avatar-ph">♪</div>`}
+          <div class="profile-info">
+            <div class="profile-name">${u.name}</div>
+            <div class="profile-meta">${fmt(totalPlays)} total scrobbles · member for ${memberYears}y</div>
+            <div class="integrity-badge"><span class="badge badge-checking">⟳ checking integrity...</span></div>
+          </div>
+          <button class="back-btn" onclick="show('page-input')">← back</button>
         </div>
-        <button class="back-btn" onclick="show('page-input')">← back</button>
-      </div>
-
-      <div class="stat-grid">
-        <div class="stat-card hero">
-          <div class="hero-number" id="hero-number" style="color:var(--muted2)">—</div>
-          <div class="hero-unit"   id="hero-unit"   style="animation:blink 2s ease infinite">calculating hours...</div>
-          <div class="hero-sub"    id="hero-sub">${weekTotal ? `${fmt(weekTotal)} scrobbles · ~${avgPerDay}/day` : 'recent tracks private'}</div>
-        </div>
-        <div class="stat-card"><div class="stat-number">${weekTotal ? fmt(weekTotal) : '—'}</div><div class="stat-label">scrobbles<br>this week</div></div>
-        <div class="stat-card"><div class="stat-number">${avgPerDay}</div><div class="stat-label">avg tracks<br>per day</div></div>
-        <div class="stat-card"><div class="stat-number">${fmt(totalPlays)}</div><div class="stat-label">all-time<br>scrobbles</div></div>
-      </div>
-
-      <div class="results-grid">
-        <div class="results-col">
-          <div class="ban-card" id="ban-card"></div>
-          <div id="patterns-card"></div>
-        </div>
-        <div class="results-col">
-          ${hasTabs ? `
-          <div class="tabs-card">
-            <div class="tabs-header">
-              ${artistRows ? `<button class="tab-btn${firstTab==='artists'?' active':''}" onclick="switchTab('artists')">artists</button>` : ''}
-              ${trackRows  ? `<button class="tab-btn${firstTab==='tracks' ?' active':''}" onclick="switchTab('tracks')">tracks</button>`   : ''}
-              ${albumRows  ? `<button class="tab-btn${firstTab==='albums' ?' active':''}" onclick="switchTab('albums')">albums</button>`   : ''}
-            </div>
-            ${artistRows ? `<div class="tab-content${firstTab==='artists'?' active':''}" id="tab-artists">${artistRows}</div>` : ''}
-            ${trackRows  ? `<div class="tab-content${firstTab==='tracks' ?' active':''}" id="tab-tracks">${trackRows}</div>`   : ''}
-            ${albumRows  ? `<div class="tab-content${firstTab==='albums' ?' active':''}" id="tab-albums">${albumRows}</div>`   : ''}
-          </div>` : ''}
-
-          ${recentRows.length ? `<div class="section"><div class="section-head"><span class="section-label">recently played</span></div>${recentRows}</div>` : ''}
-          ${!recent ? `<div class="section"><div class="section-head"><span class="section-label">recently played</span></div><p style="font-size:0.62rem;color:var(--muted2);padding:0.8rem 0.7rem">recent tracks are private</p></div>` : ''}
+        <div class="stat-strip">
+          <div class="stat-strip-item">
+            <span class="strip-num" id="hero-number" style="color:var(--muted2);animation:blink 2s ease infinite">—</span>
+            <span class="strip-lbl" id="hero-unit">hrs · 7 days</span>
+          </div>
+          <div class="stat-strip-item">
+            <span class="strip-num">${weekTotal ? fmt(weekTotal) : '—'}</span>
+            <span class="strip-lbl">scrobbles<br>this week</span>
+          </div>
+          <div class="stat-strip-item">
+            <span class="strip-num">${avgPerDay}</span>
+            <span class="strip-lbl">avg tracks<br>per day</span>
+          </div>
+          <div class="stat-strip-item">
+            <span class="strip-num">${fmt(totalPlays)}</span>
+            <span class="strip-lbl">all-time<br>scrobbles</span>
+          </div>
         </div>
       </div>
+
+      <div class="ban-card" id="ban-card"></div>
+
+      ${hasTabs ? `
+      <div class="tabs-card">
+        <div class="tabs-header">
+          ${artistRows ? `<button class="tab-btn${firstTab==='artists'?' active':''}" onclick="switchTab('artists')">artists</button>` : ''}
+          ${trackRows  ? `<button class="tab-btn${firstTab==='tracks' ?' active':''}" onclick="switchTab('tracks')">tracks</button>`   : ''}
+          ${albumRows  ? `<button class="tab-btn${firstTab==='albums' ?' active':''}" onclick="switchTab('albums')">albums</button>`   : ''}
+        </div>
+        ${artistRows ? `<div class="tab-content${firstTab==='artists'?' active':''}" id="tab-artists">${artistRows}</div>` : ''}
+        ${trackRows  ? `<div class="tab-content${firstTab==='tracks' ?' active':''}" id="tab-tracks">${trackRows}</div>`   : ''}
+        ${albumRows  ? `<div class="tab-content${firstTab==='albums' ?' active':''}" id="tab-albums">${albumRows}</div>`   : ''}
+      </div>` : ''}
+
+      ${recentRows.length ? `<div class="section"><div class="section-head"><span class="section-label">recently played</span></div>${recentRows}</div>` : ''}
+      ${!recent ? `<div class="section"><div class="section-head"><span class="section-label">recently played</span></div><p style="font-size:0.62rem;color:var(--muted2);padding:0.8rem 0.7rem">recent tracks are private</p></div>` : ''}
+
+      <div id="patterns-card"></div>
     `;
 
     if (trackList.length) loadTrackImages(trackList);
@@ -1262,10 +1210,11 @@
     const realWeekHrs = weekListenSecs / 3600;
     const heroNum  = document.getElementById('hero-number');
     const heroUnit = document.getElementById('hero-unit');
-    const heroSub  = document.getElementById('hero-sub');
-    if (heroNum) heroNum.textContent = realWeekHrs < 10 ? realWeekHrs.toFixed(1) : Math.round(realWeekHrs);
-    if (heroUnit) heroUnit.textContent = realWeekHrs >= 1 ? 'listening hours this week' : 'listening minutes this week';
-    if (heroSub) heroSub.textContent = `${fmt(week.length)} scrobbles · ~${(week.length / 7).toFixed(1)}/day`;
+    if (heroNum) {
+      heroNum.textContent = realWeekHrs < 10 ? realWeekHrs.toFixed(1) : Math.round(realWeekHrs);
+      heroNum.style.cssText = '';
+    }
+    if (heroUnit) heroUnit.textContent = realWeekHrs >= 1 ? 'hrs · 7 days' : 'mins · 7 days';
 
     // ── Listening patterns visualizations ──
     renderPatterns(week, uniq);
@@ -1562,32 +1511,20 @@
 
     card.className = `ban-card ${cardExtra}`;
     card.innerHTML = `
-      <div class="section-head" style="margin-bottom:0">
-        <span class="section-label">leaderboard ban risk · 8-day rolling window</span>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.4rem">
+        <span class="section-label">ban risk · 8-day window</span>
+        <span class="ban-status ${statusClass}">${statusText}</span>
       </div>
       <div class="ban-header">
         <span class="ban-pct" style="color:${banColor}">${banDisplay}</span>
-        <span class="ban-pct-sub">of ban threshold</span>
-      </div>
-      <div class="ban-bar-wrap">
-        <div class="ban-bar" style="width:${barPct}%;background:${banColor}"></div>
-      </div>
-      <div class="ban-details">
-        <div class="ban-detail-row">
-          <span class="ban-detail-label">actual listening (8 days)</span>
-          <span class="ban-detail-val">${listenHrs} hrs / 144 hr limit</span>
-        </div>
-        <div class="ban-detail-row">
-          <span class="ban-detail-label">${banPct >= 100 ? 'over limit by' : 'headroom remaining'}</span>
-          <span class="ban-detail-val" style="color:${banColor}">${banPct >= 100 ? '+' + overHrs : remainHrs} hrs</span>
-        </div>
-        <div class="ban-detail-row">
-          <span class="ban-detail-label">scrobbles counted</span>
-          <span class="ban-detail-val">${fmt(scrobbleCount)} tracks · ${coverage}% had real durations</span>
-        </div>
-        <div class="ban-detail-row">
-          <span class="ban-detail-label">window type</span>
-          <span class="ban-detail-val">rolling · drops off as scrobbles age out</span>
+        <div style="flex:1;display:flex;flex-direction:column;gap:0.35rem">
+          <div class="ban-bar-wrap">
+            <div class="ban-bar" style="width:${barPct}%;background:${banColor}"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between">
+            <span class="ban-detail-label">${listenHrs} hrs / 144 hr limit</span>
+            <span class="ban-detail-val" style="color:${banColor}">${banPct >= 100 ? '+' + overHrs + ' hrs over' : remainHrs + ' hrs left'}</span>
+          </div>
         </div>
       </div>
       `;
