@@ -1615,7 +1615,7 @@
     let banColor, cardExtra, statusClass, statusText, banDisplay;
     if (banPct >= 100) {
       banColor = '#e8726f'; cardExtra = 'danger';
-      statusClass = 'danger'; statusText = '⚠ over est. limit';
+      statusClass = 'danger'; statusText = 'over est. limit!';
       banDisplay = banPct > 999 ? '999+%' : banPct.toFixed(1) + '%';
     } else if (banPct >= 75) {
       banColor = '#e8a46f'; cardExtra = 'warning';
@@ -1623,7 +1623,7 @@
       banDisplay = banPct.toFixed(1) + '%';
     } else if (banPct >= 40) {
       banColor = '#d4a574'; cardExtra = '';
-      statusClass = 'caution'; statusText = 'worth watching';
+      statusClass = 'caution'; statusText = 'scary';
       banDisplay = banPct.toFixed(1) + '%';
     } else {
       banColor = '#4ade80'; cardExtra = '';
