@@ -179,6 +179,7 @@
       animation: spin 0.8s linear infinite;
     }
     .loading-label { font-size: 0.6rem; letter-spacing: 0.18em; color: var(--muted2); text-transform: lowercase; }
+    .loading-sub { font-size: 0.52rem; letter-spacing: 0.14em; color: var(--muted); text-transform: lowercase; min-height: 0.8em; }
 
     .results-card {
       width: 100%;
@@ -879,7 +880,8 @@
 <div class="page hidden" id="page-loading">
   <div class="loading-wrap">
     <div class="spinner"></div>
-    <p class="loading-label">fetching stats...</p>
+    <p class="loading-label" id="loading-label">looking up user...</p>
+    <p class="loading-sub" id="loading-sub"></p>
   </div>
 </div>
 
@@ -951,7 +953,6 @@
   const inpUser = document.getElementById('inp-user');
   inpUser.value = localStorage.getItem('lfm_user') || '';
 
-  // Auto-load from ?user= param
   const _paramUser = new URLSearchParams(location.search).get('user');
   if (_paramUser) inpUser.value = _paramUser;
 
@@ -1060,10 +1061,17 @@
   // ── Load & render ──
   async function loadStats(user) {
     show('page-loading');
+    const lblEl = document.getElementById('loading-label');
+    const subEl = document.getElementById('loading-sub');
+    const setStatus = (lbl, sub = '') => {
+      if (lblEl) lblEl.textContent = lbl;
+      if (subEl) subEl.textContent = sub;
+    };
+
     const now     = Math.floor(Date.now() / 1000);
     const weekAgo = now - 7 * 24 * 60 * 60;
 
-    // Profile is required — fail fast if it errors
+    setStatus('looking up user...');
     let info;
     try {
       info = await lfm('user.getInfo', API_KEY, { user });
@@ -1073,7 +1081,7 @@
       return;
     }
 
-    // Everything else loads gracefully — private or failed sections just show nothing
+    setStatus('loading stats...', 'top artists · top tracks · top albums · recent plays');
     const settled = await Promise.allSettled([
       lfm('user.getRecentTracks', API_KEY, { user, from: weekAgo, to: now, limit: 1 }),
       lfm('user.getTopArtists',   API_KEY, { user, period: '7day', limit: 5 }),
@@ -1092,9 +1100,27 @@
       recent:     ok(settled[4]),
     });
     show('page-results');
-    runAnalysis(user).catch(() => {
-      const b = document.querySelector('.integrity-badge');
-      if (b) b.innerHTML = `<span class="badge badge-error">~ couldn't check</span>`;
+    runAnalysis(user).catch(e => {
+      const banCard = document.getElementById('ban-card');
+      if (banCard && !banCard.querySelector('.ban-pct')) {
+        banCard.className = 'ban-card';
+        banCard.style.cssText = '';
+        banCard.innerHTML = `
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <span class="section-label">ban risk</span>
+            <span class="ban-status danger">error</span>
+          </div>
+          <p style="font-size:0.55rem;color:var(--red);letter-spacing:0.06em;margin-top:0.3rem">${e.message || 'analysis failed'}</p>`;
+      }
+      const intCard = document.getElementById('integrity-card');
+      if (intCard) {
+        intCard.style.opacity = '1';
+        intCard.innerHTML = `
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <span class="section-label">manual scrobbles</span>
+            <span class="ban-status danger">error</span>
+          </div>`;
+      }
     });
   }
 
@@ -1134,7 +1160,6 @@
     }).join('');
 
     const hasTabs = artistRows || trackRows || albumRows;
-    // Default active tab: first available
     const firstTab = artistRows ? 'artists' : trackRows ? 'tracks' : 'albums';
 
     document.getElementById('results-card').innerHTML = `
@@ -1167,7 +1192,10 @@
         </div>
       </div>
 
-      <div class="ban-card" id="ban-card"></div>
+      <div class="ban-card" id="ban-card" style="opacity:0.6;gap:0.3rem">
+        <span class="section-label">ban risk</span>
+        <span class="badge badge-checking">⟳ loading history...</span>
+      </div>
 
       <div class="ban-card" id="integrity-card" style="gap:0.3rem;opacity:0.6">
         <span class="section-label">manual scrobbles</span>
@@ -1224,7 +1252,6 @@
     if (!tracks.length) return { rows: null, tracks: [] };
     const max = parseInt(tracks[0].playcount);
     const rows = tracks.map((t, i) =>
-      // Placeholder image with unique id — loadTrackImages() fills it in
       listItem(i+1, null, t.name, t.artist.name, `${fmt(t.playcount)} plays`,
         Math.round((parseInt(t.playcount)/max)*100), `timg-${i}`)
     ).join('');
@@ -1260,7 +1287,8 @@
     const eightAgo = now - 8 * 24 * 60 * 60;
     const weekAgo  = now - 7 * 24 * 60 * 60;
 
-    // Fetch all 8-day scrobbles (paginated, cap 10 pages = 2000 tracks)
+    const banCard = document.getElementById('ban-card');
+
     const page1 = await lfm('user.getRecentTracks', API_KEY, {
       user, from: eightAgo, to: now, limit: 200, page: 1
     });
@@ -1268,6 +1296,7 @@
     let all = toArr(page1.recenttracks.track).filter(t => t.date);
 
     if (totalPages > 1) {
+      if (banCard) banCard.innerHTML = `<span class="section-label">ban risk</span><span class="badge badge-checking" style="margin-top:0.2rem;display:inline-flex">⟳ loading history (${totalPages} pages)...</span>`;
       const rest = await Promise.all(
         Array.from({ length: totalPages - 1 }, (_, i) =>
           lfm('user.getRecentTracks', API_KEY, {
@@ -1278,16 +1307,15 @@
       rest.forEach(p => all = all.concat(toArr(p.recenttracks.track).filter(t => t.date)));
     }
 
-    // Build unique track map
     const uniq = {};
     all.forEach(t => {
       const key = `${t.artist['#text']}|||${t.name}`;
       if (!uniq[key]) uniq[key] = { artist: t.artist['#text'], name: t.name, duration: null };
     });
 
-    // Batch-fetch actual durations from Last.fm (returns milliseconds)
     const keys = Object.keys(uniq);
-    const BATCH = 15;
+    const BATCH = 8;
+    if (banCard) banCard.innerHTML = `<span class="section-label">ban risk</span><span class="badge badge-checking" id="dur-progress" style="margin-top:0.2rem;display:inline-flex">⟳ fetching durations (0/${keys.length} tracks)...</span>`;
     for (let i = 0; i < keys.length; i += BATCH) {
       await Promise.all(
         keys.slice(i, i + BATCH).map(async key => {
@@ -1297,25 +1325,34 @@
               track:  uniq[key].name
             });
             const ms = parseInt(d.track?.duration);
-            if (ms > 0) uniq[key].duration = ms / 1000; // ms → seconds
+            if (ms > 0) uniq[key].duration = ms / 1000;
           } catch {}
         })
       );
+      const prog = document.getElementById('dur-progress');
+      if (prog) prog.textContent = `⟳ fetching durations (${Math.min(i + BATCH, keys.length)}/${keys.length} tracks)`;
+      if (i + BATCH < keys.length) await new Promise(r => setTimeout(r, 120));
     }
 
-    // ── Ban risk: sum real durations over 8-day window ──
-    const FALLBACK_SECS = 210; // only used for tracks with no duration in Last.fm db
-    const BAN_LIMIT_SECS = 6 * 24 * 3600; // 144 hours
+    const BAN_LIMIT_SECS = 6 * 24 * 3600;
+
+    let knownSum = 0, knownN = 0;
+    all.forEach(t => {
+      const dur = uniq[`${t.artist['#text']}|||${t.name}`]?.duration;
+      if (dur) { knownSum += dur; knownN++; }
+    });
+    const fallbackSecs = knownN > 0 ? knownSum / knownN : 210;
 
     let totalListenSecs = 0;
     let tracksWithRealDur = 0;
+    let tracksWithFallback = 0;
     all.forEach(t => {
       const dur = uniq[`${t.artist['#text']}|||${t.name}`]?.duration;
       if (dur) { totalListenSecs += dur; tracksWithRealDur++; }
-      else      { totalListenSecs += FALLBACK_SECS; }
+      else      { totalListenSecs += fallbackSecs; tracksWithFallback++; }
     });
 
-    updateBanCard(totalListenSecs, all.length, tracksWithRealDur);
+    updateBanCard(totalListenSecs, all.length, tracksWithRealDur, tracksWithFallback, fallbackSecs);
 
     // ── Update hero card with real 7-day listening time ──
     const week = all.filter(t => parseInt(t.date.uts) >= weekAgo);
@@ -1323,7 +1360,7 @@
     let weekListenSecs = 0;
     week.forEach(t => {
       const dur = uniq[`${t.artist['#text']}|||${t.name}`]?.duration;
-      weekListenSecs += dur ?? FALLBACK_SECS;
+      weekListenSecs += dur ?? fallbackSecs;
     });
     const realWeekHrs = weekListenSecs / 3600;
     const heroNum  = document.getElementById('hero-number');
@@ -1600,17 +1637,19 @@
     });
   }
 
-  function updateBanCard(totalSecs, scrobbleCount, realDurCount) {
+  function updateBanCard(totalSecs, scrobbleCount, realDurCount, fallbackCount = 0, fallbackSecs = 210) {
     const card = document.getElementById('ban-card');
     if (!card) return;
 
-    const BAN_LIMIT_SECS = 6 * 24 * 3600; // 144 hrs
-    const banPct   = (totalSecs / BAN_LIMIT_SECS) * 100;
-    const barPct   = Math.min(banPct, 100);
-    const listenHrs  = (totalSecs / 3600).toFixed(1);
-    const remainHrs  = Math.max((BAN_LIMIT_SECS - totalSecs) / 3600, 0).toFixed(1);
-    const overHrs    = ((totalSecs - BAN_LIMIT_SECS) / 3600).toFixed(1);
-    const coverage   = Math.round((realDurCount / scrobbleCount) * 100);
+    const BAN_LIMIT_SECS = 6 * 24 * 3600;
+    const banPct    = (totalSecs / BAN_LIMIT_SECS) * 100;
+    const barPct    = Math.min(banPct, 100);
+    const listenHrs = (totalSecs / 3600).toFixed(1);
+    const remainHrs = Math.max((BAN_LIMIT_SECS - totalSecs) / 3600, 0).toFixed(1);
+    const overHrs   = ((totalSecs - BAN_LIMIT_SECS) / 3600).toFixed(1);
+    const fbMin     = Math.floor(fallbackSecs / 60);
+    const fbSecR    = Math.round(fallbackSecs % 60);
+    const fmtFb     = `${fbMin}m${fbSecR > 0 ? ' ' + fbSecR + 's' : ''}`;
 
     let banColor, cardExtra, statusClass, statusText, banDisplay;
     if (banPct >= 100) {
@@ -1632,6 +1671,7 @@
     }
 
     card.className = `ban-card ${cardExtra}`;
+    card.style.cssText = '';
     card.innerHTML = `
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.4rem">
         <span class="section-label">ban risk · est. 8-day window</span>
@@ -1644,12 +1684,13 @@
             <div class="ban-bar" style="width:${barPct}%;background:${banColor}"></div>
           </div>
           <div style="display:flex;justify-content:space-between">
-            <span class="ban-detail-label">${listenHrs} hrs listened / ~144 hr limit</span>
+            <span class="ban-detail-label">${listenHrs} hrs listened / 144 hr limit</span>
             <span class="ban-detail-val" style="color:${banColor}">${banPct >= 100 ? '+' + overHrs + ' hrs over' : remainHrs + ' hrs left'}</span>
           </div>
+          <div style="font-size:0.47rem;color:var(--muted);letter-spacing:0.06em;margin-top:0.05rem">${realDurCount}/${scrobbleCount} real durations${fallbackCount > 0 ? ` · ${fallbackCount} estimated at avg ${fmtFb}` : ''}</div>
         </div>
       </div>
-      <p style="font-size:0.49rem;color:var(--muted);letter-spacing:0.07em;margin-top:0.1rem;line-height:1.55">just an estimation!</p>
+      <p style="font-size:0.49rem;color:var(--muted);letter-spacing:0.07em;margin-top:0.1rem;line-height:1.55">just a rough indicator!</p>
       `;
   }
 
