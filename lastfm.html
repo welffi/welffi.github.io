@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>last.fm stats · welffi</title>
-  <meta name="description" content="Look up Last.fm listening stats — hours this week, ban risk, top artists, tracks, and albums." />
+  <meta name="description" content="Look up Last.fm listening stats, showing listening hours this week, ban risk, top artists, tracks, and albums." />
   <meta property="og:type"        content="website" />
   <meta property="og:url"         content="https://welffi.github.io/lastfm.html" />
   <meta property="og:site_name"   content="welffi" />
@@ -1402,7 +1402,7 @@
         <span style="font-size:0.56rem;letter-spacing:0.08em;color:var(--accent2)">${uniqSusp.length} flagged · ${msPct}% of week</span>
       </div>
       <div class="ms-list">${msRows}${msExtra}</div>
-      <p class="ms-note">tracks scrobbled faster than their expected listening time — likely added manually via Universal Scrobbler or fmbot commands · not against Last.fm rules</p>
+      <p class="ms-note">tracks scrobbled faster than their expected listening time, likely added manually</p>
     `;
   }
 
@@ -1649,7 +1649,7 @@
           </div>
         </div>
       </div>
-      <p style="font-size:0.49rem;color:var(--muted);letter-spacing:0.07em;margin-top:0.1rem;line-height:1.55">fmbot's exact ban threshold is undocumented · based on estimated track durations · treat as a rough indicator</p>
+      <p style="font-size:0.49rem;color:var(--muted);letter-spacing:0.07em;margin-top:0.1rem;line-height:1.55">just an estimation!</p>
       `;
   }
 
