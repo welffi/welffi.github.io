@@ -802,6 +802,13 @@
     .list-name-link { text-decoration: none; color: inherit; transition: color 0.15s; }
     .list-name-link:hover { color: var(--accent2); }
 
+    .ms-list { display: flex; flex-direction: column; margin-top: 0.35rem; }
+    .ms-item { padding: 0.42rem 0; border-bottom: 1px solid var(--border); }
+    .ms-item:last-child { border-bottom: none; }
+    .ms-track { font-size: 0.68rem; color: var(--text); }
+    .ms-detail { font-size: 0.55rem; color: var(--muted2); letter-spacing: 0.04em; margin-top: 0.1rem; line-height: 1.5; }
+    .ms-note { font-size: 0.51rem; color: var(--muted); letter-spacing: 0.07em; line-height: 1.65; margin-top: 0.55rem; border-top: 1px solid var(--border); padding-top: 0.45rem; }
+
     @media (min-width: 600px) {
       .profile-name    { font-size: 1.4rem; }
       .profile-meta    { font-size: 0.64rem; }
@@ -838,6 +845,9 @@
       .recent-title    { font-size: 0.8rem; }
       .recent-sub      { font-size: 0.65rem; }
       .recent-time     { font-size: 0.62rem; }
+      .ms-track        { font-size: 0.76rem; }
+      .ms-detail       { font-size: 0.62rem; }
+      .ms-note         { font-size: 0.58rem; }
     }
   </style>
 </head>
@@ -1134,7 +1144,6 @@
           <div class="profile-info">
             <div class="profile-name">${u.name}</div>
             <div class="profile-meta">${fmt(totalPlays)} total scrobbles · member for ${memberYears}y</div>
-            <div class="integrity-badge"><span class="badge badge-checking">⟳ checking integrity...</span></div>
           </div>
           <button class="back-btn" onclick="show('page-input')">← back</button>
         </div>
@@ -1159,6 +1168,11 @@
       </div>
 
       <div class="ban-card" id="ban-card"></div>
+
+      <div class="ban-card" id="integrity-card" style="gap:0.3rem;opacity:0.6">
+        <span class="section-label">manual scrobbles</span>
+        <span class="badge badge-checking">⟳ checking...</span>
+      </div>
 
       ${hasTabs ? `
       <div class="tabs-card">
@@ -1335,8 +1349,8 @@
       const currDur = uniq[`${curr.artist['#text']}|||${curr.name}`]?.duration;
 
       const minGap = currDur
-        ? Math.max(Math.min(currDur * 0.5, 240), 30)
-        : (prevDur ? Math.min(prevDur * 0.4, 90) : 30);
+        ? Math.max(Math.min(currDur * 0.3, 120), 15)
+        : 20;
 
       if (gap < minGap) {
         suspicious.push({
@@ -1347,15 +1361,20 @@
       }
     }
 
-    const badge = document.querySelector('.integrity-badge');
-    if (!badge) return;
+    const intCard = document.getElementById('integrity-card');
+    if (!intCard) return;
+
+    intCard.style.opacity = '1';
 
     if (suspicious.length === 0) {
-      badge.innerHTML = `<span class="badge badge-clean">✓ clean · ${week.length} scrobbles checked</span>`;
+      intCard.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <span class="section-label">manual scrobbles</span>
+          <span class="ban-status safe">✓ none detected · ${week.length} checked</span>
+        </div>`;
       return;
     }
 
-    // Deduplicate
     const seen = new Set();
     const uniqSusp = suspicious.filter(s => {
       const k = `${s.prevTrack}|${s.currTrack}`;
@@ -1367,26 +1386,24 @@
       return s >= 60 ? `${Math.floor(s/60)}m ${Math.round(s%60)}s` : `${Math.round(s)}s`;
     }
 
-    const rows = uniqSusp.slice(0, 5).map(s => `
-      <div class="suspicious-row">
-        <div class="suspicious-track">${s.currTrack} <span style="color:var(--muted2)">by ${s.currArtist}</span></div>
-        <div class="suspicious-detail">
-          scrobbled ${fmtSecs(s.gap)} after "${s.prevTrack}"
-          ${s.currDur ? `· needs ≥ ${fmtSecs(Math.min(s.currDur * 0.5, 240))} to scrobble legitimately` : ''}
-        </div>
+    const msPct = Math.round((uniqSusp.length / week.length) * 100);
+    const msRows = uniqSusp.slice(0, 8).map(s => `
+      <div class="ms-item">
+        <div class="ms-track">${s.currTrack} <span style="color:var(--muted2)">by ${s.currArtist}</span></div>
+        <div class="ms-detail">scrobbled ${fmtSecs(s.gap)} after "${s.prevTrack}"${s.currDur ? ` · min expected ${fmtSecs(Math.max(Math.min(s.currDur * 0.3, 120), 15))}` : ''}</div>
       </div>`).join('');
 
-    const extra = uniqSusp.length > 5
-      ? `<div class="suspicious-detail" style="margin-top:0.2rem">+ ${uniqSusp.length - 5} more</div>` : '';
+    const msExtra = uniqSusp.length > 8
+      ? `<div class="ms-detail" style="padding-top:0.3rem">+ ${uniqSusp.length - 8} more</div>` : '';
 
-    badge.innerHTML = `
-      <span class="badge badge-caution" onclick="this.closest('.integrity-badge').querySelector('.suspicious-list').classList.toggle('hidden')">
-        ${suspicious.length} impossible scrobble${suspicious.length !== 1 ? 's' : ''} · click to expand
-      </span>
-      <div class="suspicious-list hidden">
-        ${rows}
-        ${extra}
-      </div>`;
+    intCard.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.4rem">
+        <span class="section-label">manual scrobbles</span>
+        <span style="font-size:0.56rem;letter-spacing:0.08em;color:var(--accent2)">${uniqSusp.length} flagged · ${msPct}% of week</span>
+      </div>
+      <div class="ms-list">${msRows}${msExtra}</div>
+      <p class="ms-note">tracks scrobbled faster than their expected listening time — likely added manually via Universal Scrobbler or fmbot commands · not against Last.fm rules</p>
+    `;
   }
 
   function renderPatterns(week, uniq) {
@@ -1598,7 +1615,7 @@
     let banColor, cardExtra, statusClass, statusText, banDisplay;
     if (banPct >= 100) {
       banColor = '#e8726f'; cardExtra = 'danger';
-      statusClass = 'banned'; statusText = '⚠ would be banned';
+      statusClass = 'danger'; statusText = '⚠ over est. limit';
       banDisplay = banPct > 999 ? '999+%' : banPct.toFixed(1) + '%';
     } else if (banPct >= 75) {
       banColor = '#e8a46f'; cardExtra = 'warning';
@@ -1617,7 +1634,7 @@
     card.className = `ban-card ${cardExtra}`;
     card.innerHTML = `
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.4rem">
-        <span class="section-label">ban risk · 8-day window</span>
+        <span class="section-label">ban risk · est. 8-day window</span>
         <span class="ban-status ${statusClass}">${statusText}</span>
       </div>
       <div class="ban-header">
@@ -1627,11 +1644,12 @@
             <div class="ban-bar" style="width:${barPct}%;background:${banColor}"></div>
           </div>
           <div style="display:flex;justify-content:space-between">
-            <span class="ban-detail-label">${listenHrs} hrs / 144 hr limit</span>
+            <span class="ban-detail-label">${listenHrs} hrs listened / ~144 hr limit</span>
             <span class="ban-detail-val" style="color:${banColor}">${banPct >= 100 ? '+' + overHrs + ' hrs over' : remainHrs + ' hrs left'}</span>
           </div>
         </div>
       </div>
+      <p style="font-size:0.49rem;color:var(--muted);letter-spacing:0.07em;margin-top:0.1rem;line-height:1.55">fmbot's exact ban threshold is undocumented · based on estimated track durations · treat as a rough indicator</p>
       `;
   }
 
