@@ -11,24 +11,31 @@
   <meta property="og:title"       content="last.fm stats" />
   <meta property="og:description" content="listening hours · ban risk · top artists, tracks &amp; albums · impossible scrobble check" />
   <meta property="og:image"       content="https://i.imgur.com/c7moPaj.png" />
-  <meta name="theme-color"        content="#d4a574" />
+  <meta name="theme-color"        content="#d8a772" />
   <link rel="icon" type="image/png" href="https://i.imgur.com/c7moPaj.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,100;0,9..144,300;1,9..144,100;1,9..144,300&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200;0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,200;1,6..72,300;1,6..72,400&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --bg:       #0a0908;
-      --surface:  #141210;
-      --surface2: #1a1714;
-      --border:   #241f1b;
-      --border2:  #2e2821;
-      --text:     #ede8e0;
-      --muted:    #4e463c;
-      --muted2:   #695e52;
-      --accent:   #d4a574;
-      --accent2:  #e8c49a;
-      --red:      #e8726f;
+      --bg:       #0b0a08;
+      --surface:  #15110d;
+      --surface2: #1d1814;
+      --surface3: #241e18;
+      --border:   #261f19;
+      --border2:  #342b22;
+      --text:     #f0eae1;
+      --muted:    #574d40;
+      --muted2:   #786a59;
+      --muted3:   #9c8d79;
+      --accent:   #d8a772;
+      --accent2:  #edca9f;
+      --green:    #82d7a4;
+      --red:      #e87b78;
+      --purple:   #9d89d6;
+      --serif:    'Newsreader', Georgia, serif;
+      --mono:     'DM Mono', ui-monospace, monospace;
+      --ease:     cubic-bezier(0.22, 1, 0.36, 1);
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -37,860 +44,395 @@
       min-height: 100%;
       background: var(--bg);
       color: var(--text);
-      font-family: 'DM Mono', monospace;
+      font-family: var(--mono);
       -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
     }
 
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background-image: radial-gradient(circle, rgba(255,255,255,0.032) 1px, transparent 1px);
-      background-size: 24px 24px;
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    body::after {
-      content: '';
-      position: fixed;
-      inset: 0;
+    .fx { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+    .fx-grid { background-image: radial-gradient(circle, rgba(255,255,255,0.028) 1px, transparent 1px); background-size: 26px 26px; -webkit-mask-image: radial-gradient(ellipse 90% 70% at 50% 30%, #000 25%, transparent 80%); mask-image: radial-gradient(ellipse 90% 70% at 50% 30%, #000 25%, transparent 80%); }
+    .fx-glow {
       background:
-        radial-gradient(ellipse 80% 40% at 50% -5%, rgba(212,165,116,0.09) 0%, transparent 65%),
-        radial-gradient(ellipse 60% 30% at 50% 105%, rgba(180,130,80,0.05) 0%, transparent 65%);
-      pointer-events: none;
-      z-index: 0;
+        radial-gradient(ellipse 70% 38% at 50% -6%, rgba(216,167,114,0.10) 0%, transparent 62%),
+        radial-gradient(ellipse 60% 30% at 88% 8%, rgba(157,137,214,0.05) 0%, transparent 60%),
+        radial-gradient(ellipse 70% 34% at 50% 108%, rgba(180,130,80,0.05) 0%, transparent 62%);
     }
+    .fx-vig { box-shadow: inset 0 0 240px 40px rgba(0,0,0,0.55); }
 
     .page {
-      position: relative;
-      z-index: 1;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 3rem 1.5rem 7rem;
+      position: relative; z-index: 1; min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 3.2rem 1.25rem 8rem;
     }
-
     .hidden { display: none !important; }
 
-    /* ── Input ── */
+    .eyebrow { font-size: 0.56rem; letter-spacing: 0.32em; color: var(--accent); text-transform: lowercase; display: block; }
+    .display { font-family: var(--serif); font-weight: 200; letter-spacing: -0.01em; line-height: 0.98; }
+    .num { font-family: var(--serif); font-weight: 300; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+
+    /* ── card base ── */
+    .card {
+      background: linear-gradient(180deg, var(--surface) 0%, rgba(21,17,13,0.7) 100%);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: 0 1px 0 rgba(255,255,255,0.025) inset, 0 18px 40px -28px rgba(0,0,0,0.8);
+    }
+
+    .section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; margin-bottom: 0.9rem; }
+    .section-label { font-size: 0.58rem; letter-spacing: 0.26em; color: var(--muted2); text-transform: lowercase; display: flex; align-items: center; gap: 0.55rem; }
+    .section-label::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 8px rgba(216,167,114,0.5); }
+    .section-aside { font-size: 0.56rem; letter-spacing: 0.1em; color: var(--muted); }
+
+    /* ════ INPUT ════ */
     .input-card {
-      width: 100%;
-      max-width: 360px;
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-      animation: fadeUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+      width: 100%; max-width: 380px;
+      display: flex; flex-direction: column; gap: 1.5rem;
+      animation: fadeUp 0.7s var(--ease) both;
     }
+    .input-head { text-align: center; display: flex; flex-direction: column; gap: 0.7rem; align-items: center; }
+    .input-head .display { font-size: 2.9rem; }
+    .input-head .display em { font-style: italic; color: var(--accent2); font-weight: 300; }
+    .input-tagline { font-size: 0.64rem; letter-spacing: 0.04em; color: var(--muted2); line-height: 1.6; max-width: 24ch; }
 
-    .input-title { text-align: center; margin-bottom: 0.4rem; }
-    .input-title h1 {
-      font-family: 'Fraunces', serif;
-      font-size: 1.9rem;
-      font-weight: 300;
-      color: var(--text);
-    }
-    .input-title p {
-      font-size: 0.58rem;
-      letter-spacing: 0.18em;
-      color: var(--muted2);
-      margin-top: 0.4rem;
-      text-transform: lowercase;
-    }
+    .pulse-line { display: inline-flex; align-items: flex-end; gap: 3px; height: 18px; margin-bottom: 0.2rem; }
+    .pulse-line span { width: 3px; border-radius: 2px; background: linear-gradient(180deg, var(--accent2), var(--accent)); animation: eq-anim 1.1s ease infinite; }
+    .pulse-line span:nth-child(1){ animation-delay: 0s; }
+    .pulse-line span:nth-child(2){ animation-delay: .18s; }
+    .pulse-line span:nth-child(3){ animation-delay: .36s; }
+    .pulse-line span:nth-child(4){ animation-delay: .54s; }
+    .pulse-line span:nth-child(5){ animation-delay: .72s; }
 
-    .field { display: flex; flex-direction: column; gap: 0.4rem; }
-    .field label { font-size: 0.58rem; letter-spacing: 0.15em; color: var(--muted2); text-transform: lowercase; }
-
+    .field { display: flex; flex-direction: column; gap: 0.55rem; }
+    .field label { font-size: 0.56rem; letter-spacing: 0.22em; color: var(--muted2); text-transform: lowercase; }
+    .field-wrap { position: relative; display: flex; align-items: center; }
+    .field-at { position: absolute; left: 1rem; color: var(--muted); font-size: 0.85rem; pointer-events: none; }
     .field input {
-      background: var(--surface);
-      border: 1px solid var(--border2);
-      border-radius: 10px;
-      padding: 0.75rem 1rem;
-      color: var(--text);
-      font-family: 'DM Mono', monospace;
-      font-size: 0.8rem;
-      outline: none;
-      width: 100%;
-      transition: border-color 0.2s, box-shadow 0.2s;
+      background: var(--surface2); border: 1px solid var(--border2); border-radius: 12px;
+      padding: 0.95rem 1rem 0.95rem 2rem; color: var(--text);
+      font-family: var(--mono); font-size: 0.92rem; letter-spacing: 0.02em; outline: none; width: 100%;
+      transition: border-color 0.25s, box-shadow 0.25s, background 0.25s;
     }
-    .field input:focus {
-      border-color: rgba(212,165,116,0.4);
-      box-shadow: 0 0 0 3px rgba(212,165,116,0.08);
-    }
+    .field input:focus { border-color: rgba(216,167,114,0.55); box-shadow: 0 0 0 4px rgba(216,167,114,0.09); background: var(--surface3); }
     .field input::placeholder { color: var(--muted); }
 
-    .api-section { display: flex; flex-direction: column; gap: 0.5rem; }
-    .api-hint { font-size: 0.54rem; color: var(--muted); letter-spacing: 0.08em; }
-    .api-hint a { color: var(--accent2); text-decoration: none; }
-    .api-hint a:hover { text-decoration: underline; }
-
     .btn-primary {
-      background: rgba(212,165,116,0.1);
-      border: 1px solid rgba(212,165,116,0.25);
-      border-radius: 10px;
-      padding: 0.8rem;
-      color: var(--accent);
-      font-family: 'DM Mono', monospace;
-      font-size: 0.72rem;
-      letter-spacing: 0.12em;
-      cursor: pointer;
-      transition: background 0.2s, transform 0.2s;
-      text-transform: lowercase;
+      display: flex; align-items: center; justify-content: center; gap: 0.6rem;
+      background: linear-gradient(180deg, rgba(216,167,114,0.16), rgba(216,167,114,0.09));
+      border: 1px solid rgba(216,167,114,0.32); border-radius: 12px;
+      padding: 0.95rem; color: var(--accent2); font-family: var(--mono);
+      font-size: 0.74rem; letter-spacing: 0.16em; cursor: pointer; text-transform: lowercase;
+      transition: background 0.25s, transform 0.2s var(--ease), box-shadow 0.25s;
+      box-shadow: 0 1px 0 rgba(255,255,255,0.06) inset;
     }
-    .btn-primary:hover { background: rgba(212,165,116,0.16); transform: translateY(-1px); }
-
-    .toggle-link {
-      text-align: center;
-      font-size: 0.54rem;
-      letter-spacing: 0.1em;
-      color: var(--muted);
-      cursor: pointer;
-      text-decoration: underline;
-      text-underline-offset: 3px;
-    }
+    .btn-primary:hover { background: linear-gradient(180deg, rgba(216,167,114,0.24), rgba(216,167,114,0.14)); transform: translateY(-2px); box-shadow: 0 10px 26px -14px rgba(216,167,114,0.5), 0 1px 0 rgba(255,255,255,0.08) inset; }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-arrow { transition: transform 0.25s var(--ease); }
+    .btn-primary:hover .btn-arrow { transform: translateX(4px); }
 
     .error-box {
-      font-size: 0.6rem;
-      color: var(--red);
-      letter-spacing: 0.08em;
-      padding: 0.6rem 0.8rem;
-      background: rgba(232,114,111,0.07);
-      border: 1px solid rgba(232,114,111,0.18);
-      border-radius: 8px;
-      text-align: center;
+      font-size: 0.62rem; color: var(--red); letter-spacing: 0.04em; line-height: 1.5;
+      padding: 0.7rem 0.85rem; background: rgba(232,123,120,0.07);
+      border: 1px solid rgba(232,123,120,0.2); border-radius: 10px; text-align: center;
+      animation: shake 0.4s var(--ease);
     }
 
-    /* ── Loading ── */
-    .loading-wrap {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 1.2rem;
-      animation: fadeUp 0.4s ease both;
+    .recent-searches { display: flex; flex-direction: column; gap: 0.6rem; }
+    .recent-label { font-size: 0.54rem; letter-spacing: 0.22em; color: var(--muted); text-transform: lowercase; }
+    .recent-chips { display: flex; flex-wrap: wrap; gap: 0.45rem; }
+    .recent-chip {
+      background: var(--surface2); border: 1px solid var(--border2); border-radius: 9px;
+      padding: 0.34rem 0.7rem; color: var(--muted3); font-family: var(--mono); font-size: 0.64rem;
+      letter-spacing: 0.04em; cursor: pointer; text-transform: lowercase;
+      transition: color 0.2s, border-color 0.2s, background 0.2s, transform 0.2s;
     }
-    .spinner {
-      width: 34px;
-      height: 34px;
-      border: 2px solid var(--border2);
-      border-top-color: var(--accent);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-    .loading-label { font-size: 0.6rem; letter-spacing: 0.18em; color: var(--muted2); text-transform: lowercase; }
-    .loading-sub { font-size: 0.52rem; letter-spacing: 0.14em; color: var(--muted); text-transform: lowercase; min-height: 0.8em; }
+    .recent-chip:hover { color: var(--accent2); border-color: rgba(216,167,114,0.4); background: rgba(216,167,114,0.06); transform: translateY(-1px); }
 
-    .results-card {
-      width: 100%;
-      max-width: 560px;
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
+    .input-note { font-size: 0.54rem; letter-spacing: 0.07em; color: var(--muted); text-align: center; text-transform: lowercase; line-height: 1.8; }
+
+    /* ════ LOADING ════ */
+    .loading-wrap { display: flex; flex-direction: column; align-items: center; gap: 1.6rem; animation: fadeUp 0.5s var(--ease) both; width: 100%; max-width: 300px; }
+    .loading-eq { display: flex; align-items: flex-end; gap: 5px; height: 46px; }
+    .loading-eq span { width: 5px; border-radius: 3px; background: linear-gradient(180deg, var(--accent2), var(--accent)); animation: eq-tall 1.05s ease infinite; }
+    .loading-eq span:nth-child(1){ animation-delay: 0s; }
+    .loading-eq span:nth-child(2){ animation-delay: .14s; }
+    .loading-eq span:nth-child(3){ animation-delay: .28s; }
+    .loading-eq span:nth-child(4){ animation-delay: .42s; }
+    .loading-eq span:nth-child(5){ animation-delay: .56s; }
+    .loading-eq span:nth-child(6){ animation-delay: .70s; }
+    .loading-eq span:nth-child(7){ animation-delay: .84s; }
+    .loading-text { text-align: center; display: flex; flex-direction: column; gap: 0.5rem; }
+    .loading-label { font-family: var(--serif); font-size: 1.15rem; font-weight: 300; color: var(--text); letter-spacing: 0; }
+    .loading-sub { font-size: 0.56rem; letter-spacing: 0.12em; color: var(--muted2); text-transform: lowercase; min-height: 0.9em; line-height: 1.6; }
+    .loading-track { width: 100%; height: 3px; background: var(--border2); border-radius: 3px; overflow: hidden; }
+    .loading-track-fill { height: 100%; width: 40%; border-radius: 3px; background: linear-gradient(90deg, transparent, var(--accent), transparent); animation: indeterminate 1.4s ease infinite; }
+
+    /* ════ RESULTS ════ */
+    .results-card { width: 100%; max-width: 600px; display: flex; flex-direction: column; gap: 1.25rem; }
     #ban-card:empty, #patterns-card:empty { display: none; }
+    .reveal { animation: fadeUp 0.6s var(--ease) both; }
 
-    .profile-banner {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      overflow: hidden;
-      animation: fadeUp 0.5s ease both;
-    }
-    .profile-top {
-      display: flex;
-      align-items: center;
-      gap: 0.85rem;
-      padding: 0.95rem 1.1rem;
-    }
-    .stat-strip {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      border-top: 1px solid var(--border);
-    }
-    .stat-strip-item {
-      padding: 0.55rem 0.4rem;
-      text-align: center;
-      border-right: 1px solid var(--border);
-    }
-    .stat-strip-item:last-child { border-right: none; }
-    .strip-num {
-      font-family: 'Fraunces', serif;
-      font-size: 1.1rem;
-      font-weight: 100;
-      color: var(--accent);
-      line-height: 1;
-      display: block;
-    }
-    .strip-lbl {
-      font-size: 0.44rem;
-      letter-spacing: 0.12em;
-      color: var(--muted2);
-      text-transform: lowercase;
-      margin-top: 0.22rem;
-      display: block;
-      line-height: 1.5;
-    }
-    .profile-avatar {
-      width: 42px;
-      height: 42px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 1px solid rgba(212,165,116,0.22);
-      flex-shrink: 0;
-    }
-    .profile-avatar-ph {
-      width: 42px;
-      height: 42px;
-      border-radius: 50%;
-      background: var(--surface);
-      border: 1px solid var(--border2);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--muted2);
-      font-size: 1.1rem;
-      flex-shrink: 0;
-    }
-    .profile-info { flex: 1; min-width: 0; }
-    .profile-name {
-      font-family: 'Fraunces', serif;
-      font-size: 1.2rem;
-      font-weight: 300;
-      color: var(--text);
-      line-height: 1;
-    }
-    .profile-meta { font-size: 0.56rem; color: var(--muted2); letter-spacing: 0.1em; margin-top: 0.3rem; }
-
+    /* hero */
+    .hero { overflow: hidden; }
+    .hero-top { display: flex; align-items: center; gap: 1rem; padding: 1.3rem 1.4rem; }
+    .hero-avatar { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; border: 1px solid rgba(216,167,114,0.3); flex-shrink: 0; box-shadow: 0 0 0 4px rgba(216,167,114,0.06); }
+    .hero-avatar-ph { width: 56px; height: 56px; border-radius: 50%; background: var(--surface3); border: 1px solid var(--border2); display: flex; align-items: center; justify-content: center; color: var(--accent); font-size: 1.4rem; flex-shrink: 0; }
+    .hero-info { flex: 1; min-width: 0; }
+    .hero-name { font-family: var(--serif); font-size: 1.7rem; font-weight: 300; color: var(--text); line-height: 1.05; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .hero-meta { font-size: 0.58rem; color: var(--muted2); letter-spacing: 0.06em; margin-top: 0.3rem; }
+    .hero-meta a { color: var(--accent); text-decoration: none; }
+    .hero-meta a:hover { text-decoration: underline; }
     .back-btn {
-      background: none;
-      border: 1px solid var(--border2);
-      border-radius: 8px;
-      padding: 0.4rem 0.75rem;
-      color: var(--muted2);
-      font-family: 'DM Mono', monospace;
-      font-size: 0.56rem;
-      letter-spacing: 0.1em;
-      cursor: pointer;
-      transition: color 0.2s, border-color 0.2s;
-      flex-shrink: 0;
+      background: var(--surface2); border: 1px solid var(--border2); border-radius: 9px;
+      padding: 0.45rem 0.8rem; color: var(--muted2); font-family: var(--mono);
+      font-size: 0.58rem; letter-spacing: 0.1em; cursor: pointer; flex-shrink: 0;
+      transition: color 0.2s, border-color 0.2s, transform 0.2s;
     }
-    .back-btn:hover { color: var(--text); border-color: var(--muted2); }
+    .back-btn:hover { color: var(--text); border-color: var(--muted2); transform: translateX(-2px); }
 
-    /* Sections */
-    .section {
-      display: flex;
-      flex-direction: column;
-      gap: 0;
-      animation: fadeUp 0.5s ease both;
-    }
+    .hero-feature { display: flex; align-items: stretch; border-top: 1px solid var(--border); }
+    .hero-big { flex: 1.4; padding: 1.1rem 1.4rem; display: flex; flex-direction: column; justify-content: center; gap: 0.15rem; border-right: 1px solid var(--border); position: relative; overflow: hidden; }
+    .hero-big::after { content: ''; position: absolute; right: -30%; top: -60%; width: 80%; height: 220%; background: radial-gradient(ellipse at center, rgba(216,167,114,0.1), transparent 70%); pointer-events: none; }
+    .hero-big-num { font-family: var(--serif); font-size: 2.7rem; font-weight: 200; color: var(--accent2); line-height: 1; letter-spacing: -0.02em; }
+    .hero-big-num.pending { color: var(--muted2); animation: pulse 1.8s ease infinite; }
+    .hero-big-lbl { font-size: 0.54rem; letter-spacing: 0.16em; color: var(--muted2); text-transform: lowercase; margin-top: 0.35rem; }
+    .hero-mini { flex: 1; display: flex; flex-direction: column; }
+    .hero-mini-item { flex: 1; padding: 0.62rem 1rem; display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; border-bottom: 1px solid var(--border); }
+    .hero-mini-item:last-child { border-bottom: none; }
+    .hero-mini-num { font-family: var(--serif); font-size: 1rem; font-weight: 300; color: var(--text); }
+    .hero-mini-lbl { font-size: 0.5rem; letter-spacing: 0.1em; color: var(--muted2); text-transform: lowercase; text-align: right; line-height: 1.4; }
 
-    .section-head {
-      display: flex;
-      align-items: center;
-      gap: 0.8rem;
-      margin-bottom: 0.4rem;
-    }
-    .section-head::before, .section-head::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, var(--border), transparent);
-    }
-    .section-label {
-      font-size: 0.53rem;
-      letter-spacing: 0.2em;
-      color: var(--muted);
-      text-transform: lowercase;
-      flex-shrink: 0;
-    }
+    /* ── ban gauge ── */
+    .ban-card { padding: 1.2rem 1.3rem; display: flex; flex-direction: column; gap: 0.5rem; }
+    .ban-card.loading-state { opacity: 0.75; }
+    .ban-body { display: flex; align-items: center; gap: 1.4rem; flex-wrap: wrap; }
+    .gauge { position: relative; width: 168px; height: 96px; flex-shrink: 0; margin: 0 auto; }
+    .gauge svg { width: 168px; height: 96px; display: block; overflow: visible; }
+    .gauge-track { fill: none; stroke: var(--border2); stroke-width: 11; stroke-linecap: round; }
+    .gauge-fill { fill: none; stroke-width: 11; stroke-linecap: round; transition: stroke-dasharray 1s var(--ease); filter: drop-shadow(0 0 6px rgba(216,167,114,0.35)); }
+    .gauge-center { position: absolute; left: 0; right: 0; bottom: 2px; display: flex; flex-direction: column; align-items: center; gap: 0.3rem; }
+    .gauge-pct { font-family: var(--serif); font-size: 2rem; font-weight: 200; line-height: 0.9; letter-spacing: -0.02em; }
+    .gauge-status { font-size: 0.54rem; letter-spacing: 0.14em; padding: 0.2rem 0.6rem; border-radius: 6px; text-transform: lowercase; }
+    .gauge-status.safe    { color: var(--green);  background: rgba(130,215,164,0.1); border: 1px solid rgba(130,215,164,0.22); }
+    .gauge-status.caution { color: var(--accent2); background: rgba(216,167,114,0.1); border: 1px solid rgba(216,167,114,0.24); }
+    .gauge-status.danger  { color: var(--red);    background: rgba(232,123,120,0.1); border: 1px solid rgba(232,123,120,0.26); }
 
-    .list-item {
-      display: flex;
-      align-items: center;
-      gap: 0.7rem;
-      padding: 0.6rem 0.7rem;
-      border-radius: 10px;
-      transition: background 0.2s;
-    }
-    .list-item:hover { background: rgba(255,255,255,0.022); }
-    .list-item.nowplaying { background: rgba(212,165,116,0.04); }
+    .ban-details { flex: 1; min-width: 180px; display: flex; flex-direction: column; gap: 0.6rem; }
+    .ban-row { display: flex; align-items: baseline; justify-content: space-between; gap: 0.8rem; padding-bottom: 0.55rem; border-bottom: 1px solid var(--border); }
+    .ban-row:last-of-type { border-bottom: none; padding-bottom: 0; }
+    .ban-row-lbl { font-size: 0.56rem; letter-spacing: 0.08em; color: var(--muted2); text-transform: lowercase; }
+    .ban-row-val { font-size: 0.66rem; letter-spacing: 0.03em; color: var(--text); font-family: var(--serif); font-weight: 400; }
+    .ban-foot { font-size: 0.5rem; color: var(--muted); letter-spacing: 0.06em; line-height: 1.6; margin-top: 0.1rem; }
+    .badge-loading { display: inline-flex; align-items: center; gap: 0.45rem; font-size: 0.58rem; letter-spacing: 0.1em; color: var(--muted2); text-transform: lowercase; }
+    .badge-loading .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: pulse 1.2s ease infinite; }
 
-    .list-rank { font-size: 0.56rem; color: var(--muted); width: 1.1rem; text-align: right; flex-shrink: 0; }
+    /* ── manual scrobbles ── */
+    .ms-card { padding: 1.2rem 1.3rem; }
+    .ms-status { font-size: 0.58rem; letter-spacing: 0.1em; padding: 0.24rem 0.6rem; border-radius: 6px; text-transform: lowercase; }
+    .ms-status.safe { color: var(--green); background: rgba(130,215,164,0.1); border: 1px solid rgba(130,215,164,0.22); }
+    .ms-status.flag { color: var(--accent2); background: rgba(216,167,114,0.1); border: 1px solid rgba(216,167,114,0.24); }
+    .ms-list { display: flex; flex-direction: column; }
+    .ms-item { padding: 0.6rem 0; border-bottom: 1px solid var(--border); }
+    .ms-item:last-child { border-bottom: none; }
+    .ms-track { font-size: 0.74rem; color: var(--text); }
+    .ms-track span { color: var(--muted2); }
+    .ms-detail { font-size: 0.57rem; color: var(--muted2); letter-spacing: 0.02em; margin-top: 0.18rem; line-height: 1.5; }
+    .ms-note { font-size: 0.54rem; color: var(--muted); letter-spacing: 0.04em; line-height: 1.7; margin-top: 0.7rem; padding-top: 0.55rem; border-top: 1px solid var(--border); }
 
-    .list-img {
-      width: 34px;
-      height: 34px;
-      border-radius: 6px;
-      object-fit: cover;
-      flex-shrink: 0;
-      background: var(--surface2);
-    }
-    .list-img-ph {
-      width: 34px;
-      height: 34px;
-      border-radius: 6px;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      flex-shrink: 0;
-    }
-
-    .list-body { flex: 1; min-width: 0; }
-    .list-name { font-size: 0.7rem; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .list-sub { font-size: 0.57rem; color: var(--muted2); margin-top: 0.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-    .bar-wrap { height: 2px; background: var(--border); border-radius: 2px; margin-top: 0.35rem; overflow: hidden; }
-    .bar { height: 100%; background: var(--accent); border-radius: 2px; }
-
-    .list-count { font-size: 0.58rem; color: var(--muted2); flex-shrink: 0; }
-
-    .nowplaying-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--accent);
-      box-shadow: 0 0 6px rgba(212,165,116,0.5);
-      animation: blink 2s ease infinite;
-      flex-shrink: 0;
-    }
-
-    /* Taskbar */
-    .taskbar {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 100;
-      display: flex;
-      align-items: center;
-      padding: 0 6px;
-      height: 52px;
-      background: rgba(20,17,14,0.82);
-      backdrop-filter: blur(24px) saturate(180%);
-      -webkit-backdrop-filter: blur(24px) saturate(180%);
-      border: 1px solid rgba(212,165,116,0.14);
-      border-radius: 18px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.03) inset, 0 1px 0 rgba(255,255,255,0.06) inset;
-      animation: dockSlideUp 0.7s 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
-    }
-    .taskbar-section { display: flex; align-items: center; gap: 2px; padding: 0 8px; }
-    .taskbar-divider { width: 1px; height: 24px; background: var(--border); flex-shrink: 0; margin: 0 2px; }
-    .taskbar-clock { padding: 0 10px; text-align: center; }
-    .clock-time { font-size: 0.72rem; font-weight: 400; color: var(--accent); letter-spacing: 0.08em; line-height: 1; }
-    .clock-date { font-size: 0.5rem; font-weight: 300; color: var(--muted2); letter-spacing: 0.12em; margin-top: 2px; text-transform: lowercase; }
-
-    .dock-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 38px;
-      height: 38px;
-      border-radius: 12px;
-      border: none;
-      background: transparent;
-      cursor: pointer;
-      position: relative;
-      transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), background 0.2s ease;
-      text-decoration: none;
-    }
-    .dock-btn:hover { background: rgba(212,165,116,0.08); transform: translateY(-4px) scale(1.08); }
-    .dock-btn svg { width: 16px; height: 16px; display: block; }
-    .dock-btn.active::after {
-      content: '';
-      position: absolute;
-      bottom: 1px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 3px;
-      height: 3px;
-      border-radius: 50%;
-      background: var(--accent);
-    }
-    .dock-btn .tooltip {
-      position: absolute;
-      bottom: calc(100% + 8px);
-      left: 50%;
-      transform: translateX(-50%) translateY(4px);
-      background: rgba(20,17,14,0.95);
-      border: 1px solid var(--border2);
-      border-radius: 6px;
-      padding: 3px 8px;
-      font-size: 0.55rem;
-      letter-spacing: 0.1em;
-      color: var(--accent);
-      white-space: nowrap;
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity 0.15s, transform 0.15s;
-    }
-    .dock-btn:hover .tooltip { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(12px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes dockSlideUp {
-      from { opacity: 0; transform: translateX(-50%) translateY(20px); }
-      to   { opacity: 1; transform: translateX(-50%) translateY(0); }
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    @keyframes blink {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.4; }
-    }
-
-    /* ── Integrity badge ── */
-    .integrity-badge { display: flex; align-items: center; gap: 0.4rem; margin-top: 0.35rem; flex-wrap: wrap; }
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.3rem;
-      font-size: 0.52rem;
-      letter-spacing: 0.12em;
-      padding: 0.18rem 0.5rem;
-      border-radius: 5px;
-      font-weight: 400;
-      text-transform: lowercase;
-      cursor: default;
-    }
-    .badge-checking { color: var(--muted2); background: rgba(105,94,82,0.1); border: 1px solid var(--border2); animation: blink 2s ease infinite; }
-    .badge-clean    { color: #4ade80; background: rgba(74,222,128,0.08); border: 1px solid rgba(74,222,128,0.2); }
-    .badge-caution  { color: var(--accent2); background: rgba(212,165,116,0.08); border: 1px solid rgba(212,165,116,0.22); cursor: pointer; }
-    .badge-error    { color: var(--muted2); background: transparent; border: 1px solid var(--border2); }
-
-    .suspicious-list {
-      margin-top: 0.4rem;
-      padding: 0.7rem 0.8rem;
-      background: rgba(232,114,111,0.05);
-      border: 1px solid rgba(232,114,111,0.15);
-      border-radius: 10px;
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-    .suspicious-row { display: flex; flex-direction: column; gap: 0.1rem; }
-    .suspicious-track { font-size: 0.67rem; color: var(--text); }
-    .suspicious-detail { font-size: 0.56rem; color: var(--muted2); letter-spacing: 0.06em; }
-
-    /* ── Ban risk card ── */
-    .ban-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 0.85rem 1rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.45rem;
-    }
-    .ban-card.danger  { border-color: rgba(232,114,111,0.3); background: rgba(232,114,111,0.04); }
-    .ban-card.warning { border-color: rgba(212,165,116,0.3); background: rgba(212,165,116,0.04); }
-
-    .ban-header { display: flex; align-items: center; gap: 0.75rem; }
-    .ban-pct {
-      font-family: 'Fraunces', serif;
-      font-size: 1.8rem;
-      font-weight: 100;
-      line-height: 1;
-      letter-spacing: -0.02em;
-      flex-shrink: 0;
-    }
-
-    .ban-bar-wrap {
-      height: 5px;
-      background: var(--border2);
-      border-radius: 3px;
-      overflow: hidden;
-      position: relative;
-    }
-    .ban-bar {
-      height: 100%;
-      border-radius: 3px;
-      transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
-    }
-
-    .ban-detail-label { font-size: 0.54rem; color: var(--muted2); letter-spacing: 0.1em; text-transform: lowercase; }
-    .ban-detail-val   { font-size: 0.6rem; color: var(--text); letter-spacing: 0.06em; }
-    .ban-status {
-      font-size: 0.58rem;
-      letter-spacing: 0.12em;
-      padding: 0.25rem 0.6rem;
-      border-radius: 6px;
-      text-transform: lowercase;
-      align-self: flex-start;
-    }
-    .ban-status.safe     { color: #4ade80; background: rgba(74,222,128,0.08); border: 1px solid rgba(74,222,128,0.18); }
-    .ban-status.caution  { color: var(--accent2); background: rgba(212,165,116,0.08); border: 1px solid rgba(212,165,116,0.2); }
-    .ban-status.danger   { color: var(--red); background: rgba(232,114,111,0.08); border: 1px solid rgba(232,114,111,0.2); }
-    .ban-status.banned   { color: var(--red); background: rgba(232,114,111,0.12); border: 1px solid rgba(232,114,111,0.3); font-weight: 500; }
-
-    /* ── Input note ── */
-    .input-note {
-      font-size: 0.52rem;
-      letter-spacing: 0.1em;
-      color: var(--muted);
-      text-align: center;
-      text-transform: lowercase;
-      line-height: 1.7;
-    }
-
-    /* ── Tabs card ── */
-    .tabs-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      overflow: hidden;
-    }
-    .tabs-header {
-      display: flex;
-      border-bottom: 1px solid var(--border);
-      padding: 0 0.4rem;
-    }
+    /* ── tabs ── */
+    .tabs-card { padding: 0.4rem 0.5rem 0.5rem; }
+    .tabs-header { display: flex; gap: 0.2rem; padding: 0.5rem 0.4rem 0.2rem; }
     .tab-btn {
-      background: none;
-      border: none;
-      padding: 0.7rem 0.85rem;
-      font-family: 'DM Mono', monospace;
-      font-size: 0.58rem;
-      letter-spacing: 0.15em;
-      color: var(--muted2);
-      cursor: pointer;
-      text-transform: lowercase;
-      position: relative;
-      transition: color 0.2s;
+      flex: 1; background: none; border: 1px solid transparent; border-radius: 10px;
+      padding: 0.55rem 0.5rem; font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.14em;
+      color: var(--muted2); cursor: pointer; text-transform: lowercase; transition: color 0.2s, background 0.2s, border-color 0.2s;
     }
     .tab-btn:hover { color: var(--text); }
-    .tab-btn.active { color: var(--accent); }
-    .tab-btn.active::after {
-      content: '';
-      position: absolute;
-      bottom: -1px;
-      left: 0.5rem;
-      right: 0.5rem;
-      height: 1px;
-      background: var(--accent);
-    }
-    .tab-content { display: none; padding: 0.3rem 0; }
-    .tab-content.active { display: block; }
+    .tab-btn.active { color: var(--accent2); background: rgba(216,167,114,0.08); border-color: rgba(216,167,114,0.18); }
+    .tab-content { display: none; padding: 0.3rem 0.1rem 0.1rem; }
+    .tab-content.active { display: block; animation: fadeUp 0.3s var(--ease); }
 
-    /* ── Artist rank number ── */
-    .artist-rank {
-      font-family: 'Fraunces', serif;
-      font-size: 1.4rem;
-      font-weight: 100;
-      color: var(--muted);
-      width: 38px;
-      text-align: right;
-      flex-shrink: 0;
-      letter-spacing: -0.02em;
-      line-height: 1;
-      padding-right: 2px;
-    }
+    .list-item { display: flex; align-items: center; gap: 0.8rem; padding: 0.62rem 0.7rem; border-radius: 11px; transition: background 0.2s; }
+    .list-item:hover { background: rgba(255,255,255,0.026); }
+    .list-rank { font-size: 0.58rem; color: var(--muted); width: 1.2rem; text-align: right; flex-shrink: 0; }
+    .artist-rank { font-family: var(--serif); font-size: 1.5rem; font-weight: 200; color: var(--muted); width: 40px; text-align: right; flex-shrink: 0; letter-spacing: -0.02em; line-height: 1; }
+    .list-img { width: 38px; height: 38px; border-radius: 7px; object-fit: cover; flex-shrink: 0; background: var(--surface2); }
+    .list-img-ph { width: 38px; height: 38px; border-radius: 7px; background: var(--surface2); border: 1px solid var(--border); flex-shrink: 0; }
+    .list-body { flex: 1; min-width: 0; }
+    .list-name { font-size: 0.78rem; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .list-sub { font-size: 0.6rem; color: var(--muted2); margin-top: 0.12rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .list-name-link { text-decoration: none; color: inherit; transition: color 0.15s; }
+    .list-name-link:hover { color: var(--accent2); }
+    .bar-wrap { height: 3px; background: var(--border); border-radius: 3px; margin-top: 0.45rem; overflow: hidden; }
+    .bar { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 3px; width: 0; transition: width 0.9s var(--ease); }
+    .list-count { font-size: 0.62rem; color: var(--muted2); flex-shrink: 0; font-family: var(--serif); }
 
-    /* ── Slot-in animation ── */
-    @keyframes slotIn {
-      from { opacity: 0; transform: translateY(-10px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    .slot-in { animation: slotIn 0.4s cubic-bezier(0.22,1,0.36,1) both; }
+    /* ── recently played ── */
+    .recent-card { padding: 0; overflow: hidden; }
+    .recent-head { padding: 1rem 1.3rem 0.85rem; }
+    .recent-row { display: flex; align-items: center; gap: 0.85rem; padding: 0.65rem 1.3rem; border-top: 1px solid var(--border); transition: background 0.15s; position: relative; text-decoration: none; color: inherit; }
+    .recent-row:hover { background: rgba(255,255,255,0.03); }
+    .recent-row.is-now { background: rgba(216,167,114,0.05); }
+    .recent-art { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; flex-shrink: 0; background: var(--surface2); }
+    .recent-art-ph { width: 44px; height: 44px; border-radius: 8px; flex-shrink: 0; background: var(--surface2); border: 1px solid var(--border); }
+    .recent-info { flex: 1; min-width: 0; }
+    .recent-title { font-size: 0.76rem; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .recent-sub { font-size: 0.6rem; color: var(--muted2); margin-top: 0.14rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .recent-right { flex-shrink: 0; position: relative; min-width: 40px; text-align: right; }
+    .recent-time { font-size: 0.58rem; color: var(--muted2); display: block; transition: opacity 0.15s; }
+    .recent-open { position: absolute; right: 0; top: 50%; transform: translateY(-50%); opacity: 0; transition: opacity 0.15s; color: var(--accent2); font-size: 0.7rem; }
+    .recent-row:hover .recent-time { opacity: 0; }
+    .recent-row:hover .recent-open { opacity: 1; }
+    .empty-note { font-size: 0.62rem; color: var(--muted2); letter-spacing: 0.04em; padding: 0.4rem 1.3rem 1.1rem; line-height: 1.6; }
 
-    /* ── Recent searches ── */
-    .recent-searches { display: flex; flex-direction: column; gap: 0.5rem; }
-    .recent-label { font-size: 0.54rem; letter-spacing: 0.15em; color: var(--muted); text-transform: lowercase; }
-    .recent-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
-    .recent-chip {
-      background: var(--surface);
-      border: 1px solid var(--border2);
-      border-radius: 7px;
-      padding: 0.28rem 0.65rem;
-      color: var(--muted2);
-      font-family: 'DM Mono', monospace;
-      font-size: 0.6rem;
-      letter-spacing: 0.08em;
-      cursor: pointer;
-      transition: color 0.2s, border-color 0.2s, background 0.2s;
-      text-transform: lowercase;
-    }
-    .recent-chip:hover { color: var(--text); border-color: rgba(212,165,116,0.3); background: rgba(212,165,116,0.05); }
+    /* ── patterns ── */
+    .patterns-card { padding: 1.3rem 1.3rem 1.5rem; display: flex; flex-direction: column; gap: 1.6rem; }
+    .insight-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .insight { background: rgba(216,167,114,0.04); border: 1px solid var(--border2); border-radius: 12px; padding: 0.8rem 0.85rem; display: flex; flex-direction: column; gap: 0.28rem; }
+    .insight-val { font-family: var(--serif); font-size: 1.3rem; font-weight: 300; color: var(--text); line-height: 1; }
+    .insight-val sub { font-size: 0.6em; color: var(--muted2); vertical-align: baseline; }
+    .insight-label { font-size: 0.5rem; letter-spacing: 0.1em; color: var(--muted2); text-transform: lowercase; line-height: 1.4; }
+    .sleep-insight { background: rgba(157,137,214,0.06); border-color: rgba(157,137,214,0.24); flex-direction: row; align-items: center; gap: 0.7rem; }
+    .sleep-insight .moon { font-size: 1.3rem; }
 
-    /* ── Patterns card ── */
-    .patterns-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1.1rem 1rem 1.2rem;
-      display: flex;
-      flex-direction: column;
-      gap: 1.3rem;
-    }
+    .chart-block { display: flex; flex-direction: column; gap: 0.85rem; }
+    .pattern-sub { font-size: 0.54rem; letter-spacing: 0.18em; color: var(--muted2); text-transform: lowercase; display: flex; align-items: center; gap: 0.5rem; }
+    .pattern-sub::before { content: ''; width: 4px; height: 4px; border-radius: 50%; background: var(--muted2); }
 
-    /* insight pills */
-    .insight-row {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 7px;
-    }
-    .insight {
-      background: rgba(212,165,116,0.04);
-      border: 1px solid var(--border2);
-      border-radius: 10px;
-      padding: 0.7rem 0.8rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
-    }
-    .insight-icon { font-size: 0.85rem; line-height: 1; }
-    .insight-val {
-      font-family: 'Fraunces', serif;
-      font-size: 1.05rem;
-      font-weight: 300;
-      color: var(--text);
-      line-height: 1.1;
-    }
-    .insight-label { font-size: 0.5rem; letter-spacing: 0.13em; color: var(--muted2); text-transform: lowercase; }
-
-    /* 7-day bar chart */
-    .chart-block { display: flex; flex-direction: column; gap: 0.7rem; }
-    .day-chart {
-      display: flex;
-      align-items: flex-end;
-      justify-content: space-between;
-      gap: 5px;
-      height: 72px;
-    }
-    .day-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 0.4rem; height: 100%; justify-content: flex-end; min-width: 0; }
+    .day-chart { display: flex; align-items: flex-end; justify-content: space-between; gap: 7px; height: 96px; }
+    .day-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; height: 100%; justify-content: flex-end; min-width: 0; }
     .day-bar-track { width: 100%; flex: 1; display: flex; align-items: flex-end; }
-    .day-bar {
-      width: 100%;
-      border-radius: 5px 5px 2px 2px;
-      background: linear-gradient(180deg, var(--accent2), var(--accent));
-      min-height: 2px;
-      transition: height 0.7s cubic-bezier(0.22,1,0.36,1);
-      position: relative;
-    }
-    .day-bar.peak { background: linear-gradient(180deg, #f0d9bb, var(--accent)); box-shadow: 0 0 12px rgba(212,165,116,0.35); }
-    .day-bar-count { font-size: 0.5rem; color: var(--muted2); }
-    .day-bar-label { font-size: 0.5rem; letter-spacing: 0.06em; color: var(--muted); text-transform: lowercase; }
+    .day-bar { width: 100%; border-radius: 6px 6px 3px 3px; background: linear-gradient(180deg, var(--accent2), var(--accent)); min-height: 3px; transition: height 0.8s var(--ease); }
+    .day-bar.peak { background: linear-gradient(180deg, #f3ddbf, var(--accent)); box-shadow: 0 0 14px rgba(216,167,114,0.4); }
+    .day-bar-count { font-size: 0.54rem; color: var(--muted2); font-family: var(--serif); }
+    .day-bar-label { font-size: 0.52rem; letter-spacing: 0.06em; color: var(--muted); text-transform: lowercase; }
     .day-col.is-peak .day-bar-label { color: var(--accent2); }
 
-    /* radial 24h clock */
-    .clock-wrap { display: flex; align-items: center; gap: 1rem; }
-    .clock-svg { width: 150px; height: 150px; flex-shrink: 0; }
-    @media (max-width: 380px) { .clock-svg { width: 120px; height: 120px; } }
-    .clock-center-num {
-      font-family: 'Fraunces', serif;
-      font-size: 1.5rem;
-      font-weight: 300;
-      fill: var(--accent);
-    }
-    .clock-center-sub { font-size: 0.52rem; letter-spacing: 0.1em; fill: var(--muted2); }
+    .clock-wrap { display: flex; align-items: center; gap: 1.4rem; }
+    .clock-svg { width: 176px; height: 176px; flex-shrink: 0; }
+    .clock-center-num { font-family: var(--serif); font-size: 1.6rem; font-weight: 300; fill: var(--accent2); }
+    .clock-center-sub { font-size: 0.5rem; letter-spacing: 0.14em; fill: var(--muted2); text-transform: lowercase; }
     .clock-tick-label { font-size: 0.46rem; fill: var(--muted); letter-spacing: 0.05em; }
-    .clock-legend { display: flex; flex-direction: column; gap: 0.55rem; flex: 1; min-width: 0; }
-    .clock-legend-item { display: flex; flex-direction: column; gap: 0.15rem; }
-    .clock-legend-val { font-size: 0.78rem; color: var(--text); }
-    .clock-legend-label { font-size: 0.5rem; letter-spacing: 0.12em; color: var(--muted2); text-transform: lowercase; }
+    .clock-legend { display: flex; flex-direction: column; gap: 0.7rem; flex: 1; min-width: 0; }
+    .clock-legend-item { display: flex; align-items: center; gap: 0.6rem; }
+    .clock-legend-swatch { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+    .clock-legend-txt { display: flex; flex-direction: column; gap: 0.1rem; }
+    .clock-legend-val { font-size: 0.84rem; color: var(--text); font-family: var(--serif); }
+    .clock-legend-label { font-size: 0.5rem; letter-spacing: 0.1em; color: var(--muted2); text-transform: lowercase; }
 
-    .pattern-sub { font-size: 0.5rem; letter-spacing: 0.13em; color: var(--muted); text-transform: lowercase; }
-
-    .heatmap-grid {
-      display: grid;
-      grid-template-columns: 28px repeat(7, 1fr);
-      gap: 1px;
-    }
-    .hm-spacer { height: 12px; }
-    .hm-day-label {
-      font-size: 0.44rem;
-      color: var(--muted);
-      text-align: center;
-      height: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      letter-spacing: 0.05em;
-    }
-    .hm-hour-label {
-      font-size: 0.42rem;
-      color: var(--muted);
-      text-align: right;
-      padding-right: 4px;
-      height: 8px;
-      line-height: 8px;
-    }
-    .hm-cell {
-      height: 8px;
-      border-radius: 2px;
-      background: rgba(212,165,116,var(--hm-a, 0));
-    }
+    .heatmap-grid { display: grid; grid-template-columns: 30px repeat(7, 1fr); gap: 2px; }
+    .hm-spacer { height: 13px; }
+    .hm-day-label { font-size: 0.44rem; color: var(--muted); text-align: center; height: 13px; display: flex; align-items: center; justify-content: center; letter-spacing: 0.04em; }
+    .hm-hour-label { font-size: 0.42rem; color: var(--muted); text-align: right; padding-right: 5px; height: 9px; line-height: 9px; }
+    .hm-cell { height: 9px; border-radius: 2px; background: rgba(216,167,114,var(--hm-a, 0)); transition: transform 0.12s; }
+    .hm-cell:hover { transform: scale(1.35); }
     .hm-cell.hm-empty { background: var(--surface2); }
-    .hm-cell.hm-sleep { background: rgba(140,120,200,var(--hm-a, 0)); }
-    .hm-cell.hm-sleep.hm-empty { background: rgba(140,120,200,0.07); }
-    .hm-legend {
-      display: flex;
-      gap: 0.9rem;
-      flex-wrap: wrap;
-      margin-top: 0.25rem;
-    }
-    .hm-legend-item {
-      display: flex;
-      align-items: center;
-      gap: 0.3rem;
-      font-size: 0.46rem;
-      color: var(--muted2);
-      letter-spacing: 0.07em;
-      text-transform: lowercase;
-    }
-    .hm-legend-swatch {
-      width: 10px;
-      height: 10px;
-      border-radius: 2px;
-      flex-shrink: 0;
-    }
-    .sleep-insight {
-      background: rgba(140,120,200,0.06) !important;
-      border-color: rgba(140,120,200,0.22) !important;
-    }
+    .hm-cell.hm-sleep { background: rgba(157,137,214,var(--hm-a, 0)); }
+    .hm-cell.hm-sleep.hm-empty { background: rgba(157,137,214,0.06); }
+    .hm-legend { display: flex; gap: 1.1rem; flex-wrap: wrap; margin-top: 0.3rem; }
+    .hm-legend-item { display: flex; align-items: center; gap: 0.35rem; font-size: 0.48rem; color: var(--muted2); letter-spacing: 0.06em; text-transform: lowercase; }
+    .hm-legend-swatch { width: 11px; height: 11px; border-radius: 3px; flex-shrink: 0; }
 
-    .data-tip {
-      position: fixed;
-      background: rgba(10,9,8,0.96);
-      border: 1px solid var(--border2);
-      border-radius: 7px;
-      padding: 0.28rem 0.65rem;
-      font-family: 'DM Mono', monospace;
-      font-size: 0.58rem;
-      color: var(--text);
-      letter-spacing: 0.08em;
-      pointer-events: none;
-      z-index: 300;
-      opacity: 0;
-      transition: opacity 0.1s;
-      white-space: nowrap;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-    }
-
-    .eq { display: inline-flex; align-items: flex-end; gap: 2px; height: 14px; vertical-align: middle; }
+    .eq { display: inline-flex; align-items: flex-end; gap: 2px; height: 15px; vertical-align: middle; }
     .eq-b { width: 3px; border-radius: 1.5px; background: var(--accent); animation: eq-anim 0.85s ease infinite; }
     .eq-b:nth-child(2) { animation-delay: 0.22s; }
     .eq-b:nth-child(3) { animation-delay: 0.44s; }
-    @keyframes eq-anim { 0%, 100% { height: 3px; } 50% { height: 13px; } }
 
-    .recent-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
-    .recent-head { display: flex; align-items: center; padding: 0.7rem 1rem; border-bottom: 1px solid var(--border); }
-    .recent-row {
-      display: flex;
-      align-items: center;
-      gap: 0.8rem;
-      padding: 0.6rem 1rem;
-      border-bottom: 1px solid var(--border);
-      transition: background 0.15s;
-      position: relative;
-      text-decoration: none;
-      color: inherit;
+    .data-tip { position: fixed; background: rgba(11,10,8,0.97); border: 1px solid var(--border2); border-radius: 8px; padding: 0.32rem 0.7rem; font-family: var(--mono); font-size: 0.58rem; color: var(--text); letter-spacing: 0.04em; pointer-events: none; z-index: 300; opacity: 0; transition: opacity 0.1s; white-space: nowrap; box-shadow: 0 6px 24px rgba(0,0,0,0.6); }
+
+    /* ── taskbar ── */
+    .taskbar {
+      position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); z-index: 100;
+      display: flex; align-items: center; padding: 0 6px; height: 54px;
+      background: rgba(21,17,13,0.8); backdrop-filter: blur(26px) saturate(180%); -webkit-backdrop-filter: blur(26px) saturate(180%);
+      border: 1px solid rgba(216,167,114,0.16); border-radius: 19px;
+      box-shadow: 0 10px 36px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.03) inset, 0 1px 0 rgba(255,255,255,0.06) inset;
+      animation: dockSlideUp 0.8s 0.35s var(--ease) both;
     }
-    .recent-row:last-child { border-bottom: none; }
-    .recent-row:hover { background: rgba(255,255,255,0.03); }
-    .recent-row.is-now { background: rgba(212,165,116,0.04); }
-    .recent-art { width: 42px; height: 42px; border-radius: 6px; object-fit: cover; flex-shrink: 0; background: var(--surface2); }
-    .recent-art-ph { width: 42px; height: 42px; border-radius: 6px; flex-shrink: 0; background: var(--surface2); border: 1px solid var(--border); }
-    .recent-info { flex: 1; min-width: 0; }
-    .recent-title { font-size: 0.72rem; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .recent-sub   { font-size: 0.58rem; color: var(--muted2); margin-top: 0.12rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .recent-right { flex-shrink: 0; position: relative; min-width: 36px; text-align: right; }
-    .recent-time  { font-size: 0.56rem; color: var(--muted2); display: block; transition: opacity 0.15s; }
-    .recent-open  { position: absolute; right: 0; top: 50%; transform: translateY(-50%); opacity: 0; transition: opacity 0.15s; color: var(--accent2); font-size: 0.65rem; }
-    .recent-row:hover .recent-time { opacity: 0; }
-    .recent-row:hover .recent-open { opacity: 1; }
+    .taskbar-section { display: flex; align-items: center; gap: 2px; padding: 0 8px; }
+    .taskbar-divider { width: 1px; height: 26px; background: var(--border); flex-shrink: 0; margin: 0 2px; }
+    .taskbar-clock { padding: 0 10px; text-align: center; }
+    .clock-time { font-size: 0.74rem; color: var(--accent); letter-spacing: 0.08em; line-height: 1; font-variant-numeric: tabular-nums; }
+    .clock-date { font-size: 0.5rem; font-weight: 300; color: var(--muted2); letter-spacing: 0.12em; margin-top: 3px; text-transform: lowercase; }
+    .dock-btn { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 13px; border: none; background: transparent; cursor: pointer; position: relative; transition: transform 0.2s var(--ease), background 0.2s ease; text-decoration: none; }
+    .dock-btn:hover { background: rgba(216,167,114,0.1); transform: translateY(-5px) scale(1.08); }
+    .dock-btn svg { width: 17px; height: 17px; display: block; color: var(--accent); }
+    .dock-btn.active::after { content: ''; position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); width: 3px; height: 3px; border-radius: 50%; background: var(--accent); }
+    .dock-btn .tooltip { position: absolute; bottom: calc(100% + 9px); left: 50%; transform: translateX(-50%) translateY(4px); background: rgba(21,17,13,0.96); border: 1px solid var(--border2); border-radius: 7px; padding: 3px 9px; font-size: 0.55rem; letter-spacing: 0.1em; color: var(--accent); white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity 0.15s, transform 0.15s; }
+    .dock-btn:hover .tooltip { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-    .list-name-link { text-decoration: none; color: inherit; transition: color 0.15s; }
-    .list-name-link:hover { color: var(--accent2); }
+    @keyframes fadeUp { from { transform: translateY(16px); } to { transform: translateY(0); } }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes dockSlideUp { from { opacity: 0; transform: translateX(-50%) translateY(22px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+    @keyframes shake { 0%,100%{transform:translateX(0);} 25%{transform:translateX(-4px);} 75%{transform:translateX(4px);} }
+    @keyframes eq-anim { 0%, 100% { height: 3px; } 50% { height: 14px; } }
+    @keyframes eq-tall { 0%, 100% { height: 8px; } 50% { height: 44px; } }
+    @keyframes indeterminate { 0% { transform: translateX(-120%); } 100% { transform: translateX(370%); } }
 
-    .ms-list { display: flex; flex-direction: column; margin-top: 0.35rem; }
-    .ms-item { padding: 0.42rem 0; border-bottom: 1px solid var(--border); }
-    .ms-item:last-child { border-bottom: none; }
-    .ms-track { font-size: 0.68rem; color: var(--text); }
-    .ms-detail { font-size: 0.55rem; color: var(--muted2); letter-spacing: 0.04em; margin-top: 0.1rem; line-height: 1.5; }
-    .ms-note { font-size: 0.51rem; color: var(--muted); letter-spacing: 0.07em; line-height: 1.65; margin-top: 0.55rem; border-top: 1px solid var(--border); padding-top: 0.45rem; }
-
-    @media (min-width: 600px) {
-      .profile-name    { font-size: 1.4rem; }
-      .profile-meta    { font-size: 0.64rem; }
-      .strip-num       { font-size: 1.25rem; }
-      .strip-lbl       { font-size: 0.54rem; }
-      .stat-strip-item { padding: 0.65rem 0.5rem; }
-      .profile-top     { padding: 1.05rem 1.2rem; }
-      .back-btn        { font-size: 0.62rem; }
-      .section-label   { font-size: 0.6rem; }
-      .badge           { font-size: 0.59rem; }
-      .list-name       { font-size: 0.78rem; }
-      .list-sub        { font-size: 0.64rem; }
-      .list-count      { font-size: 0.66rem; }
-      .list-rank       { font-size: 0.64rem; }
-      .artist-rank     { font-size: 1.55rem; }
-      .tab-btn         { font-size: 0.65rem; padding: 0.75rem 0.95rem; }
-      .ban-pct         { font-size: 2rem; }
-      .ban-detail-label{ font-size: 0.62rem; }
-      .ban-detail-val  { font-size: 0.68rem; }
-      .ban-status      { font-size: 0.64rem; }
-      .insight-val     { font-size: 1.15rem; }
-      .insight-label   { font-size: 0.57rem; }
-      .day-chart       { height: 82px; }
-      .day-bar-count   { font-size: 0.57rem; }
-      .day-bar-label   { font-size: 0.57rem; }
-      .clock-legend-val  { font-size: 0.88rem; }
-      .clock-legend-label{ font-size: 0.57rem; }
-      .pattern-sub     { font-size: 0.58rem; }
-      .hm-legend-item  { font-size: 0.54rem; }
-      .recent-label    { font-size: 0.62rem; }
-      .recent-chip     { font-size: 0.68rem; }
-      .results-card    { max-width: 620px; }
-      .list-item:hover { background: rgba(255,255,255,0.04); }
-      .recent-title    { font-size: 0.8rem; }
-      .recent-sub      { font-size: 0.65rem; }
-      .recent-time     { font-size: 0.62rem; }
-      .ms-track        { font-size: 0.76rem; }
-      .ms-detail       { font-size: 0.62rem; }
-      .ms-note         { font-size: 0.58rem; }
+    @media (max-width: 480px) {
+      .hero-feature { flex-direction: column; }
+      .hero-big { border-right: none; border-bottom: 1px solid var(--border); }
+      .hero-mini { flex-direction: row; }
+      .hero-mini-item { flex: 1; flex-direction: column; align-items: flex-start; gap: 0.2rem; justify-content: center; border-bottom: none; border-right: 1px solid var(--border); }
+      .hero-mini-item:last-child { border-right: none; }
+      .hero-mini-lbl { text-align: left; }
+      .clock-wrap { flex-direction: column; gap: 1rem; }
+      .clock-legend { flex-direction: row; flex-wrap: wrap; gap: 0.7rem 1.2rem; align-self: stretch; }
+      .insight-row { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (min-width: 620px) {
+      .results-card { max-width: 620px; }
+      .insight-label { font-size: 0.54rem; }
     }
   </style>
 </head>
 <body>
 
-<!-- INPUT PAGE -->
+<div class="fx fx-grid"></div>
+<div class="fx fx-glow"></div>
+<div class="fx fx-vig"></div>
+
 <div class="page" id="page-input">
   <div class="input-card">
-    <div class="input-title">
-      <h1>last.fm stats</h1>
-      <p>look up any user's listening data</p>
+    <div class="input-head">
+      <div class="pulse-line"><span style="height:8px"></span><span style="height:14px"></span><span style="height:18px"></span><span style="height:11px"></span><span style="height:6px"></span></div>
+      <span class="eyebrow">last.fm</span>
+      <h1 class="display">listening <em>stats</em></h1>
+      <p class="input-tagline">enter a username!</p>
     </div>
 
     <div class="field">
-      <label>username</label>
-      <input id="inp-user" type="text" placeholder="welffi" autocomplete="off" spellcheck="false" />
+      <label for="inp-user">username</label>
+      <div class="field-wrap">
+        <span class="field-at">@</span>
+        <input id="inp-user" type="text" placeholder="welffi" autocomplete="off" spellcheck="false" />
+      </div>
     </div>
 
     <div id="err-box" class="error-box" style="display:none"></div>
 
-    <button class="btn-primary" id="btn-search">look up stats →</button>
+    <button class="btn-primary" id="btn-search"><span>look up stats</span><span class="btn-arrow">→</span></button>
 
     <div id="recent-searches"></div>
-    <p class="input-note">some profiles are private · heavy use may trigger rate limits</p>
+    <p class="input-note">profile must have recent tracks public! | i also can't up the rate limits so use wisely thank you</p>
   </div>
 </div>
 
-<!-- LOADING PAGE -->
 <div class="page hidden" id="page-loading">
   <div class="loading-wrap">
-    <div class="spinner"></div>
-    <p class="loading-label" id="loading-label">looking up user...</p>
-    <p class="loading-sub" id="loading-sub"></p>
+    <div class="loading-eq"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+    <div class="loading-text">
+      <p class="loading-label" id="loading-label">looking up user</p>
+      <p class="loading-sub" id="loading-sub"></p>
+    </div>
+    <div class="loading-track"><div class="loading-track-fill"></div></div>
   </div>
 </div>
 
-<!-- RESULTS PAGE -->
 <div class="page hidden" id="page-results">
   <div class="results-card" id="results-card"></div>
 </div>
 
-<!-- TASKBAR -->
 <div class="taskbar">
   <div class="taskbar-section">
     <div class="taskbar-clock">
@@ -900,802 +442,729 @@
   </div>
   <div class="taskbar-divider"></div>
   <div class="taskbar-section">
-    <a class="dock-btn" href="./">
+    <a class="dock-btn" href="./" title="home">
       <span class="tooltip">home</span>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="color:#d4a574">
-        <path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/>
-        <path d="M9 21V12h6v9"/>
-      </svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg>
     </a>
-    <a class="dock-btn" href="cropper.html">
+    <a class="dock-btn" href="cropper.html" title="crop image">
       <span class="tooltip">crop image</span>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="color:#d4a574">
-        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-        <circle cx="12" cy="13" r="4"/>
-      </svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
     </a>
-    <a class="dock-btn active" href="lastfm.html">
+    <a class="dock-btn active" href="lastfm.html" title="last.fm">
       <span class="tooltip">last.fm</span>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="color:#d4a574">
-        <path d="M3 18v-6a9 9 0 0 1 18 0v6"/>
-        <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/>
-      </svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
     </a>
   </div>
 </div>
 
 <script>
-  // ── Clock ──
-  function updateClock() {
-    const now = new Date();
-    const h = String(now.getHours()).padStart(2,'0');
-    const m = String(now.getMinutes()).padStart(2,'0');
-    const s = String(now.getSeconds()).padStart(2,'0');
-    document.getElementById('clock-time').textContent = `${h}:${m}:${s}`;
-    const days = ['sun','mon','tue','wed','thu','fri','sat'];
-    const months = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
-    document.getElementById('clock-date').textContent =
-      `${days[now.getDay()]} · ${months[now.getMonth()]} ${String(now.getDate()).padStart(2,'0')}`;
-  }
-  updateClock();
-  setInterval(updateClock, 1000);
-
-  const _tip = document.createElement('div');
-  _tip.className = 'data-tip';
-  document.body.appendChild(_tip);
-  function showTip(e, text) { _tip.textContent = text; _tip.style.opacity = '1'; moveTip(e); }
-  function moveTip(e) { _tip.style.left = (e.clientX + 14) + 'px'; _tip.style.top = (e.clientY - 38) + 'px'; }
-  function hideTip() { _tip.style.opacity = '0'; }
-
+(function () {
   const API_KEY = '44e2c647de30a1be4df7679e7041e36f';
+    const API_BASE = 'https://ws.audioscrobbler.com/2.0/';
+    const $ = id => document.getElementById(id);
+    // run on next frame when visible; finalize immediately when backgrounded (rAF is paused while hidden)
+    const settle = (cb) => { if (document.hidden) cb(); else requestAnimationFrame(cb); };
 
-  // ── Persistence & recent searches ──
-  const inpUser = document.getElementById('inp-user');
-  inpUser.value = localStorage.getItem('lfm_user') || '';
-
-  const _paramUser = new URLSearchParams(location.search).get('user');
-  if (_paramUser) inpUser.value = _paramUser;
-
-  function getRecents() { return JSON.parse(localStorage.getItem('lfm_recents') || '[]'); }
-  function saveRecent(user) {
-    const list = [user, ...getRecents().filter(u => u !== user)].slice(0, 6);
-    localStorage.setItem('lfm_recents', JSON.stringify(list));
-  }
-  function renderRecents() {
-    const list = getRecents();
-    const el   = document.getElementById('recent-searches');
-    if (!el) return;
-    if (!list.length) { el.innerHTML = ''; return; }
-    el.innerHTML = `
-      <p class="recent-label">recent</p>
-      <div class="recent-chips">
-        ${list.map(u => `<button class="recent-chip" onclick="quickSearch('${u}')">${u}</button>`).join('')}
-      </div>`;
-  }
-  function quickSearch(user) { inpUser.value = user; handleSearch(); }
-  renderRecents();
-
-  // ── Pages ──
-  function show(id) {
-    ['page-input','page-loading','page-results'].forEach(p =>
-      document.getElementById(p).classList.toggle('hidden', p !== id)
-    );
-    if (id === 'page-input') history.replaceState(null, '', location.pathname);
-  }
-  function showErr(msg) {
-    const b = document.getElementById('err-box');
-    b.textContent = msg; b.style.display = 'block';
-  }
-  function hideErr() { document.getElementById('err-box').style.display = 'none'; }
-
-  // ── Search ──
-  async function handleSearch() {
-    const user = inpUser.value.trim();
-    hideErr();
-    if (!user) { showErr('please enter a username'); return; }
-    localStorage.setItem('lfm_user', user);
-    saveRecent(user);
-    renderRecents();
-    history.replaceState(null, '', `?user=${encodeURIComponent(user)}`);
-    loadStats(user);
-  }
-  document.getElementById('btn-search').addEventListener('click', handleSearch);
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && !document.getElementById('page-input').classList.contains('hidden'))
-      handleSearch();
-  });
-
-  // ── API ──
-  const API_BASE = 'https://ws.audioscrobbler.com/2.0/';
-  async function lfm(method, apiKey, params = {}) {
-    const url = new URL(API_BASE);
-    url.searchParams.set('method', method);
-    url.searchParams.set('api_key', apiKey);
-    url.searchParams.set('format', 'json');
-    for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
-    const r = await fetch(url);
-    if (!r.ok) {
-      if (r.status === 403) throw new Error('access denied — this profile may be private or suspended (403)');
-      if (r.status === 429) throw new Error('rate limited — too many requests, try again in a moment (429)');
-      if (r.status === 404) throw new Error('not found (404)');
-      throw new Error(`network error (${r.status})`);
+    // ── Clock ──
+    function updateClock() {
+      const now = new Date();
+      const h = String(now.getHours()).padStart(2,'0');
+      const m = String(now.getMinutes()).padStart(2,'0');
+      const s = String(now.getSeconds()).padStart(2,'0');
+      const t = $('clock-time'); if (t) t.textContent = `${h}:${m}:${s}`;
+      const days = ['sun','mon','tue','wed','thu','fri','sat'];
+      const months = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+      const d = $('clock-date');
+      if (d) d.textContent = `${days[now.getDay()]} · ${months[now.getMonth()]} ${String(now.getDate()).padStart(2,'0')}`;
     }
-    const d = await r.json();
-    if (d.error) throw new Error(d.message);
-    return d;
-  }
+    updateClock();
+    setInterval(updateClock, 1000);
 
-  // ── Helpers ──
-  function fmt(n) { return parseInt(n).toLocaleString(); }
-  function timeAgo(uts) {
-    const diff = Math.floor(Date.now() / 1000) - parseInt(uts);
-    if (diff < 60)    return 'just now';
-    if (diff < 3600)  return `${Math.floor(diff/60)}m ago`;
-    if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
-    return `${Math.floor(diff/86400)}d ago`;
-  }
-  function img(imgs, pref = 'medium') {
-    if (!imgs) return null;
-    const arr = Array.isArray(imgs) ? imgs : [imgs];
-    return (arr.find(i => i.size === pref && i['#text']) || arr.find(i => i['#text']) || {})['#text'] || null;
-  }
-  function toArr(v) { if (!v) return []; return Array.isArray(v) ? v : [v]; }
+    // ── Tooltip ──
+    const _tip = document.createElement('div');
+    _tip.className = 'data-tip';
+    document.body.appendChild(_tip);
+    const showTip = (e, text) => { _tip.textContent = text; _tip.style.opacity = '1'; moveTip(e); };
+    const moveTip = (e) => { _tip.style.left = (e.clientX + 14) + 'px'; _tip.style.top = (e.clientY - 40) + 'px'; };
+    const hideTip = () => { _tip.style.opacity = '0'; };
+    window.showTip = showTip; window.moveTip = moveTip; window.hideTip = hideTip;
 
-  function listItem(rank, imgUrl, name, sub, count, pct, imgId = null) {
-    const imgHtml = imgUrl
-      ? `<img class="list-img" src="${imgUrl}" alt="" onerror="this.outerHTML='<div class=list-img-ph></div>'" />`
-      : `<div class="list-img-ph"${imgId ? ` id="${imgId}"` : ''}></div>`;
-    return `
-      <div class="list-item">
-        <span class="list-rank">${rank}</span>
-        ${imgHtml}
-        <div class="list-body">
-          <div class="list-name">${name}</div>
-          ${sub ? `<div class="list-sub">${sub}</div>` : ''}
-          <div class="bar-wrap"><div class="bar" style="width:${pct}%"></div></div>
+    // ── count-up ──
+    function countUp(el, target, opts = {}) {
+      if (!el) return;
+      const dur = opts.dur || 950, dec = opts.dec ?? 0, suffix = opts.suffix || '';
+      const finalText = (Number.isInteger(target) ? target : target.toFixed(dec)) + suffix;
+      if (document.hidden) { el.textContent = finalText; return; }
+      const start = performance.now();
+      function tick(t) {
+        const p = Math.min((t - start) / dur, 1);
+        const e = 1 - Math.pow(1 - p, 3);
+        el.textContent = (target * e).toFixed(dec) + suffix;
+        if (p < 1) requestAnimationFrame(tick);
+        else el.textContent = finalText;
+      }
+      requestAnimationFrame(tick);
+    }
+
+    // ── Persistence & recents ──
+    const inpUser = $('inp-user');
+    inpUser.value = localStorage.getItem('lfm_user') || '';
+    const _paramUser = new URLSearchParams(location.search).get('user');
+    if (_paramUser) inpUser.value = _paramUser;
+
+    const getRecents = () => JSON.parse(localStorage.getItem('lfm_recents') || '[]');
+    function saveRecent(user) {
+      const list = [user, ...getRecents().filter(u => u !== user)].slice(0, 6);
+      localStorage.setItem('lfm_recents', JSON.stringify(list));
+    }
+    function renderRecents() {
+      const list = getRecents();
+      const el = $('recent-searches');
+      if (!el) return;
+      if (!list.length) { el.innerHTML = ''; return; }
+      el.className = 'recent-searches';
+      el.innerHTML = `
+        <p class="recent-label">recent</p>
+        <div class="recent-chips">
+          ${list.map(u => `<button class="recent-chip" onclick="quickSearch('${u.replace(/'/g,"\\'")}')">${u}</button>`).join('')}
+        </div>`;
+    }
+    window.quickSearch = (user) => { inpUser.value = user; handleSearch(); };
+    renderRecents();
+
+    // ── Pages ──
+    function show(id) {
+      ['page-input','page-loading','page-results'].forEach(p =>
+        $(p).classList.toggle('hidden', p !== id)
+      );
+      if (id === 'page-input') history.replaceState(null, '', location.pathname);
+    }
+    window.show = show;
+    function showErr(msg) { const b = $('err-box'); b.textContent = msg; b.style.display = 'block'; }
+    function hideErr() { $('err-box').style.display = 'none'; }
+
+    async function handleSearch() {
+      const user = inpUser.value.trim();
+      hideErr();
+      if (!user) { showErr('please enter a username'); return; }
+      localStorage.setItem('lfm_user', user);
+      saveRecent(user);
+      renderRecents();
+      history.replaceState(null, '', `?user=${encodeURIComponent(user)}`);
+      loadStats(user);
+    }
+    $('btn-search').addEventListener('click', handleSearch);
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !$('page-input').classList.contains('hidden')) handleSearch();
+    });
+
+    // ── API ──
+    async function lfm(method, apiKey, params = {}) {
+      const url = new URL(API_BASE);
+      url.searchParams.set('method', method);
+      url.searchParams.set('api_key', apiKey);
+      url.searchParams.set('format', 'json');
+      for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
+      const r = await fetch(url);
+      if (!r.ok) {
+        if (r.status === 403) throw new Error('access denied — this profile may be private or suspended (403)');
+        if (r.status === 429) throw new Error('rate limited — too many requests, try again in a moment (429)');
+        if (r.status === 404) throw new Error('not found (404)');
+        throw new Error(`network error (${r.status})`);
+      }
+      const d = await r.json();
+      if (d.error) throw new Error(d.message);
+      return d;
+    }
+
+    // ── Helpers ──
+    const fmt = n => parseInt(n).toLocaleString();
+    function timeAgo(uts) {
+      const diff = Math.floor(Date.now() / 1000) - parseInt(uts);
+      if (diff < 60) return 'just now';
+      if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
+      if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
+      return `${Math.floor(diff/86400)}d ago`;
+    }
+    function img(imgs, pref = 'medium') {
+      if (!imgs) return null;
+      const arr = Array.isArray(imgs) ? imgs : [imgs];
+      return (arr.find(i => i.size === pref && i['#text']) || arr.find(i => i['#text']) || {})['#text'] || null;
+    }
+    const toArr = v => !v ? [] : (Array.isArray(v) ? v : [v]);
+    const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+    function listItem(rank, imgUrl, name, sub, count, pct, imgId = null) {
+      const imgHtml = imgUrl
+        ? `<img class="list-img" src="${imgUrl}" alt="" onerror="this.outerHTML='<div class=list-img-ph></div>'" />`
+        : `<div class="list-img-ph"${imgId ? ` id="${imgId}"` : ''}></div>`;
+      return `
+        <div class="list-item">
+          <span class="list-rank">${rank}</span>
+          ${imgHtml}
+          <div class="list-body">
+            <div class="list-name">${esc(name)}</div>
+            ${sub ? `<div class="list-sub">${esc(sub)}</div>` : ''}
+            <div class="bar-wrap"><div class="bar" data-w="${pct}"></div></div>
+          </div>
+          <div class="list-count">${count}</div>
+        </div>`;
+    }
+    function animateBars(root) {
+      settle(() => {
+        (root || document).querySelectorAll('.bar[data-w]').forEach(b => { b.style.width = b.dataset.w + '%'; });
+      });
+    }
+
+    // ── Load & render ──
+    async function loadStats(user) {
+      show('page-loading');
+      const setStatus = (lbl, sub = '') => {
+        const l = $('loading-label'), s = $('loading-sub');
+        if (l) l.textContent = lbl;
+        if (s) s.textContent = sub;
+      };
+
+      const now = Math.floor(Date.now() / 1000);
+      const weekAgo = now - 7 * 24 * 60 * 60;
+
+      setStatus('looking up user', 'fetching profile');
+      let info;
+      try {
+        info = await lfm('user.getInfo', API_KEY, { user });
+      } catch(e) {
+        show('page-input');
+        showErr(e.message || 'user not found');
+        return;
+      }
+
+      setStatus('loading! thank u for using');
+      const settled = await Promise.allSettled([
+        lfm('user.getRecentTracks', API_KEY, { user, from: weekAgo, to: now, limit: 1 }),
+        lfm('user.getTopArtists',   API_KEY, { user, period: '7day', limit: 5 }),
+        lfm('user.getTopTracks',    API_KEY, { user, period: '7day', limit: 5 }),
+        lfm('user.getTopAlbums',    API_KEY, { user, period: '7day', limit: 5 }),
+        lfm('user.getRecentTracks', API_KEY, { user, limit: 6 }),
+      ]);
+      const ok = r => r.status === 'fulfilled' ? r.value : null;
+
+      renderResults({
+        info, week: ok(settled[0]), topArtists: ok(settled[1]),
+        topTracks: ok(settled[2]), topAlbums: ok(settled[3]), recent: ok(settled[4]),
+      });
+      show('page-results');
+
+      runAnalysis(user).catch(e => {
+        const banCard = $('ban-card');
+        if (banCard && !banCard.querySelector('.gauge-pct')) {
+          banCard.className = 'card ban-card reveal';
+          banCard.innerHTML = `
+            <div class="section-head"><span class="section-label">ban risk</span><span class="gauge-status danger">error</span></div>
+            <p style="font-size:0.56rem;color:var(--red);letter-spacing:0.04em">${esc(e.message || 'analysis failed')}</p>`;
+        }
+        const intCard = $('integrity-card');
+        if (intCard) {
+          intCard.style.opacity = '1';
+          intCard.innerHTML = `<div class="section-head"><span class="section-label">manual scrobbles</span><span class="ms-status flag">error</span></div>`;
+        }
+      });
+    }
+
+    function renderResults({ info, week, topArtists, topTracks, topAlbums, recent }) {
+      const u = info.user;
+      const totalPlays = parseInt(u.playcount);
+      const regDate = new Date(parseInt(u.registered.unixtime) * 1000);
+      const memberYears = ((Date.now() - regDate) / (1000*60*60*24*365)).toFixed(1);
+      const avatarUrl = img(u.image, 'large') || img(u.image, 'medium');
+      const weekTotal = week ? parseInt(week.recenttracks['@attr'].total) : null;
+      const avgPerDay = weekTotal ? (weekTotal / 7).toFixed(1) : '—';
+      const profileUrl = u.url || `https://www.last.fm/user/${encodeURIComponent(u.name)}`;
+
+      const artistRows = buildArtistRows(topArtists);
+      const { rows: trackRows, tracks: trackList } = buildTrackRows(topTracks);
+      const albumRows = buildAlbumRows(topAlbums);
+      const recents = toArr(recent?.recenttracks?.track).slice(0, 4);
+
+      const recentRows = recents.map(t => {
+        const isNow = t['@attr']?.nowplaying === 'true';
+        const cover = img(t.image,'large') || img(t.image,'medium') || img(t.image,'small');
+        const sub = [t.artist['#text'], t.album?.['#text']].filter(Boolean).join(' · ');
+        const lfmUrl = `https://www.last.fm/music/${encodeURIComponent(t.artist['#text'])}/_/${encodeURIComponent(t.name)}`;
+        return `
+          <a class="recent-row${isNow ? ' is-now' : ''}" href="${lfmUrl}" target="_blank" rel="noopener">
+            ${cover ? `<img class="recent-art" src="${cover}" alt="" onerror="this.outerHTML='<div class=recent-art-ph></div>'" />` : `<div class="recent-art-ph"></div>`}
+            <div class="recent-info">
+              <div class="recent-title">${esc(t.name)}</div>
+              <div class="recent-sub">${esc(sub)}</div>
+            </div>
+            <div class="recent-right">
+              ${isNow
+                ? `<span class="eq"><span class="eq-b"></span><span class="eq-b"></span><span class="eq-b"></span></span>`
+                : `<span class="recent-time">${timeAgo(t.date?.uts)}</span><span class="recent-open">↗</span>`}
+            </div>
+          </a>`;
+      }).join('');
+
+      const hasTabs = artistRows || trackRows || albumRows;
+      const firstTab = artistRows ? 'artists' : trackRows ? 'tracks' : 'albums';
+      const D = (n) => `style="animation-delay:${n}ms"`;
+
+      $('results-card').innerHTML = `
+        <div class="card hero reveal" ${D(0)}>
+          <div class="hero-top">
+            ${avatarUrl ? `<img class="hero-avatar" src="${avatarUrl}" alt="${esc(u.name)}" onerror="this.outerHTML='<div class=hero-avatar-ph>♪</div>'" />` : `<div class="hero-avatar-ph">♪</div>`}
+            <div class="hero-info">
+              <div class="hero-name">${esc(u.name)}</div>
+              <div class="hero-meta">${fmt(totalPlays)} scrobbles · ${memberYears}y on <a href="${profileUrl}" target="_blank" rel="noopener">last.fm</a></div>
+            </div>
+            <button class="back-btn" onclick="show('page-input')">← back</button>
+          </div>
+          <div class="hero-feature">
+            <div class="hero-big">
+              <span class="hero-big-num pending" id="hero-number">—</span>
+              <span class="hero-big-lbl" id="hero-unit">hours listened · this week</span>
+            </div>
+            <div class="hero-mini">
+              <div class="hero-mini-item"><span class="hero-mini-num">${weekTotal ? fmt(weekTotal) : '—'}</span><span class="hero-mini-lbl">scrobbles<br>this week</span></div>
+              <div class="hero-mini-item"><span class="hero-mini-num">${avgPerDay}</span><span class="hero-mini-lbl">avg / day</span></div>
+            </div>
+          </div>
         </div>
-        <div class="list-count">${count}</div>
-      </div>`;
-  }
 
-  // ── Load & render ──
-  async function loadStats(user) {
-    show('page-loading');
-    const lblEl = document.getElementById('loading-label');
-    const subEl = document.getElementById('loading-sub');
-    const setStatus = (lbl, sub = '') => {
-      if (lblEl) lblEl.textContent = lbl;
-      if (subEl) subEl.textContent = sub;
+        <div class="card ban-card loading-state reveal" id="ban-card" ${D(70)}>
+          <div class="section-head"><span class="section-label">ban risk</span></div>
+          <span class="badge-loading"><span class="dot"></span>loading listening history…</span>
+        </div>
+
+        ${hasTabs ? `
+        <div class="card tabs-card reveal" ${D(140)}>
+          <div class="tabs-header">
+            ${artistRows ? `<button class="tab-btn${firstTab==='artists'?' active':''}" onclick="switchTab('artists')">top artists</button>` : ''}
+            ${trackRows  ? `<button class="tab-btn${firstTab==='tracks' ?' active':''}" onclick="switchTab('tracks')">top tracks</button>` : ''}
+            ${albumRows  ? `<button class="tab-btn${firstTab==='albums' ?' active':''}" onclick="switchTab('albums')">top albums</button>` : ''}
+          </div>
+          ${artistRows ? `<div class="tab-content${firstTab==='artists'?' active':''}" id="tab-artists">${artistRows}</div>` : ''}
+          ${trackRows  ? `<div class="tab-content${firstTab==='tracks' ?' active':''}" id="tab-tracks">${trackRows}</div>` : ''}
+          ${albumRows  ? `<div class="tab-content${firstTab==='albums' ?' active':''}" id="tab-albums">${albumRows}</div>` : ''}
+        </div>` : ''}
+
+        <div id="patterns-card"></div>
+
+        ${recentRows.length ? `<div class="card recent-card reveal" ${D(210)}><div class="recent-head"><span class="section-label">recently played</span></div>${recentRows}</div>` : ''}
+        ${!recent ? `<div class="card recent-card reveal" ${D(210)}><div class="recent-head"><span class="section-label">recently played</span></div><p class="empty-note">this user's recent tracks are private 🔒</p></div>` : ''}
+
+        <div class="card ms-card reveal" id="integrity-card" ${D(280)} style="opacity:0.75">
+          <div class="section-head"><span class="section-label">manual scrobbles</span></div>
+          <span class="badge-loading"><span class="dot"></span>checking scrobble timing…</span>
+        </div>
+      `;
+
+      animateBars($('results-card'));
+      if (trackList.length) loadTrackImages(trackList);
+    }
+
+    window.switchTab = function(name) {
+      ['artists','tracks','albums'].forEach(t => {
+        const content = $(`tab-${t}`);
+        const btn = document.querySelector(`.tab-btn[onclick="switchTab('${t}')"]`);
+        if (content) content.classList.toggle('active', t === name);
+        if (btn) btn.classList.toggle('active', t === name);
+      });
+      animateBars($(`tab-${name}`));
     };
 
-    const now     = Math.floor(Date.now() / 1000);
-    const weekAgo = now - 7 * 24 * 60 * 60;
-
-    setStatus('looking up user...');
-    let info;
-    try {
-      info = await lfm('user.getInfo', API_KEY, { user });
-    } catch(e) {
-      show('page-input');
-      showErr(e.message || 'user not found');
-      return;
+    function buildArtistRows(data) {
+      const artists = toArr(data?.topartists?.artist);
+      if (!artists.length) return null;
+      const max = parseInt(artists[0].playcount);
+      return artists.map((a, i) => `
+        <div class="list-item">
+          <span class="artist-rank">${String(i+1).padStart(2,'0')}</span>
+          <div class="list-body">
+            <div class="list-name"><a class="list-name-link" href="https://www.last.fm/music/${encodeURIComponent(a.name)}" target="_blank" rel="noopener">${esc(a.name)}</a></div>
+            <div class="bar-wrap"><div class="bar" data-w="${Math.round((parseInt(a.playcount)/max)*100)}"></div></div>
+          </div>
+          <div class="list-count">${fmt(a.playcount)} plays</div>
+        </div>`).join('');
     }
 
-    setStatus('loading stats...', 'top artists · top tracks · top albums · recent plays');
-    const settled = await Promise.allSettled([
-      lfm('user.getRecentTracks', API_KEY, { user, from: weekAgo, to: now, limit: 1 }),
-      lfm('user.getTopArtists',   API_KEY, { user, period: '7day', limit: 5 }),
-      lfm('user.getTopTracks',    API_KEY, { user, period: '7day', limit: 5 }),
-      lfm('user.getTopAlbums',    API_KEY, { user, period: '7day', limit: 5 }),
-      lfm('user.getRecentTracks', API_KEY, { user, limit: 6 }),
-    ]);
-    const ok = r => r.status === 'fulfilled' ? r.value : null;
-
-    renderResults({
-      info,
-      week:       ok(settled[0]),
-      topArtists: ok(settled[1]),
-      topTracks:  ok(settled[2]),
-      topAlbums:  ok(settled[3]),
-      recent:     ok(settled[4]),
-    });
-    show('page-results');
-    runAnalysis(user).catch(e => {
-      const banCard = document.getElementById('ban-card');
-      if (banCard && !banCard.querySelector('.ban-pct')) {
-        banCard.className = 'ban-card';
-        banCard.style.cssText = '';
-        banCard.innerHTML = `
-          <div style="display:flex;align-items:center;justify-content:space-between">
-            <span class="section-label">ban risk</span>
-            <span class="ban-status danger">error</span>
-          </div>
-          <p style="font-size:0.55rem;color:var(--red);letter-spacing:0.06em;margin-top:0.3rem">${e.message || 'analysis failed'}</p>`;
-      }
-      const intCard = document.getElementById('integrity-card');
-      if (intCard) {
-        intCard.style.opacity = '1';
-        intCard.innerHTML = `
-          <div style="display:flex;align-items:center;justify-content:space-between">
-            <span class="section-label">manual scrobbles</span>
-            <span class="ban-status danger">error</span>
-          </div>`;
-      }
-    });
-  }
-
-  function renderResults({ info, week, topArtists, topTracks, topAlbums, recent }) {
-    const u           = info.user;
-    const totalPlays  = parseInt(u.playcount);
-    const regDate     = new Date(parseInt(u.registered.unixtime) * 1000);
-    const memberYears = ((Date.now() - regDate) / (1000*60*60*24*365)).toFixed(1);
-    const avatarUrl   = img(u.image, 'large') || img(u.image, 'medium');
-    const weekTotal   = week ? parseInt(week.recenttracks['@attr'].total) : null;
-    const avgPerDay   = weekTotal ? (weekTotal / 7).toFixed(1) : '—';
-
-    const artistRows = buildArtistRows(topArtists);
-    const { rows: trackRows, tracks: trackList } = buildTrackRows(topTracks);
-    const albumRows  = buildAlbumRows(topAlbums);
-    const recents    = toArr(recent?.recenttracks?.track).slice(0, 4);
-
-    const recentRows = recents.map(t => {
-      const isNow  = t['@attr']?.nowplaying === 'true';
-      const cover  = img(t.image,'large') || img(t.image,'medium') || img(t.image,'small');
-      const sub    = [t.artist['#text'], t.album?.['#text']].filter(Boolean).join(' · ');
-      const lfmUrl = `https://www.last.fm/music/${encodeURIComponent(t.artist['#text'])}/_/${encodeURIComponent(t.name)}`;
-      return `
-        <a class="recent-row${isNow ? ' is-now' : ''}" href="${lfmUrl}" target="_blank" rel="noopener">
-          ${cover ? `<img class="recent-art" src="${cover}" alt="" onerror="this.outerHTML='<div class=recent-art-ph></div>'" />` : `<div class="recent-art-ph"></div>`}
-          <div class="recent-info">
-            <div class="recent-title">${t.name}</div>
-            <div class="recent-sub">${sub}</div>
-          </div>
-          <div class="recent-right">
-            ${isNow
-              ? `<span class="eq"><span class="eq-b"></span><span class="eq-b"></span><span class="eq-b"></span></span>`
-              : `<span class="recent-time">${timeAgo(t.date?.uts)}</span><span class="recent-open">↗</span>`
-            }
-          </div>
-        </a>`;
-    }).join('');
-
-    const hasTabs = artistRows || trackRows || albumRows;
-    const firstTab = artistRows ? 'artists' : trackRows ? 'tracks' : 'albums';
-
-    document.getElementById('results-card').innerHTML = `
-      <div class="profile-banner">
-        <div class="profile-top">
-          ${avatarUrl ? `<img class="profile-avatar" src="${avatarUrl}" alt="${u.name}" />` : `<div class="profile-avatar-ph">♪</div>`}
-          <div class="profile-info">
-            <div class="profile-name">${u.name}</div>
-            <div class="profile-meta">${fmt(totalPlays)} total scrobbles · member for ${memberYears}y</div>
-          </div>
-          <button class="back-btn" onclick="show('page-input')">← back</button>
-        </div>
-        <div class="stat-strip">
-          <div class="stat-strip-item">
-            <span class="strip-num" id="hero-number" style="color:var(--muted2);animation:blink 2s ease infinite">—</span>
-            <span class="strip-lbl" id="hero-unit">hrs · 7 days</span>
-          </div>
-          <div class="stat-strip-item">
-            <span class="strip-num">${weekTotal ? fmt(weekTotal) : '—'}</span>
-            <span class="strip-lbl">scrobbles<br>this week</span>
-          </div>
-          <div class="stat-strip-item">
-            <span class="strip-num">${avgPerDay}</span>
-            <span class="strip-lbl">avg tracks<br>per day</span>
-          </div>
-          <div class="stat-strip-item">
-            <span class="strip-num">${fmt(totalPlays)}</span>
-            <span class="strip-lbl">all-time<br>scrobbles</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="ban-card" id="ban-card" style="opacity:0.6;gap:0.3rem">
-        <span class="section-label">ban risk</span>
-        <span class="badge badge-checking">⟳ loading history...</span>
-      </div>
-
-      <div class="ban-card" id="integrity-card" style="gap:0.3rem;opacity:0.6">
-        <span class="section-label">manual scrobbles</span>
-        <span class="badge badge-checking">⟳ checking...</span>
-      </div>
-
-      ${hasTabs ? `
-      <div class="tabs-card">
-        <div class="tabs-header">
-          ${artistRows ? `<button class="tab-btn${firstTab==='artists'?' active':''}" onclick="switchTab('artists')">artists</button>` : ''}
-          ${trackRows  ? `<button class="tab-btn${firstTab==='tracks' ?' active':''}" onclick="switchTab('tracks')">tracks</button>`   : ''}
-          ${albumRows  ? `<button class="tab-btn${firstTab==='albums' ?' active':''}" onclick="switchTab('albums')">albums</button>`   : ''}
-        </div>
-        ${artistRows ? `<div class="tab-content${firstTab==='artists'?' active':''}" id="tab-artists">${artistRows}</div>` : ''}
-        ${trackRows  ? `<div class="tab-content${firstTab==='tracks' ?' active':''}" id="tab-tracks">${trackRows}</div>`   : ''}
-        ${albumRows  ? `<div class="tab-content${firstTab==='albums' ?' active':''}" id="tab-albums">${albumRows}</div>`   : ''}
-      </div>` : ''}
-
-      ${recentRows.length ? `<div class="recent-card"><div class="recent-head"><span class="section-label">recently played</span></div>${recentRows}</div>` : ''}
-      ${!recent ? `<div class="recent-card"><div class="recent-head"><span class="section-label">recently played</span></div><p style="font-size:0.62rem;color:var(--muted2);padding:0.8rem 1rem">recent tracks are private</p></div>` : ''}
-
-      <div id="patterns-card"></div>
-    `;
-
-    if (trackList.length) loadTrackImages(trackList);
-  }
-
-  function switchTab(name) {
-    ['artists','tracks','albums'].forEach(t => {
-      const content = document.getElementById(`tab-${t}`);
-      const btn = document.querySelector(`.tab-btn[onclick="switchTab('${t}')"]`);
-      if (content) content.classList.toggle('active', t === name);
-      if (btn)     btn.classList.toggle('active', t === name);
-    });
-  }
-
-  function buildArtistRows(data) {
-    const artists = toArr(data?.topartists?.artist);
-    if (!artists.length) return null;
-    const max = parseInt(artists[0].playcount);
-    return artists.map((a, i) => `
-      <div class="list-item">
-        <span class="artist-rank">${String(i+1).padStart(2,'0')}</span>
-        <div class="list-body">
-          <div class="list-name"><a class="list-name-link" href="https://www.last.fm/music/${encodeURIComponent(a.name)}" target="_blank" rel="noopener">${a.name}</a></div>
-          <div class="bar-wrap"><div class="bar" style="width:${Math.round((parseInt(a.playcount)/max)*100)}%"></div></div>
-        </div>
-        <div class="list-count">${fmt(a.playcount)} plays</div>
-      </div>`).join('');
-  }
-
-  function buildTrackRows(data) {
-    const tracks = toArr(data?.toptracks?.track);
-    if (!tracks.length) return { rows: null, tracks: [] };
-    const max = parseInt(tracks[0].playcount);
-    const rows = tracks.map((t, i) =>
-      listItem(i+1, null, t.name, t.artist.name, `${fmt(t.playcount)} plays`,
-        Math.round((parseInt(t.playcount)/max)*100), `timg-${i}`)
-    ).join('');
-    return { rows, tracks };
-  }
-
-  async function loadTrackImages(tracks) {
-    await Promise.all(tracks.map(async (t, i) => {
-      try {
-        const d = await lfm('track.getInfo', API_KEY, { artist: t.artist.name, track: t.name });
-        const albumImg = img(d.track?.album?.image, 'small') || img(d.track?.album?.image, 'medium');
-        if (!albumImg) return;
-        const ph = document.getElementById(`timg-${i}`);
-        if (ph) ph.outerHTML = `<img class="list-img" src="${albumImg}" alt="" onerror="this.outerHTML='<div class=list-img-ph></div>'" />`;
-      } catch {}
-    }));
-  }
-
-  function buildAlbumRows(data) {
-    const albums = toArr(data?.topalbums?.album);
-    if (!albums.length) return null;
-    const max = parseInt(albums[0].playcount);
-    return albums.map((a, i) => {
-      const cover = img(a.image,'small') || img(a.image,'medium');
-      return listItem(i+1, cover, a.name, a.artist.name, `${fmt(a.playcount)} plays`,
-        Math.round((parseInt(a.playcount)/max)*100));
-    }).join('');
-  }
-
-  // ── Background analysis: real durations → ban risk + integrity check ──
-  async function runAnalysis(user) {
-    const now      = Math.floor(Date.now() / 1000);
-    const eightAgo = now - 8 * 24 * 60 * 60;
-    const weekAgo  = now - 7 * 24 * 60 * 60;
-
-    const banCard = document.getElementById('ban-card');
-
-    const page1 = await lfm('user.getRecentTracks', API_KEY, {
-      user, from: eightAgo, to: now, limit: 200, page: 1
-    });
-    const totalPages = parseInt(page1.recenttracks['@attr'].totalPages);
-    let all = toArr(page1.recenttracks.track).filter(t => t.date);
-
-    if (totalPages > 1) {
-      if (banCard) banCard.innerHTML = `<span class="section-label">ban risk</span><span class="badge badge-checking" style="margin-top:0.2rem;display:inline-flex">⟳ loading history (${totalPages} pages)...</span>`;
-      const rest = await Promise.all(
-        Array.from({ length: totalPages - 1 }, (_, i) =>
-          lfm('user.getRecentTracks', API_KEY, {
-            user, from: eightAgo, to: now, limit: 200, page: i + 2
-          })
-        )
-      );
-      rest.forEach(p => all = all.concat(toArr(p.recenttracks.track).filter(t => t.date)));
+    function buildTrackRows(data) {
+      const tracks = toArr(data?.toptracks?.track);
+      if (!tracks.length) return { rows: null, tracks: [] };
+      const max = parseInt(tracks[0].playcount);
+      const rows = tracks.map((t, i) =>
+        listItem(i+1, null, t.name, t.artist.name, `${fmt(t.playcount)} plays`,
+          Math.round((parseInt(t.playcount)/max)*100), `timg-${i}`)
+      ).join('');
+      return { rows, tracks };
     }
 
-    const uniq = {};
-    all.forEach(t => {
-      const key = `${t.artist['#text']}|||${t.name}`;
-      if (!uniq[key]) uniq[key] = { artist: t.artist['#text'], name: t.name, duration: null };
-    });
+    async function loadTrackImages(tracks) {
+      await Promise.all(tracks.map(async (t, i) => {
+        try {
+          const d = await lfm('track.getInfo', API_KEY, { artist: t.artist.name, track: t.name });
+          const albumImg = img(d.track?.album?.image, 'small') || img(d.track?.album?.image, 'medium');
+          if (!albumImg) return;
+          const ph = $(`timg-${i}`);
+          if (ph) ph.outerHTML = `<img class="list-img" src="${albumImg}" alt="" onerror="this.outerHTML='<div class=list-img-ph></div>'" />`;
+        } catch {}
+      }));
+    }
 
-    const keys = Object.keys(uniq);
-    const BATCH = 8;
-    if (banCard) banCard.innerHTML = `<span class="section-label">ban risk</span><span class="badge badge-checking" id="dur-progress" style="margin-top:0.2rem;display:inline-flex">⟳ fetching durations (0/${keys.length} tracks)...</span>`;
-    for (let i = 0; i < keys.length; i += BATCH) {
-      await Promise.all(
-        keys.slice(i, i + BATCH).map(async key => {
+    function buildAlbumRows(data) {
+      const albums = toArr(data?.topalbums?.album);
+      if (!albums.length) return null;
+      const max = parseInt(albums[0].playcount);
+      return albums.map((a, i) => {
+        const cover = img(a.image,'small') || img(a.image,'medium');
+        return listItem(i+1, cover, a.name, a.artist.name, `${fmt(a.playcount)} plays`,
+          Math.round((parseInt(a.playcount)/max)*100));
+      }).join('');
+    }
+
+    // ── Background analysis ──
+    async function runAnalysis(user) {
+      const now = Math.floor(Date.now() / 1000);
+      const eightAgo = now - 8 * 24 * 60 * 60;
+      const weekAgo = now - 7 * 24 * 60 * 60;
+      const banCard = $('ban-card');
+      const setBanLoad = (txt) => {
+        if (banCard) banCard.innerHTML = `<div class="section-head"><span class="section-label">ban risk</span></div><span class="badge-loading"><span class="dot"></span>${txt}</span>`;
+      };
+
+      const page1 = await lfm('user.getRecentTracks', API_KEY, { user, from: eightAgo, to: now, limit: 200, page: 1 });
+      const totalPages = parseInt(page1.recenttracks['@attr'].totalPages);
+      let all = toArr(page1.recenttracks.track).filter(t => t.date);
+
+      if (totalPages > 1) {
+        setBanLoad(`loading history · ${totalPages} pages…`);
+        const rest = await Promise.all(
+          Array.from({ length: totalPages - 1 }, (_, i) =>
+            lfm('user.getRecentTracks', API_KEY, { user, from: eightAgo, to: now, limit: 200, page: i + 2 })
+          )
+        );
+        rest.forEach(p => all = all.concat(toArr(p.recenttracks.track).filter(t => t.date)));
+      }
+
+      const uniq = {};
+      all.forEach(t => {
+        const key = `${t.artist['#text']}|||${t.name}`;
+        if (!uniq[key]) uniq[key] = { artist: t.artist['#text'], name: t.name, duration: null };
+      });
+
+      const keys = Object.keys(uniq);
+      const BATCH = 8;
+      setBanLoad(`fetching durations · 0/${keys.length}…`);
+      for (let i = 0; i < keys.length; i += BATCH) {
+        await Promise.all(keys.slice(i, i + BATCH).map(async key => {
           try {
-            const d = await lfm('track.getInfo', API_KEY, {
-              artist: uniq[key].artist,
-              track:  uniq[key].name
-            });
+            const d = await lfm('track.getInfo', API_KEY, { artist: uniq[key].artist, track: uniq[key].name });
             const ms = parseInt(d.track?.duration);
             if (ms > 0) uniq[key].duration = ms / 1000;
           } catch {}
-        })
-      );
-      const prog = document.getElementById('dur-progress');
-      if (prog) prog.textContent = `⟳ fetching durations (${Math.min(i + BATCH, keys.length)}/${keys.length} tracks)`;
-      if (i + BATCH < keys.length) await new Promise(r => setTimeout(r, 120));
-    }
-
-    const BAN_LIMIT_SECS = 6 * 24 * 3600;
-
-    let knownSum = 0, knownN = 0;
-    all.forEach(t => {
-      const dur = uniq[`${t.artist['#text']}|||${t.name}`]?.duration;
-      if (dur) { knownSum += dur; knownN++; }
-    });
-    const fallbackSecs = knownN > 0 ? knownSum / knownN : 210;
-
-    let totalListenSecs = 0;
-    let tracksWithRealDur = 0;
-    let tracksWithFallback = 0;
-    all.forEach(t => {
-      const dur = uniq[`${t.artist['#text']}|||${t.name}`]?.duration;
-      if (dur) { totalListenSecs += dur; tracksWithRealDur++; }
-      else      { totalListenSecs += fallbackSecs; tracksWithFallback++; }
-    });
-
-    updateBanCard(totalListenSecs, all.length, tracksWithRealDur, tracksWithFallback, fallbackSecs);
-
-    // ── Update hero card with real 7-day listening time ──
-    const week = all.filter(t => parseInt(t.date.uts) >= weekAgo);
-
-    let weekListenSecs = 0;
-    week.forEach(t => {
-      const dur = uniq[`${t.artist['#text']}|||${t.name}`]?.duration;
-      weekListenSecs += dur ?? fallbackSecs;
-    });
-    const realWeekHrs = weekListenSecs / 3600;
-    const heroNum  = document.getElementById('hero-number');
-    const heroUnit = document.getElementById('hero-unit');
-    if (heroNum) {
-      heroNum.textContent = realWeekHrs < 10 ? realWeekHrs.toFixed(1) : Math.round(realWeekHrs);
-      heroNum.style.cssText = '';
-    }
-    if (heroUnit) heroUnit.textContent = realWeekHrs >= 1 ? 'hrs · 7 days' : 'mins · 7 days';
-
-    // ── Listening patterns visualizations ──
-    renderPatterns(week, uniq);
-
-    // ── Integrity check: sorted oldest → newest ──
-    week.sort((a, b) => parseInt(a.date.uts) - parseInt(b.date.uts));
-
-    const suspicious = [];
-    for (let i = 1; i < week.length; i++) {
-      const prev    = week[i - 1];
-      const curr    = week[i];
-      const gap     = parseInt(curr.date.uts) - parseInt(prev.date.uts);
-      const prevDur = uniq[`${prev.artist['#text']}|||${prev.name}`]?.duration;
-      const currDur = uniq[`${curr.artist['#text']}|||${curr.name}`]?.duration;
-
-      const minGap = currDur
-        ? Math.max(Math.min(currDur * 0.3, 120), 15)
-        : 20;
-
-      if (gap < minGap) {
-        suspicious.push({
-          prevTrack: prev.name, prevArtist: prev.artist['#text'],
-          currTrack: curr.name, currArtist: curr.artist['#text'],
-          gap, currDur, prevDur
-        });
+        }));
+        const prog = banCard && banCard.querySelector('.badge-loading');
+        if (prog) prog.innerHTML = `<span class="dot"></span>fetching durations · ${Math.min(i + BATCH, keys.length)}/${keys.length}…`;
+        if (i + BATCH < keys.length) await new Promise(r => setTimeout(r, 120));
       }
-    }
 
-    const intCard = document.getElementById('integrity-card');
-    if (!intCard) return;
+      let knownSum = 0, knownN = 0;
+      all.forEach(t => {
+        const dur = uniq[`${t.artist['#text']}|||${t.name}`]?.duration;
+        if (dur) { knownSum += dur; knownN++; }
+      });
+      const fallbackSecs = knownN > 0 ? knownSum / knownN : 210;
 
-    intCard.style.opacity = '1';
+      let totalListenSecs = 0, tracksWithRealDur = 0, tracksWithFallback = 0;
+      all.forEach(t => {
+        const dur = uniq[`${t.artist['#text']}|||${t.name}`]?.duration;
+        if (dur) { totalListenSecs += dur; tracksWithRealDur++; }
+        else { totalListenSecs += fallbackSecs; tracksWithFallback++; }
+      });
 
-    if (suspicious.length === 0) {
+      updateBanCard(totalListenSecs, all.length, tracksWithRealDur, tracksWithFallback, fallbackSecs);
+
+      // hero: real 7-day listening hours
+      const week = all.filter(t => parseInt(t.date.uts) >= weekAgo);
+      let weekListenSecs = 0;
+      week.forEach(t => {
+        const dur = uniq[`${t.artist['#text']}|||${t.name}`]?.duration;
+        weekListenSecs += dur ?? fallbackSecs;
+      });
+      const realWeekHrs = weekListenSecs / 3600;
+      const heroNum = $('hero-number'), heroUnit = $('hero-unit');
+      if (heroNum) {
+        heroNum.classList.remove('pending');
+        if (realWeekHrs >= 1) countUp(heroNum, realWeekHrs >= 10 ? Math.round(realWeekHrs) : +realWeekHrs.toFixed(1), { dec: realWeekHrs >= 10 ? 0 : 1 });
+        else countUp(heroNum, Math.round(weekListenSecs / 60), { dec: 0 });
+      }
+      if (heroUnit) heroUnit.textContent = realWeekHrs >= 1 ? 'hours listened · this week' : 'minutes listened · this week';
+
+      renderPatterns(week, uniq);
+
+      // integrity check
+      week.sort((a, b) => parseInt(a.date.uts) - parseInt(b.date.uts));
+      const suspicious = [];
+      for (let i = 1; i < week.length; i++) {
+        const prev = week[i - 1], curr = week[i];
+        const gap = parseInt(curr.date.uts) - parseInt(prev.date.uts);
+        const currDur = uniq[`${curr.artist['#text']}|||${curr.name}`]?.duration;
+        const minGap = currDur ? Math.max(Math.min(currDur * 0.3, 120), 15) : 20;
+        if (gap < minGap) {
+          suspicious.push({ prevTrack: prev.name, currTrack: curr.name, currArtist: curr.artist['#text'], gap, currDur });
+        }
+      }
+
+      const intCard = $('integrity-card');
+      if (!intCard) return;
+      intCard.style.opacity = '1';
+
+      if (suspicious.length === 0) {
+        intCard.innerHTML = `
+          <div class="section-head">
+            <span class="section-label">manual scrobbles</span>
+            <span class="ms-status safe">✓ none · ${week.length} checked</span>
+          </div>
+          <p class="ms-note" style="border-top:none;padding-top:0;margin-top:0.3rem">every scrobble this week had enough time to actually play — clean listening history.</p>`;
+        return;
+      }
+
+      const seen = new Set();
+      const uniqSusp = suspicious.filter(s => {
+        const k = `${s.prevTrack}|${s.currTrack}`;
+        return seen.has(k) ? false : (seen.add(k), true);
+      });
+      const fmtSecs = s => !s ? '?' : (s >= 60 ? `${Math.floor(s/60)}m ${Math.round(s%60)}s` : `${Math.round(s)}s`);
+      const msPct = Math.round((uniqSusp.length / week.length) * 100);
+      const msRows = uniqSusp.slice(0, 8).map(s => `
+        <div class="ms-item">
+          <div class="ms-track">${esc(s.currTrack)} <span>by ${esc(s.currArtist)}</span></div>
+          <div class="ms-detail">scrobbled ${fmtSecs(s.gap)} after the previous track${s.currDur ? ` · expected ≥ ${fmtSecs(Math.max(Math.min(s.currDur * 0.3, 120), 15))}` : ''}</div>
+        </div>`).join('');
+      const msExtra = uniqSusp.length > 8 ? `<div class="ms-detail" style="padding-top:0.4rem">+ ${uniqSusp.length - 8} more</div>` : '';
+
       intCard.innerHTML = `
-        <div style="display:flex;align-items:center;justify-content:space-between">
+        <div class="section-head">
           <span class="section-label">manual scrobbles</span>
-          <span class="ban-status safe">✓ none detected · ${week.length} checked</span>
-        </div>`;
-      return;
-    }
-
-    const seen = new Set();
-    const uniqSusp = suspicious.filter(s => {
-      const k = `${s.prevTrack}|${s.currTrack}`;
-      return seen.has(k) ? false : (seen.add(k), true);
-    });
-
-    function fmtSecs(s) {
-      if (!s) return '?';
-      return s >= 60 ? `${Math.floor(s/60)}m ${Math.round(s%60)}s` : `${Math.round(s)}s`;
-    }
-
-    const msPct = Math.round((uniqSusp.length / week.length) * 100);
-    const msRows = uniqSusp.slice(0, 8).map(s => `
-      <div class="ms-item">
-        <div class="ms-track">${s.currTrack} <span style="color:var(--muted2)">by ${s.currArtist}</span></div>
-        <div class="ms-detail">scrobbled ${fmtSecs(s.gap)} after "${s.prevTrack}"${s.currDur ? ` · min expected ${fmtSecs(Math.max(Math.min(s.currDur * 0.3, 120), 15))}` : ''}</div>
-      </div>`).join('');
-
-    const msExtra = uniqSusp.length > 8
-      ? `<div class="ms-detail" style="padding-top:0.3rem">+ ${uniqSusp.length - 8} more</div>` : '';
-
-    intCard.innerHTML = `
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.4rem">
-        <span class="section-label">manual scrobbles</span>
-        <span style="font-size:0.56rem;letter-spacing:0.08em;color:var(--accent2)">${uniqSusp.length} flagged · ${msPct}% of week</span>
-      </div>
-      <div class="ms-list">${msRows}${msExtra}</div>
-      <p class="ms-note">tracks scrobbled faster than their expected listening time, likely added manually</p>
-    `;
-  }
-
-  function renderPatterns(week, uniq) {
-    const card = document.getElementById('patterns-card');
-    if (!card || !week.length) return;
-
-    const dayNames = ['sun','mon','tue','wed','thu','fri','sat'];
-    const now = new Date();
-
-    const dayBuckets = [];
-    const keyIndex = {};
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date(now);
-      d.setDate(now.getDate() - i);
-      keyIndex[d.toDateString()] = dayBuckets.length;
-      dayBuckets.push({ label: dayNames[d.getDay()], count: 0 });
-    }
-
-    const hourCounts = new Array(24).fill(0);
-    const tod = { morning: 0, afternoon: 0, evening: 0, night: 0 };
-    const uniqArtists = new Set();
-    const uniqTracks  = new Set();
-    let sleepScrobbles = 0;
-
-    const matrix = {};
-    for (let d = 0; d < 7; d++)
-      for (let h = 0; h < 24; h++)
-        matrix[`${d}_${h}`] = 0;
-
-    week.forEach(t => {
-      const dt = new Date(parseInt(t.date.uts) * 1000);
-      const dk = dt.toDateString();
-      const di = keyIndex[dk];
-      const h  = dt.getHours();
-      if (di !== undefined) { dayBuckets[di].count++; matrix[`${di}_${h}`]++; }
-      hourCounts[h]++;
-      if (h >= 6 && h <= 11)       tod.morning++;
-      else if (h >= 12 && h <= 17) tod.afternoon++;
-      else if (h >= 18 && h <= 23) tod.evening++;
-      else                          tod.night++;
-      if (h >= 1 && h <= 6)        sleepScrobbles++;
-      uniqArtists.add(t.artist['#text']);
-      uniqTracks.add(`${t.artist['#text']}|||${t.name}`);
-    });
-
-    const total       = week.length;
-    const activeDays  = dayBuckets.filter(b => b.count > 0).length;
-    const repeatRatio = uniqTracks.size > 0 ? (total / uniqTracks.size).toFixed(1) : '—';
-    const sleepPct    = total > 0 ? Math.round((sleepScrobbles / total) * 100) : 0;
-    const maxDay      = Math.max(...dayBuckets.map(b => b.count), 1);
-    const peakDay     = dayBuckets.reduce((mi, b, i, a) => b.count > a[mi].count ? i : mi, 0);
-    const maxHour     = Math.max(...hourCounts, 1);
-    const peakHour    = hourCounts.reduce((mi, c, i) => c > hourCounts[mi] ? i : mi, 0);
-    const maxCell     = Math.max(...Object.values(matrix), 1);
-
-    const fmtHour = h => { const ap = h < 12 ? 'am' : 'pm'; const hr = h % 12 || 12; return `${hr}${ap}`; };
-
-    const cx = 100, cy = 100, rIn = 34, rMax = 80;
-    let spokes = '';
-    for (let h = 0; h < 24; h++) {
-      const ang   = (h / 24) * 2 * Math.PI - Math.PI / 2;
-      const len   = rIn + (hourCounts[h] / maxHour) * (rMax - rIn);
-      const x1    = cx + Math.cos(ang) * rIn, y1 = cy + Math.sin(ang) * rIn;
-      const x2    = cx + Math.cos(ang) * len, y2 = cy + Math.sin(ang) * len;
-      const inten = hourCounts[h] / maxHour;
-      const isP   = h === peakHour && hourCounts[h] > 0;
-      const isSleepH = h >= 1 && h <= 6;
-      let col;
-      if (isSleepH && hourCounts[h] > 0)
-        col = isP ? '#c4b8f0' : `rgba(140,120,200,${(0.22 + inten * 0.68).toFixed(2)})`;
-      else
-        col = isP ? '#f0d9bb' : `rgba(212,165,116,${(0.22 + inten * 0.68).toFixed(2)})`;
-      spokes += `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${col}" stroke-width="${isP ? 5 : 3.6}" stroke-linecap="round"/>`;
-    }
-
-    const tickDefs = [[0,'12a'],[6,'6a'],[12,'12p'],[18,'6p']];
-    let tickLabels = '';
-    tickDefs.forEach(([h, txt]) => {
-      const ang = (h / 24) * 2 * Math.PI - Math.PI / 2;
-      const x = cx + Math.cos(ang) * 92, y = cy + Math.sin(ang) * 92;
-      tickLabels += `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="middle" dominant-baseline="central" class="clock-tick-label">${txt}</text>`;
-    });
-
-    const todPct = k => total ? Math.round((tod[k] / total) * 100) : 0;
-    const legendItems = [
-      ['morning',   'morning',    '6a–12p'],
-      ['afternoon', 'afternoon',  '12p–6p'],
-      ['evening',   'evening',    '6p–12a'],
-      ['night',     'late night', '12a–6a'],
-    ].map(([k, lbl, range]) => `
-      <div class="clock-legend-item">
-        <span class="clock-legend-val">${todPct(k)}%</span>
-        <span class="clock-legend-label">${lbl} <span style="color:var(--muted);opacity:0.7">${range}</span></span>
-      </div>`).join('');
-
-    const dayCols = dayBuckets.map((b, i) => `
-      <div class="day-col${i === peakDay ? ' is-peak' : ''}" style="cursor:default" onmouseenter="showTip(event,'${b.label}: ${b.count} scrobble${b.count !== 1 ? 's' : ''}')" onmousemove="moveTip(event)" onmouseleave="hideTip()">
-        <span class="day-bar-count">${b.count || ''}</span>
-        <div class="day-bar-track">
-          <div class="day-bar${i === peakDay && b.count > 0 ? ' peak' : ''}" style="height:0%" data-h="${Math.round((b.count / maxDay) * 100)}"></div>
+          <span class="ms-status flag">${uniqSusp.length} flagged · ${msPct}%</span>
         </div>
-        <span class="day-bar-label">${b.label}</span>
-      </div>`).join('');
+        <div class="ms-list">${msRows}${msExtra}</div>
+        <p class="ms-note">tracks scrobbled faster than their playtime — most likely added manually rather than actually listened.</p>`;
+    }
 
-    let hmHtml = `<div class="hm-spacer"></div>`;
-    dayBuckets.forEach(b => { hmHtml += `<div class="hm-day-label">${b.label}</div>`; });
-    for (let h = 0; h < 24; h++) {
-      const isSleepHour = h >= 1 && h <= 6;
-      hmHtml += `<div class="hm-hour-label">${h % 6 === 0 ? fmtHour(h) : ''}</div>`;
-      for (let d = 0; d < 7; d++) {
-        const count = matrix[`${d}_${h}`];
-        const alpha = count > 0 ? (0.15 + (count / maxCell) * 0.85).toFixed(2) : '0';
-        const tipText = `${dayBuckets[d].label} ${fmtHour(h)}: ${count} scrobble${count !== 1 ? 's' : ''}`;
-        const cls   = `hm-cell${isSleepHour ? ' hm-sleep' : ''}${count === 0 ? ' hm-empty' : ''}`;
-        hmHtml += `<div class="${cls}" style="--hm-a:${alpha};cursor:default" onmouseenter="showTip(event,'${tipText}')" onmousemove="moveTip(event)" onmouseleave="hideTip()"></div>`;
+    function renderPatterns(week, uniq) {
+      const card = $('patterns-card');
+      if (!card || !week.length) return;
+
+      const dayNames = ['sun','mon','tue','wed','thu','fri','sat'];
+      const now = new Date();
+      const dayBuckets = [], keyIndex = {};
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(now);
+        d.setDate(now.getDate() - i);
+        keyIndex[d.toDateString()] = dayBuckets.length;
+        dayBuckets.push({ label: dayNames[d.getDay()], count: 0 });
       }
+
+      const hourCounts = new Array(24).fill(0);
+      const tod = { morning: 0, afternoon: 0, evening: 0, night: 0 };
+      const uniqArtists = new Set(), uniqTracks = new Set();
+      let sleepScrobbles = 0;
+      const matrix = {};
+      for (let d = 0; d < 7; d++) for (let h = 0; h < 24; h++) matrix[`${d}_${h}`] = 0;
+
+      week.forEach(t => {
+        const dt = new Date(parseInt(t.date.uts) * 1000);
+        const di = keyIndex[dt.toDateString()];
+        const h = dt.getHours();
+        if (di !== undefined) { dayBuckets[di].count++; matrix[`${di}_${h}`]++; }
+        hourCounts[h]++;
+        if (h >= 6 && h <= 11) tod.morning++;
+        else if (h >= 12 && h <= 17) tod.afternoon++;
+        else if (h >= 18 && h <= 23) tod.evening++;
+        else tod.night++;
+        if (h >= 1 && h <= 6) sleepScrobbles++;
+        uniqArtists.add(t.artist['#text']);
+        uniqTracks.add(`${t.artist['#text']}|||${t.name}`);
+      });
+
+      const total = week.length;
+      const activeDays = dayBuckets.filter(b => b.count > 0).length;
+      const repeatRatio = uniqTracks.size > 0 ? (total / uniqTracks.size).toFixed(1) : '—';
+      const sleepPct = total > 0 ? Math.round((sleepScrobbles / total) * 100) : 0;
+      const maxDay = Math.max(...dayBuckets.map(b => b.count), 1);
+      const peakDay = dayBuckets.reduce((mi, b, i, a) => b.count > a[mi].count ? i : mi, 0);
+      const maxHour = Math.max(...hourCounts, 1);
+      const peakHour = hourCounts.reduce((mi, c, i) => c > hourCounts[mi] ? i : mi, 0);
+      const maxCell = Math.max(...Object.values(matrix), 1);
+      const fmtHour = h => { const ap = h < 12 ? 'am' : 'pm'; const hr = h % 12 || 12; return `${hr}${ap}`; };
+
+      const cx = 100, cy = 100, rIn = 36, rMax = 84;
+      let spokes = '';
+      for (let h = 0; h < 24; h++) {
+        const ang = (h / 24) * 2 * Math.PI - Math.PI / 2;
+        const len = rIn + (hourCounts[h] / maxHour) * (rMax - rIn);
+        const x1 = cx + Math.cos(ang) * rIn, y1 = cy + Math.sin(ang) * rIn;
+        const x2 = cx + Math.cos(ang) * len, y2 = cy + Math.sin(ang) * len;
+        const inten = hourCounts[h] / maxHour;
+        const isP = h === peakHour && hourCounts[h] > 0;
+        const isSleepH = h >= 1 && h <= 6;
+        let col;
+        if (isSleepH && hourCounts[h] > 0) col = isP ? '#c4b8f0' : `rgba(157,137,214,${(0.25 + inten * 0.65).toFixed(2)})`;
+        else col = isP ? '#f3ddbf' : `rgba(216,167,114,${(0.25 + inten * 0.65).toFixed(2)})`;
+        spokes += `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${col}" stroke-width="${isP ? 5 : 3.6}" stroke-linecap="round"/>`;
+      }
+      let tickLabels = '';
+      [[0,'12a'],[6,'6a'],[12,'12p'],[18,'6p']].forEach(([h, txt]) => {
+        const ang = (h / 24) * 2 * Math.PI - Math.PI / 2;
+        const x = cx + Math.cos(ang) * 95, y = cy + Math.sin(ang) * 95;
+        tickLabels += `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="middle" dominant-baseline="central" class="clock-tick-label">${txt}</text>`;
+      });
+
+      const todPct = k => total ? Math.round((tod[k] / total) * 100) : 0;
+      const legendItems = [
+        ['morning','#d8a772','morning','6a–12p'],
+        ['afternoon','#edca9f','afternoon','12p–6p'],
+        ['evening','#c79a6a','evening','6p–12a'],
+        ['night','#9d89d6','late night','12a–6a'],
+      ].map(([k, col, lbl, range]) => `
+        <div class="clock-legend-item">
+          <span class="clock-legend-swatch" style="background:${col}"></span>
+          <span class="clock-legend-txt">
+            <span class="clock-legend-val">${todPct(k)}%</span>
+            <span class="clock-legend-label">${lbl} · ${range}</span>
+          </span>
+        </div>`).join('');
+
+      const dayCols = dayBuckets.map((b, i) => `
+        <div class="day-col${i === peakDay ? ' is-peak' : ''}" onmouseenter="showTip(event,'${b.label}: ${b.count} scrobble${b.count !== 1 ? 's' : ''}')" onmousemove="moveTip(event)" onmouseleave="hideTip()">
+          <span class="day-bar-count">${b.count || ''}</span>
+          <div class="day-bar-track"><div class="day-bar${i === peakDay && b.count > 0 ? ' peak' : ''}" style="height:0%" data-h="${Math.round((b.count / maxDay) * 100)}"></div></div>
+          <span class="day-bar-label">${b.label}</span>
+        </div>`).join('');
+
+      let hmHtml = `<div class="hm-spacer"></div>`;
+      dayBuckets.forEach(b => { hmHtml += `<div class="hm-day-label">${b.label}</div>`; });
+      for (let h = 0; h < 24; h++) {
+        const isSleepHour = h >= 1 && h <= 6;
+        hmHtml += `<div class="hm-hour-label">${h % 6 === 0 ? fmtHour(h) : ''}</div>`;
+        for (let d = 0; d < 7; d++) {
+          const count = matrix[`${d}_${h}`];
+          const alpha = count > 0 ? (0.15 + (count / maxCell) * 0.85).toFixed(2) : '0';
+          const tipText = `${dayBuckets[d].label} ${fmtHour(h)}: ${count} scrobble${count !== 1 ? 's' : ''}`;
+          const cls = `hm-cell${isSleepHour ? ' hm-sleep' : ''}${count === 0 ? ' hm-empty' : ''}`;
+          hmHtml += `<div class="${cls}" style="--hm-a:${alpha}" onmouseenter="showTip(event,'${tipText}')" onmousemove="moveTip(event)" onmouseleave="hideTip()"></div>`;
+        }
+      }
+
+      card.className = 'card patterns-card reveal';
+      card.innerHTML = `
+        <div class="section-head"><span class="section-label">listening patterns</span><span class="section-aside">past 7 days · local time</span></div>
+
+        <div class="insight-row">
+          <div class="insight"><span class="insight-val">${fmt(uniqArtists.size)}</span><span class="insight-label">unique artists</span></div>
+          <div class="insight"><span class="insight-val">${fmt(uniqTracks.size)}</span><span class="insight-label">unique tracks</span></div>
+          <div class="insight"><span class="insight-val">${activeDays}<sub>/7</sub></span><span class="insight-label">active days</span></div>
+          <div class="insight"><span class="insight-val">${repeatRatio}×</span><span class="insight-label">repeat ratio</span></div>
+          <div class="insight"><span class="insight-val">${dayBuckets[peakDay].label}</span><span class="insight-label">peak day · ${dayBuckets[peakDay].count}</span></div>
+          <div class="insight"><span class="insight-val">${fmtHour(peakHour)}</span><span class="insight-label">peak hour · ${hourCounts[peakHour]}</span></div>
+          ${sleepScrobbles > 0 ? `
+          <div class="insight sleep-insight" style="grid-column:1 / -1">
+            <span class="moon">🌙</span>
+            <span style="display:flex;flex-direction:column;gap:0.2rem">
+              <span class="insight-val" style="font-size:1.05rem">${fmt(sleepScrobbles)} sleep scrobbles</span>
+              <span class="insight-label">${sleepPct}% of the week · 1am–6am</span>
+            </span>
+          </div>` : ''}
+        </div>
+
+        <div class="chart-block">
+          <span class="pattern-sub">scrobbles per day</span>
+          <div class="day-chart">${dayCols}</div>
+        </div>
+
+        <div class="chart-block">
+          <span class="pattern-sub">by hour of day</span>
+          <div class="clock-wrap">
+            <svg class="clock-svg" viewBox="0 0 200 200">
+              <circle cx="100" cy="100" r="${rIn - 5}" fill="none" stroke="var(--border2)" stroke-width="1"/>
+              ${spokes}
+              ${tickLabels}
+              <text x="100" y="95" text-anchor="middle" class="clock-center-num">${fmtHour(peakHour)}</text>
+              <text x="100" y="113" text-anchor="middle" class="clock-center-sub">peak hour</text>
+            </svg>
+            <div class="clock-legend">${legendItems}</div>
+          </div>
+        </div>
+
+        <div class="chart-block">
+          <span class="pattern-sub">activity heatmap</span>
+          <div class="heatmap-grid">${hmHtml}</div>
+          <div class="hm-legend">
+            <div class="hm-legend-item"><div class="hm-legend-swatch" style="background:rgba(216,167,114,0.75)"></div><span>regular hours</span></div>
+            <div class="hm-legend-item"><div class="hm-legend-swatch" style="background:rgba(157,137,214,0.75)"></div><span>sleep hours · 1am–6am</span></div>
+          </div>
+        </div>`;
+
+      settle(() => {
+        card.querySelectorAll('.day-bar').forEach(b => { b.style.height = b.dataset.h + '%'; });
+      });
     }
 
-    card.className = 'patterns-card slot-in';
-    card.innerHTML = `
-      <div class="section-head" style="margin-bottom:0">
-        <span class="section-label">listening patterns · 7 days</span>
-      </div>
+    function updateBanCard(totalSecs, scrobbleCount, realDurCount, fallbackCount = 0, fallbackSecs = 210) {
+      const card = $('ban-card');
+      if (!card) return;
+      const BAN_LIMIT_SECS = 6 * 24 * 3600;
+      const banPct = (totalSecs / BAN_LIMIT_SECS) * 100;
+      const barPct = Math.min(banPct, 100);
+      const listenHrs = (totalSecs / 3600).toFixed(1);
+      const remainHrs = Math.max((BAN_LIMIT_SECS - totalSecs) / 3600, 0).toFixed(1);
+      const overHrs = ((totalSecs - BAN_LIMIT_SECS) / 3600).toFixed(1);
+      const fbMin = Math.floor(fallbackSecs / 60), fbSecR = Math.round(fallbackSecs % 60);
+      const fmtFb = `${fbMin}m${fbSecR > 0 ? ' ' + fbSecR + 's' : ''}`;
 
-      <div class="insight-row">
-        <div class="insight">
-          <span class="insight-val">${fmt(uniqArtists.size)}</span>
-          <span class="insight-label">unique artists</span>
-        </div>
-        <div class="insight">
-          <span class="insight-val">${fmt(uniqTracks.size)}</span>
-          <span class="insight-label">unique tracks</span>
-        </div>
-        <div class="insight">
-          <span class="insight-val">${activeDays}<span style="font-size:0.75em;color:var(--muted2)">/7</span></span>
-          <span class="insight-label">active days</span>
-        </div>
-        <div class="insight">
-          <span class="insight-val">${repeatRatio}×</span>
-          <span class="insight-label">repeat ratio</span>
-        </div>
-        <div class="insight">
-          <span class="insight-val">${dayBuckets[peakDay].label}</span>
-          <span class="insight-label">peak day · ${dayBuckets[peakDay].count}</span>
-        </div>
-        <div class="insight">
-          <span class="insight-val">${fmtHour(peakHour)}</span>
-          <span class="insight-label">peak hour · ${hourCounts[peakHour]} plays</span>
-        </div>
-        ${sleepScrobbles > 0 ? `
-        <div class="insight sleep-insight" style="grid-column:1 / -1">
-          <span class="insight-val">🌙 ${fmt(sleepScrobbles)} sleep scrobbles</span>
-          <span class="insight-label">${sleepPct}% of this week · 1am – 6am · your local timezone</span>
-        </div>` : ''}
-      </div>
+      let banColor, statusClass, statusText, banDisplay;
+      if (banPct >= 100) { banColor = '#e87b78'; statusClass = 'danger'; statusText = 'over!'; banDisplay = banPct > 999 ? 999 : banPct; }
+      else if (banPct >= 75) { banColor = '#e8a46f'; statusClass = 'danger'; statusText = 'close!'; banDisplay = banPct; }
+      else if (banPct >= 40) { banColor = '#d8a772'; statusClass = 'caution'; statusText = 'scary!'; banDisplay = banPct; }
+      else { banColor = '#82d7a4'; statusClass = 'safe'; statusText = 'safe!'; banDisplay = banPct; }
 
-      <div class="chart-block">
-        <span class="pattern-sub">scrobbles per day</span>
-        <div class="day-chart">${dayCols}</div>
-      </div>
-
-      <div class="chart-block">
-        <span class="pattern-sub">by hour of day</span>
-        <div class="clock-wrap">
-          <svg class="clock-svg" viewBox="0 0 200 200">
-            <circle cx="100" cy="100" r="${rIn - 4}" fill="none" stroke="var(--border2)" stroke-width="1"/>
-            ${spokes}
-            ${tickLabels}
-            <text x="100" y="95" text-anchor="middle" class="clock-center-num">${fmtHour(peakHour)}</text>
-            <text x="100" y="112" text-anchor="middle" class="clock-center-sub">peak hour</text>
-          </svg>
-          <div class="clock-legend">${legendItems}</div>
-        </div>
-      </div>
-
-      <div class="chart-block">
-        <span class="pattern-sub">activity heatmap · day × hour <span style="color:var(--muted);font-size:0.9em">(local time)</span></span>
-        <div class="heatmap-grid">${hmHtml}</div>
-        <div class="hm-legend">
-          <div class="hm-legend-item">
-            <div class="hm-legend-swatch" style="background:rgba(212,165,116,0.7)"></div>
-            <span>regular hours</span>
+      card.className = 'card ban-card reveal';
+      card.innerHTML = `
+        <div class="section-head"><span class="section-label">ban risk</span><span class="section-aside">est. 8-day window</span></div>
+        <div class="ban-body">
+          <div class="gauge">
+            <svg viewBox="0 0 168 96">
+              <path class="gauge-track" d="M14 90 A 70 70 0 0 1 154 90" pathLength="100"/>
+              <path class="gauge-fill" d="M14 90 A 70 70 0 0 1 154 90" pathLength="100" style="stroke:${banColor};stroke-dasharray:0 100"/>
+            </svg>
+            <div class="gauge-center">
+              <span class="gauge-pct" style="color:${banColor}">0%</span>
+              <span class="gauge-status ${statusClass}">${statusText}</span>
+            </div>
           </div>
-          <div class="hm-legend-item">
-            <div class="hm-legend-swatch" style="background:rgba(140,120,200,0.7)"></div>
-            <span>sleep hours · 1am – 6am</span>
+          <div class="ban-details">
+            <div class="ban-row"><span class="ban-row-lbl">listened / limit</span><span class="ban-row-val">${listenHrs} / 144 hrs</span></div>
+            <div class="ban-row"><span class="ban-row-lbl">${banPct >= 100 ? 'over by' : 'headroom left'}</span><span class="ban-row-val" style="color:${banColor}">${banPct >= 100 ? '+' + overHrs + ' hrs' : remainHrs + ' hrs'}</span></div>
+            <div class="ban-row"><span class="ban-row-lbl">durations / est. durations</span><span class="ban-row-val">${realDurCount}/${scrobbleCount}${fallbackCount > 0 ? ` · est ${fmtFb}` : ''}</span></div>
           </div>
         </div>
-      </div>
-    `;
+        <p class="ban-foot">shows you how close you are to getting banned on fmbot (fmbot bans you from global leaderboards if you have over 6 days of listening in 8 days)</p>`;
 
-    requestAnimationFrame(() => {
-      card.querySelectorAll('.day-bar').forEach(b => { b.style.height = b.dataset.h + '%'; });
-    });
-  }
-
-  function updateBanCard(totalSecs, scrobbleCount, realDurCount, fallbackCount = 0, fallbackSecs = 210) {
-    const card = document.getElementById('ban-card');
-    if (!card) return;
-
-    const BAN_LIMIT_SECS = 6 * 24 * 3600;
-    const banPct    = (totalSecs / BAN_LIMIT_SECS) * 100;
-    const barPct    = Math.min(banPct, 100);
-    const listenHrs = (totalSecs / 3600).toFixed(1);
-    const remainHrs = Math.max((BAN_LIMIT_SECS - totalSecs) / 3600, 0).toFixed(1);
-    const overHrs   = ((totalSecs - BAN_LIMIT_SECS) / 3600).toFixed(1);
-    const fbMin     = Math.floor(fallbackSecs / 60);
-    const fbSecR    = Math.round(fallbackSecs % 60);
-    const fmtFb     = `${fbMin}m${fbSecR > 0 ? ' ' + fbSecR + 's' : ''}`;
-
-    let banColor, cardExtra, statusClass, statusText, banDisplay;
-    if (banPct >= 100) {
-      banColor = '#e8726f'; cardExtra = 'danger';
-      statusClass = 'danger'; statusText = 'over est. limit!';
-      banDisplay = banPct > 999 ? '999+%' : banPct.toFixed(1) + '%';
-    } else if (banPct >= 75) {
-      banColor = '#e8a46f'; cardExtra = 'warning';
-      statusClass = 'danger'; statusText = 'approaching limit';
-      banDisplay = banPct.toFixed(1) + '%';
-    } else if (banPct >= 40) {
-      banColor = '#d4a574'; cardExtra = '';
-      statusClass = 'caution'; statusText = 'scary';
-      banDisplay = banPct.toFixed(1) + '%';
-    } else {
-      banColor = '#4ade80'; cardExtra = '';
-      statusClass = 'safe'; statusText = 'safe';
-      banDisplay = banPct.toFixed(1) + '%';
+      const pctEl = card.querySelector('.gauge-pct');
+      const fillEl = card.querySelector('.gauge-fill');
+      settle(() => {
+        if (fillEl) fillEl.style.strokeDasharray = `${barPct} 100`;
+        if (pctEl) {
+          if (banPct > 999) { pctEl.textContent = '999+%'; }
+          else countUp(pctEl, +banDisplay.toFixed(1), { dec: 1, suffix: '%' });
+        }
+      });
     }
 
-    card.className = `ban-card ${cardExtra}`;
-    card.style.cssText = '';
-    card.innerHTML = `
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.4rem">
-        <span class="section-label">ban risk · est. 8-day window</span>
-        <span class="ban-status ${statusClass}">${statusText}</span>
-      </div>
-      <div class="ban-header">
-        <span class="ban-pct" style="color:${banColor}">${banDisplay}</span>
-        <div style="flex:1;display:flex;flex-direction:column;gap:0.35rem">
-          <div class="ban-bar-wrap">
-            <div class="ban-bar" style="width:${barPct}%;background:${banColor}"></div>
-          </div>
-          <div style="display:flex;justify-content:space-between">
-            <span class="ban-detail-label">${listenHrs} hrs listened / 144 hr limit</span>
-            <span class="ban-detail-val" style="color:${banColor}">${banPct >= 100 ? '+' + overHrs + ' hrs over' : remainHrs + ' hrs left'}</span>
-          </div>
-          <div style="font-size:0.47rem;color:var(--muted);letter-spacing:0.06em;margin-top:0.05rem">${realDurCount}/${scrobbleCount} real durations${fallbackCount > 0 ? ` · ${fallbackCount} estimated at avg ${fmtFb}` : ''}</div>
-        </div>
-      </div>
-      <p style="font-size:0.49rem;color:var(--muted);letter-spacing:0.07em;margin-top:0.1rem;line-height:1.55">just a rough indicator!</p>
-      `;
-  }
-
-  // ── Auto-load from URL param (runs after all functions defined) ──
-  if (_paramUser) handleSearch();
+    // auto-load from URL param
+    if (_paramUser) handleSearch();
+})();
 </script>
 </body>
 </html>
