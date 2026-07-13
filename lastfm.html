@@ -206,10 +206,19 @@
     .insight-val { font-family: var(--serif); font-size: 1.4rem; font-weight: 300; color: var(--text); line-height: 1; }
     .insight-val sub { font-size: 0.55em; color: var(--muted2); vertical-align: baseline; }
     .insight-label { font-size: 0.5rem; letter-spacing: 0.09em; color: var(--muted2); text-transform: lowercase; line-height: 1.4; }
-    .sleep-insight { background: rgba(157,137,214,0.06); border: 1px solid rgba(157,137,214,0.24); border-radius: 12px; padding: 0.75rem 1rem; display: flex; align-items: center; gap: 0.8rem; }
+    .sleep-insight { background: rgba(157,137,214,0.06); border: 1px solid rgba(157,137,214,0.24); border-radius: 12px; padding: 0.75rem 1rem; display: flex; flex-direction: column; gap: 0.75rem; }
+    .sleep-insight-top { display: flex; align-items: center; gap: 0.8rem; }
     .sleep-insight .moon { font-size: 1.4rem; }
     .sleep-txt { display: flex; flex-direction: column; gap: 0.2rem; }
     .sleep-txt .insight-val { font-size: 1.1rem; }
+    .sleep-range { display: flex; flex-direction: column; gap: 0.4rem; }
+    .sleep-range-track { position: relative; height: 6px; margin: 0.5rem 8px; border-radius: 3px; background: rgba(157,137,214,0.15); }
+    .sleep-range-fill { position: absolute; top: 0; height: 100%; border-radius: 3px; background: rgba(157,137,214,0.55); }
+    .sleep-range input[type=range] { position: absolute; top: 50%; left: -8px; width: calc(100% + 16px); height: 6px; margin: 0; padding: 0; background: none; pointer-events: none; -webkit-appearance: none; appearance: none; transform: translateY(-50%); }
+    .sleep-range input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; pointer-events: auto; width: 16px; height: 16px; border-radius: 50%; background: #c4b8f0; border: 2px solid var(--bg); box-shadow: 0 1px 4px rgba(0,0,0,0.4); cursor: pointer; }
+    .sleep-range input[type=range]::-moz-range-thumb { pointer-events: auto; width: 16px; height: 16px; border-radius: 50%; background: #c4b8f0; border: 2px solid var(--bg); box-shadow: 0 1px 4px rgba(0,0,0,0.4); cursor: pointer; }
+    .sleep-range input[type=range]::-moz-range-track { background: none; }
+    .sleep-range-scale { display: flex; justify-content: space-between; font-size: 0.5rem; letter-spacing: 0.08em; color: var(--muted2); text-transform: lowercase; padding: 0 2px; }
 
     /* ── ban gauge ── */
     .ban-card { padding: 1.2rem 1.4rem; display: flex; flex-direction: column; gap: 0.6rem; }
@@ -243,6 +252,30 @@
     .ms-track span { color: var(--muted2); }
     .ms-detail { font-size: 0.57rem; color: var(--muted2); letter-spacing: 0.02em; margin-top: 0.18rem; line-height: 1.5; }
     .ms-note { font-size: 0.54rem; color: var(--muted); letter-spacing: 0.04em; line-height: 1.7; margin-top: 0.7rem; padding-top: 0.55rem; border-top: 1px solid var(--border); }
+
+    .streaks-card { padding: 1.2rem 1.4rem; }
+    .strict-toggle { display: inline-flex; align-items: center; gap: 0.42rem; background: none; border: 1px solid var(--border2); border-radius: 20px; padding: 0.3rem 0.7rem; font-family: var(--mono); font-size: 0.56rem; letter-spacing: 0.1em; color: var(--muted2); cursor: pointer; text-transform: lowercase; transition: color 0.2s, background 0.2s, border-color 0.2s; }
+    .strict-toggle:hover { color: var(--text); }
+    .strict-toggle .strict-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); transition: background 0.2s, box-shadow 0.2s; }
+    .strict-toggle.on { color: var(--accent2); border-color: rgba(216,167,114,0.35); background: rgba(216,167,114,0.08); }
+    .strict-toggle.on .strict-dot { background: var(--accent2); box-shadow: 0 0 6px rgba(216,167,114,0.6); }
+    .strict-note { font-size: 0.54rem; color: var(--muted); letter-spacing: 0.04em; line-height: 1.6; margin: 0.5rem 0 0.9rem; }
+    .streak-list { display: flex; flex-direction: column; gap: 0.1rem; }
+    .streak-row { display: flex; align-items: center; gap: 0.8rem; padding: 0.6rem 0.4rem; border-radius: 11px; transition: background 0.2s; }
+    .streak-row:hover { background: rgba(255,255,255,0.026); }
+    .streak-rank { font-family: var(--serif); font-size: 1.3rem; font-weight: 200; color: var(--muted); width: 1.5rem; text-align: right; flex-shrink: 0; line-height: 1; }
+    .streak-art { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; flex-shrink: 0; background: var(--surface2); }
+    .streak-art-ph { width: 40px; height: 40px; border-radius: 8px; flex-shrink: 0; background: var(--surface2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: var(--muted2); font-size: 0.9rem; }
+    .streak-body { flex: 1; min-width: 0; }
+    .streak-top { display: flex; align-items: baseline; justify-content: space-between; gap: 0.6rem; }
+    .streak-artist { font-size: 0.8rem; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .streak-count { font-family: var(--serif); font-size: 0.98rem; color: var(--muted3); flex-shrink: 0; white-space: nowrap; }
+    .streak-count.hot { color: var(--accent2); }
+    .streak-track { font-size: 0.6rem; color: var(--muted2); margin-top: 0.14rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .streak-bar-wrap { height: 3px; background: var(--border); border-radius: 3px; margin-top: 0.4rem; overflow: hidden; }
+    .streak-bar { height: 100%; width: 0; border-radius: 3px; background: linear-gradient(90deg, var(--purple), #c4b8f0); transition: width 0.9s var(--ease); }
+    .streak-when { font-size: 0.55rem; color: var(--muted); letter-spacing: 0.02em; margin-top: 0.3rem; }
+    .streak-moon { color: var(--purple); }
 
     /* ── tabs ── */
     .tabs-card { padding: 0.4rem 0.5rem 0.5rem; }
@@ -459,6 +492,13 @@
     // run on next frame when visible; finalize immediately when backgrounded (rAF is paused while hidden)
     const settle = (cb) => { if (document.hidden) cb(); else requestAnimationFrame(cb); };
 
+    let sleepStart = 1, sleepEnd = 6;
+    let _lastWeek = null;
+    const isSleepHour = h => h >= sleepStart && h <= sleepEnd;
+
+    let strictStreaks = false;
+    let _streaks = { all: null, dur: null };
+
     // ── Clock ──
     function updateClock() {
       const now = new Date();
@@ -482,6 +522,29 @@
     const moveTip = (e) => { _tip.style.left = (e.clientX + 14) + 'px'; _tip.style.top = (e.clientY - 40) + 'px'; };
     const hideTip = () => { _tip.style.opacity = '0'; };
     window.showTip = showTip; window.moveTip = moveTip; window.hideTip = hideTip;
+
+    const _fmtH = h => { const ap = h < 12 ? 'am' : 'pm'; const hr = h % 12 || 12; return `${hr}${ap}`; };
+    window.onSleepRange = function () {
+      const sEl = $('sleep-start'), eEl = $('sleep-end');
+      if (!sEl || !eEl) return;
+      sleepStart = Math.min(+sEl.value, +eEl.value);
+      sleepEnd = Math.max(+sEl.value, +eEl.value);
+      const fill = $('sleep-fill');
+      if (fill) { fill.style.left = (sleepStart / 23) * 100 + '%'; fill.style.width = ((sleepEnd - sleepStart) / 23) * 100 + '%'; }
+      if (_lastWeek) {
+        let sc = 0;
+        _lastWeek.forEach(t => { if (isSleepHour(new Date(parseInt(t.date.uts) * 1000).getHours())) sc++; });
+        const total = _lastWeek.length;
+        const pct = total > 0 ? Math.round((sc / total) * 100) : 0;
+        const cEl = $('sleep-count'), lEl = $('sleep-label');
+        if (cEl) cEl.textContent = `${fmt(sc)} sleep scrobbles`;
+        if (lEl) lEl.textContent = `${pct}% of the week · ${_fmtH(sleepStart)}–${_fmtH(sleepEnd)}`;
+      }
+    };
+    window.onSleepCommit = function () {
+      window.onSleepRange();
+      if (_lastWeek) renderPatterns(_lastWeek);
+    };
 
     // ── count-up ──
     function countUp(el, target, opts = {}) {
@@ -656,7 +719,7 @@
             <div class="section-head"><span class="section-label">ban risk</span><span class="gauge-status danger">error</span></div>
             <p style="font-size:0.56rem;color:var(--red);letter-spacing:0.04em">${esc(e.message || 'analysis failed')}</p>`;
         }
-        ['insights-card','clock-card','daychart-card','heatmap-card'].forEach(id => {
+        ['insights-card','clock-card','daychart-card','heatmap-card','streaks-card'].forEach(id => {
           const c = $(id);
           if (c && c.querySelector('.badge-loading')) c.style.display = 'none';
         });
@@ -758,7 +821,7 @@
 
         <div class="card insights-strip cell-full reveal" id="insights-card" ${D(60)}>
           <div class="section-head"><span class="section-label">your week</span></div>
-          <span class="badge-loading"><span class="dot"></span>crunching the numbers…</span>
+          <span class="badge-loading"><span class="dot"></span>loading…</span>
         </div>
 
         <div class="card ban-card reveal" id="ban-card" ${D(120)}>
@@ -782,6 +845,11 @@
         <div class="card card-pad cell-full reveal" id="heatmap-card" ${D(290)}>
           <div class="section-head"><span class="section-label">activity heatmap</span></div>
           <span class="badge-loading"><span class="dot"></span>plotting day × hour…</span>
+        </div>
+
+        <div class="card streaks-card cell-full reveal" id="streaks-card" ${D(310)}>
+          <div class="section-head"><span class="section-label">listening streaks</span></div>
+          <span class="badge-loading"><span class="dot"></span>hunting for streaks…</span>
         </div>
 
         <div class="card ms-card cell-full reveal" id="integrity-card" ${D(330)} style="opacity:0.75">
@@ -932,6 +1000,7 @@
       if (heroUnit) heroUnit.textContent = realWeekHrs >= 1 ? 'hours · this week' : 'minutes · this week';
 
       renderPatterns(week, uniq);
+      renderStreaks(all, uniq);
 
       // integrity check
       week.sort((a, b) => parseInt(a.date.uts) - parseInt(b.date.uts));
@@ -980,10 +1049,11 @@
           <span class="ms-status flag">${uniqSusp.length} flagged · ${msPct}%</span>
         </div>
         <div class="ms-list">${msRows}</div>${msExtra}
-        <p class="ms-note">tracks scrobbled faster than their playtime — most likely added manually rather than actually listened.</p>`;
+        <p class="ms-note">tracks that are scrobbled faster than their playtime, if it's a large number, then they're likely manual! sometimes last fm scrobble times are off so 20-30 "manual" scrobbles is usual.</p>`;
     }
 
     function renderPatterns(week, uniq) {
+      _lastWeek = week;
       if (!week.length) {
         ['insights-card','clock-card','daychart-card','heatmap-card'].forEach(id => { const c = $(id); if (c) c.style.display = 'none'; });
         return;
@@ -1016,7 +1086,7 @@
         else if (h >= 12 && h <= 17) tod.afternoon++;
         else if (h >= 18 && h <= 23) tod.evening++;
         else tod.night++;
-        if (h >= 1 && h <= 6) sleepScrobbles++;
+        if (isSleepHour(h)) sleepScrobbles++;
         uniqArtists.add(t.artist['#text']);
         uniqTracks.add(`${t.artist['#text']}|||${t.name}`);
       });
@@ -1042,20 +1112,33 @@
         [fmtHour(peakHour), `peak hour · ${hourCounts[peakHour]}`],
       ].map(([v, l]) => `<div class="insight"><span class="insight-val">${v}</span><span class="insight-label">${l}</span></div>`).join('');
 
+      const rangeLabel = `${fmtHour(sleepStart)}–${fmtHour(sleepEnd)}`;
+      const fillLeft = (sleepStart / 23) * 100;
+      const fillWidth = ((sleepEnd - sleepStart) / 23) * 100;
+
       const insCard = $('insights-card');
       if (insCard) {
         insCard.style.display = '';
         insCard.innerHTML = `
           <div class="section-head"><span class="section-label">your week</span><span class="section-aside">past 7 days · local time</span></div>
           <div class="insights-grid">${insightTiles}</div>
-          ${sleepScrobbles > 0 ? `
           <div class="sleep-insight">
-            <span class="moon">🌙</span>
-            <span class="sleep-txt">
-              <span class="insight-val">${fmt(sleepScrobbles)} sleep scrobbles</span>
-              <span class="insight-label">${sleepPct}% of the week · 1am–6am</span>
-            </span>
-          </div>` : ''}`;
+            <div class="sleep-insight-top">
+              <span class="moon">🌙</span>
+              <span class="sleep-txt">
+                <span class="insight-val" id="sleep-count">${fmt(sleepScrobbles)} sleep scrobbles</span>
+                <span class="insight-label" id="sleep-label">${sleepPct}% of the week · ${rangeLabel}</span>
+              </span>
+            </div>
+            <div class="sleep-range">
+              <div class="sleep-range-track">
+                <div class="sleep-range-fill" id="sleep-fill" style="left:${fillLeft}%;width:${fillWidth}%"></div>
+                <input type="range" min="0" max="23" step="1" value="${sleepStart}" id="sleep-start" oninput="onSleepRange()" onchange="onSleepCommit()" aria-label="sleep start hour" />
+                <input type="range" min="0" max="23" step="1" value="${sleepEnd}" id="sleep-end" oninput="onSleepRange()" onchange="onSleepCommit()" aria-label="sleep end hour" />
+              </div>
+              <div class="sleep-range-scale"><span>12am</span><span>6am</span><span>12pm</span><span>6pm</span><span>11pm</span></div>
+            </div>
+          </div>`;
       }
 
       // ── clock (24h radial) ──
@@ -1068,7 +1151,7 @@
         const x2 = cx + Math.cos(ang) * len, y2 = cy + Math.sin(ang) * len;
         const inten = hourCounts[h] / maxHour;
         const isP = h === peakHour && hourCounts[h] > 0;
-        const isSleepH = h >= 1 && h <= 6;
+        const isSleepH = isSleepHour(h);
         let col;
         if (isSleepH && hourCounts[h] > 0) col = isP ? '#c4b8f0' : `rgba(157,137,214,${(0.25 + inten * 0.65).toFixed(2)})`;
         else col = isP ? '#f3ddbf' : `rgba(216,167,114,${(0.25 + inten * 0.65).toFixed(2)})`;
@@ -1133,11 +1216,11 @@
       for (let d = 0; d < 7; d++) {
         hmHtml += `<div class="hm-row-label">${dayBuckets[d].label}</div>`;
         for (let h = 0; h < 24; h++) {
-          const isSleepHour = h >= 1 && h <= 6;
+          const isSleepH = isSleepHour(h);
           const count = matrix[`${d}_${h}`];
           const alpha = count > 0 ? (0.15 + (count / maxCell) * 0.85).toFixed(2) : '0';
           const tipText = `${dayBuckets[d].label} ${fmtHour(h)}: ${count} scrobble${count !== 1 ? 's' : ''}`;
-          const cls = `hm-cell${isSleepHour ? ' hm-sleep' : ''}${count === 0 ? ' hm-empty' : ''}`;
+          const cls = `hm-cell${isSleepH ? ' hm-sleep' : ''}${count === 0 ? ' hm-empty' : ''}`;
           hmHtml += `<div class="${cls}" style="--hm-a:${alpha}" onmouseenter="showTip(event,'${tipText}')" onmousemove="moveTip(event)" onmouseleave="hideTip()"></div>`;
         }
       }
@@ -1149,7 +1232,7 @@
           <div class="heatmap-grid">${hmHtml}</div>
           <div class="hm-legend">
             <div class="hm-legend-item"><div class="hm-legend-swatch" style="background:rgba(216,167,114,0.75)"></div><span>regular hours</span></div>
-            <div class="hm-legend-item"><div class="hm-legend-swatch" style="background:rgba(157,137,214,0.75)"></div><span>sleep hours · 1am–6am</span></div>
+            <div class="hm-legend-item"><div class="hm-legend-swatch" style="background:rgba(157,137,214,0.75)"></div><span>sleep hours · ${fmtHour(sleepStart)}–${fmtHour(sleepEnd)}</span></div>
           </div>`;
       }
 
@@ -1158,6 +1241,132 @@
         if (dc) dc.querySelectorAll('.day-bar').forEach(b => { b.style.height = b.dataset.h + '%'; });
       });
     }
+
+    function isOvernightStreak(s) {
+      const eh = new Date(s.end * 1000).getHours();
+      return eh >= 3 && eh < 12 && (s.end - s.start) >= 90 * 60 && s.count >= 15;
+    }
+
+    function computeStreaks(all, opts) {
+      const strict = opts && opts.strict;
+      const dur = (opts && opts.dur) || {};
+      const IDLE_TOL = 120;
+      const chron = all.slice().reverse();
+      const artistOf = t => t.artist['#text'];
+      const keyOf = t => `${t.artist['#text']}|||${t.name}`;
+      const paused = (cur, nxt) => {
+        const gap = parseInt(nxt.date.uts) - parseInt(cur.date.uts);
+        return gap - (dur[keyOf(cur)] || 210) > IDLE_TOL;
+      };
+      const streaks = [];
+      let i = 0;
+      while (i < chron.length) {
+        let j = i;
+        const artist = artistOf(chron[i]);
+        while (j + 1 < chron.length && artistOf(chron[j + 1]) === artist && !(strict && paused(chron[j], chron[j + 1]))) j++;
+        const run = chron.slice(i, j + 1);
+        if (run.length >= 2) {
+          let best = null; const distinct = new Set();
+          let k = 0;
+          while (k < run.length) {
+            let m = k;
+            const name = run[k].name;
+            while (m + 1 < run.length && run[m + 1].name === name) m++;
+            distinct.add(name);
+            const len = m - k + 1;
+            if (!best || len > best.count) best = { name, count: len };
+            k = m + 1;
+          }
+          streaks.push({
+            artist,
+            count: run.length,
+            start: parseInt(run[0].date.uts),
+            end: parseInt(run[run.length - 1].date.uts),
+            distinctTracks: distinct.size,
+            topTrack: best,
+            img: img(run[0].image, 'medium') || img(run[0].image, 'small') || img(run[0].image, 'large'),
+          });
+        }
+        i = j + 1;
+      }
+      return streaks;
+    }
+
+    function renderStreaks(all, uniq) {
+      const card = $('streaks-card');
+      if (!card) return;
+      if (all) {
+        const dur = {};
+        if (uniq) for (const k in uniq) dur[k] = uniq[k].duration;
+        _streaks = { all, dur };
+      }
+      if (!_streaks.all) return;
+
+      const dayNames = ['sun','mon','tue','wed','thu','fri','sat'];
+      const clock = uts => {
+        const d = new Date(uts * 1000);
+        const ap = d.getHours() < 12 ? 'am' : 'pm', hr = d.getHours() % 12 || 12;
+        return `${dayNames[d.getDay()]} ${hr}:${String(d.getMinutes()).padStart(2,'0')}${ap}`;
+      };
+      const span = secs => {
+        const h = Math.floor(secs / 3600), m = Math.round((secs % 3600) / 60);
+        return h > 0 ? `${h}h${m > 0 ? ' ' + m + 'm' : ''}` : `${m}m`;
+      };
+
+      const head = `
+        <div class="section-head">
+          <span class="section-label">listening streaks</span>
+          <button class="strict-toggle${strictStreaks ? ' on' : ''}" onclick="toggleStrict()"><span class="strict-dot"></span>strict mode</button>
+        </div>
+        <p class="strict-note">strict mode ends the streak as soon as they stop listening for a bit!</p>`;
+
+      const streaks = computeStreaks(_streaks.all, { strict: strictStreaks, dur: _streaks.dur }).sort((a, b) => b.count - a.count);
+      const top = streaks.filter(s => s.count >= 6).slice(0, 8);
+
+      if (!top.length) {
+        card.innerHTML = `${head}
+          <p class="empty-note">no notable streaks in the last 8 days — nobody's been looping hard enough 🎧</p>`;
+        return;
+      }
+
+      const maxCount = top[0].count;
+      const rows = top.map((s, i) => {
+        const hot = s.count >= 25;
+        const overnight = isOvernightStreak(s);
+        const tt = s.topTrack;
+        const trackLine = tt && tt.count === s.count
+          ? `all “${esc(tt.name)}”`
+          : (tt && tt.count >= 2
+            ? `incl. “${esc(tt.name)}” ×${tt.count} · ${s.distinctTracks} tracks`
+            : `${s.distinctTracks} different tracks`);
+        const pct = Math.round((s.count / maxCount) * 100);
+        const artHtml = s.img
+          ? `<img class="streak-art" src="${s.img}" alt="" onerror="this.outerHTML='<div class=streak-art-ph>♪</div>'" />`
+          : `<div class="streak-art-ph">♪</div>`;
+        return `
+          <div class="streak-row">
+            <span class="streak-rank">${i + 1}</span>
+            ${artHtml}
+            <div class="streak-body">
+              <div class="streak-top">
+                <span class="streak-artist">${esc(s.artist)}</span>
+                <span class="streak-count${hot ? ' hot' : ''}">${s.count}×${hot ? ' 🔥' : ''}</span>
+              </div>
+              <div class="streak-track">${trackLine}</div>
+              <div class="streak-bar-wrap"><div class="streak-bar" data-w="${pct}"></div></div>
+              <div class="streak-when">${clock(s.start)} → ${clock(s.end)} · ${span(s.end - s.start)}${overnight ? ` · <span class="streak-moon">🌙 sleep scrobble</span>` : ''}</div>
+            </div>
+          </div>`;
+      }).join('');
+
+      card.innerHTML = `${head}
+        <div class="streak-list">${rows}</div>
+        <p class="ms-note">artist streaks: 🔥 = 25+ in a row · 🌙 = likely a sleep scrobbling streak, ran overnight</p>`;
+
+      settle(() => card.querySelectorAll('.streak-bar').forEach(b => { b.style.width = b.dataset.w + '%'; }));
+    }
+
+    window.toggleStrict = function () { strictStreaks = !strictStreaks; renderStreaks(); };
 
     function updateBanCard(totalSecs, scrobbleCount, realDurCount, fallbackCount = 0, fallbackSecs = 210) {
       const card = $('ban-card');
