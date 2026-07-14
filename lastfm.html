@@ -185,7 +185,7 @@
     .hero-meta a { color: var(--accent); text-decoration: none; }
     .hero-meta a:hover { text-decoration: underline; }
     .hero-tags { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.6rem; }
-    .tag { display: inline-flex; align-items: center; gap: 0.32rem; border-radius: 20px; padding: 0.22rem 0.62rem; font-family: var(--mono); font-size: 0.55rem; letter-spacing: 0.07em; text-transform: lowercase; cursor: help; user-select: none; -webkit-tap-highlight-color: transparent; transition: background 0.2s, border-color 0.2s; background: rgba(216,167,114,0.08); border: 1px solid rgba(216,167,114,0.22); color: var(--accent2); }
+    .tag { display: inline-flex; align-items: center; gap: 0.32rem; border-radius: 20px; padding: 0.22rem 0.62rem; font-family: var(--mono); font-size: 0.55rem; letter-spacing: 0.07em; text-transform: lowercase; cursor: help; user-select: none; -webkit-tap-highlight-color: transparent; transition: background 0.2s, border-color 0.2s; background: rgba(216,167,114,0.08); border: 1px solid rgba(216,167,114,0.22); color: var(--accent2); max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .tag:hover { background: rgba(216,167,114,0.16); border-color: rgba(216,167,114,0.4); }
     .tag .tag-emoji { font-size: 0.72rem; }
     .tag.purple { background: rgba(157,137,214,0.1); border-color: rgba(157,137,214,0.28); color: #c4b8f0; }
@@ -782,10 +782,10 @@
       const weekTotal = week ? parseInt(week.recenttracks['@attr'].total) : null;
       const avgPerDay = weekTotal ? (weekTotal / 7).toFixed(1) : '—';
       const profileUrl = u.url || `https://www.last.fm/user/${encodeURIComponent(u.name)}`;
-      _profile = { playcount: totalPlays, memberYears: +memberYears };
 
       const artistRows = buildArtistRows(topArtists);
       const { rows: trackRows, tracks: trackList } = buildTrackRows(topTracks);
+      _profile = { playcount: totalPlays, memberYears: +memberYears, topTrack: trackList[0] || null };
       const albumRows = buildAlbumRows(topAlbums);
       const recents = toArr(recent?.recenttracks?.track).slice(0, 4);
 
@@ -868,7 +868,7 @@
 
         <div class="card card-pad reveal" id="clock-card" ${D(150)}>
           <div class="section-head"><span class="section-label">by hour of day</span></div>
-          <span class="badge-loading"><span class="dot"></span>mapping your hours…</span>
+          <span class="badge-loading"><span class="dot"></span>loading…</span>
         </div>
 
         ${tabsCard}
@@ -876,22 +876,22 @@
 
         <div class="card card-pad cell-full reveal" id="daychart-card" ${D(250)}>
           <div class="section-head"><span class="section-label">scrobbles per day</span></div>
-          <span class="badge-loading"><span class="dot"></span>building the chart…</span>
+          <span class="badge-loading"><span class="dot"></span>loading…</span>
         </div>
 
         <div class="card card-pad cell-full reveal" id="heatmap-card" ${D(290)}>
           <div class="section-head"><span class="section-label">activity heatmap</span></div>
-          <span class="badge-loading"><span class="dot"></span>plotting day × hour…</span>
+          <span class="badge-loading"><span class="dot"></span>loading…</span>
         </div>
 
         <div class="card streaks-card cell-full reveal" id="streaks-card" ${D(310)}>
           <div class="section-head"><span class="section-label">listening streaks</span></div>
-          <span class="badge-loading"><span class="dot"></span>hunting for streaks…</span>
+          <span class="badge-loading"><span class="dot"></span>loading…</span>
         </div>
 
         <div class="card ms-card cell-full reveal" id="integrity-card" ${D(330)} style="opacity:0.75">
           <div class="section-head"><span class="section-label">manual scrobbles</span></div>
-          <span class="badge-loading"><span class="dot"></span>checking scrobble timing…</span>
+          <span class="badge-loading"><span class="dot"></span>loading…</span>
         </div>
       `;
 
@@ -1065,7 +1065,7 @@
         }
       }
 
-      renderTags({ all, week, totalListenSecs, impossibleCount: suspicious.length });
+      renderTags({ totalListenSecs });
 
       const intCard = $('integrity-card');
       if (!intCard) return;
@@ -1423,64 +1423,32 @@
     function renderTags(ctx) {
       const box = $('hero-tags');
       if (!box) return;
-      const { all, week, totalListenSecs, impossibleCount } = ctx;
-      const p = _profile || { playcount: 0, memberYears: 0 };
-      const total = all.length || 1;
+      const p = _profile || { memberYears: 0, playcount: 0 };
+      const hoursPerDay = ctx.totalListenSecs / 8 / 3600;
 
-      let night = 0;
-      const artistCounts = {}, trackSet = new Set();
-      all.forEach(t => {
-        const h = new Date(parseInt(t.date.uts) * 1000).getHours();
-        if (h <= 5) night++;
-        const a = t.artist['#text'];
-        artistCounts[a] = (artistCounts[a] || 0) + 1;
-        trackSet.add(`${a}|||${t.name}`);
-      });
-      const streaks = computeStreaks(all);
-      const longestLoop = streaks.reduce((m, s) => Math.max(m, s.topTrack ? s.topTrack.count : 0), 0);
+      const defs = [];
+      if (hoursPerDay >= 14) {
+        defs.push({ label: 'sleep scrobbler', color: 'purple', tip: 'averages 14+ hours of listening a day.' });
+      }
+      const years = Math.floor(p.memberYears);
+      if (years >= 1) {
+        const yr = `${years} year${years === 1 ? '' : 's'}`;
+        defs.push({ label: `${yr}!`, color: '', tip: `on last.fm for ${yr}.` });
+      }
+      const MILESTONES = [1000, 5000, 10000, 25000, 50000, 100000, 250000, 500000, 1000000, 2000000, 5000000];
+      const milestone = MILESTONES.filter(m => p.playcount >= m).pop();
+      if (milestone) {
+        const ms = milestone >= 1000000 ? `${milestone / 1000000}M` : `${milestone / 1000}k`;
+        defs.push({ label: `${ms} scrobbles!`, color: 'green', tip: `${fmt(milestone)}+ total scrobbles.` });
+      }
+      if (p.topTrack) {
+        const tt = p.topTrack;
+        const artist = tt.artist?.name || tt.artist?.['#text'] || '';
+        defs.push({ label: `${tt.name}!`, color: '', tip: `favorite track this week — ${tt.name} by ${artist}, played ${fmt(tt.playcount)}x.` });
+      }
 
-      const dayset = new Set();
-      let weekend = 0;
-      week.forEach(t => {
-        const d = new Date(parseInt(t.date.uts) * 1000);
-        dayset.add(d.toDateString());
-        if (d.getDay() === 0 || d.getDay() === 6) weekend++;
-      });
-
-      const c = {
-        hoursPerDay: totalListenSecs / 8 / 3600,
-        banFrac: totalListenSecs / (6 * 24 * 3600),
-        nightShare: night / total,
-        uniqArtists: Object.keys(artistCounts).length,
-        repeatRatio: trackSet.size ? total / trackSet.size : 1,
-        topArtistShare: Math.max(0, ...Object.values(artistCounts)) / total,
-        longestLoop,
-        activeDays: dayset.size,
-        weekendShare: week.length ? weekend / week.length : 0,
-        avgPerDay: week.length / 7,
-        impossibleCount,
-        playcount: p.playcount,
-        memberYears: p.memberYears,
-      };
-
-      const defs = [
-        { label: 'sleep scrobbler', color: 'purple', prio: 100, on: c.hoursPerDay >= 14, tip: 'averages 14+ hours of listening a day.' },
-        { label: 'near ban limit', color: 'red', prio: 95, on: c.banFrac >= 0.9, tip: "within 10% of fmbot's 6-days-in-8 listening limit." },
-        { label: 'song looper', color: '', prio: 85, on: c.longestLoop >= 20 || c.repeatRatio >= 3.5, tip: 'played the same song 20+ times in a row.' },
-        { label: 'single-artist heavy', color: 'purple', prio: 80, on: c.topArtistShare >= 0.35, tip: 'one artist is 35%+ of their scrobbles.' },
-        { label: 'high variety', color: 'green', prio: 78, on: c.uniqArtists >= 80 && c.repeatRatio <= 1.4, tip: '80+ artists and rarely repeats a track.' },
-        { label: 'late-night listener', color: 'purple', prio: 70, on: c.nightShare >= 0.3, tip: '30%+ of scrobbles are after midnight.' },
-        { label: 'manual scrobbler', color: 'red', prio: 65, on: c.impossibleCount >= 100, tip: '100+ scrobbles logged faster than the songs could play.' },
-        { label: 'high volume', color: '', prio: 60, on: c.playcount >= 100000 || c.avgPerDay >= 250, tip: '100k+ total scrobbles, or 250+ a day.' },
-        { label: 'weekend listener', color: '', prio: 45, on: c.weekendShare >= 0.42, tip: 'listening is concentrated on weekends.' },
-        { label: 'daily listener', color: 'green', prio: 40, on: c.activeDays === 7, tip: 'scrobbled every day this week.' },
-        { label: 'longtime user', color: '', prio: 35, on: c.memberYears >= 10, tip: '10+ years on last.fm.' },
-        { label: 'new user', color: 'green', prio: 34, on: c.memberYears > 0 && c.memberYears < 1, tip: 'less than a year on last.fm.' },
-      ];
-
-      const chosen = defs.filter(d => d.on).sort((a, b) => b.prio - a.prio).slice(0, 5);
-      box.innerHTML = chosen.map(d =>
-        `<span class="tag${d.color ? ' ' + d.color : ''}" tabindex="0" data-tip="${esc(d.tip)}" onmouseenter="tagOver(this)" onmouseleave="tagOut()" onclick="tagTap(this,event)">${d.label}</span>`
+      box.innerHTML = defs.map(d =>
+        `<span class="tag${d.color ? ' ' + d.color : ''}" tabindex="0" data-tip="${esc(d.tip)}" onmouseenter="tagOver(this)" onmouseleave="tagOut()" onclick="tagTap(this,event)">${esc(d.label)}</span>`
       ).join('');
     }
 
