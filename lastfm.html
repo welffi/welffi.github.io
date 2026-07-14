@@ -184,6 +184,17 @@
     .hero-meta { font-size: 0.58rem; color: var(--muted2); letter-spacing: 0.06em; margin-top: 0.35rem; }
     .hero-meta a { color: var(--accent); text-decoration: none; }
     .hero-meta a:hover { text-decoration: underline; }
+    .hero-tags { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.6rem; }
+    .tag { display: inline-flex; align-items: center; gap: 0.32rem; border-radius: 20px; padding: 0.22rem 0.62rem; font-family: var(--mono); font-size: 0.55rem; letter-spacing: 0.07em; text-transform: lowercase; cursor: help; user-select: none; -webkit-tap-highlight-color: transparent; transition: background 0.2s, border-color 0.2s; background: rgba(216,167,114,0.08); border: 1px solid rgba(216,167,114,0.22); color: var(--accent2); }
+    .tag:hover { background: rgba(216,167,114,0.16); border-color: rgba(216,167,114,0.4); }
+    .tag .tag-emoji { font-size: 0.72rem; }
+    .tag.purple { background: rgba(157,137,214,0.1); border-color: rgba(157,137,214,0.28); color: #c4b8f0; }
+    .tag.purple:hover { background: rgba(157,137,214,0.18); border-color: rgba(157,137,214,0.45); }
+    .tag.red { background: rgba(232,123,120,0.1); border-color: rgba(232,123,120,0.28); color: #f0a3a1; }
+    .tag.red:hover { background: rgba(232,123,120,0.18); border-color: rgba(232,123,120,0.45); }
+    .tag.green { background: rgba(130,215,164,0.1); border-color: rgba(130,215,164,0.28); color: #9fe0bb; }
+    .tag.green:hover { background: rgba(130,215,164,0.18); border-color: rgba(130,215,164,0.45); }
+    .tag-pop { position: fixed; max-width: 230px; background: rgba(11,10,8,0.98); border: 1px solid var(--border2); border-radius: 9px; padding: 0.5rem 0.7rem; font-family: var(--mono); font-size: 0.58rem; line-height: 1.55; color: var(--text); letter-spacing: 0.03em; text-transform: none; pointer-events: none; z-index: 300; opacity: 0; transition: opacity 0.12s; box-shadow: 0 6px 24px rgba(0,0,0,0.6); }
     .hero-stats { display: flex; align-items: center; position: relative; z-index: 1; }
     .hero-stat { padding: 0.15rem 1.5rem; display: flex; flex-direction: column; gap: 0.32rem; text-align: right; border-left: 1px solid var(--border); }
     .hero-stat:first-child { border-left: none; }
@@ -498,6 +509,7 @@
 
     let strictStreaks = false;
     let _streaks = { all: null, dur: null };
+    let _profile = null;
 
     // ── Clock ──
     function updateClock() {
@@ -522,6 +534,29 @@
     const moveTip = (e) => { _tip.style.left = (e.clientX + 14) + 'px'; _tip.style.top = (e.clientY - 40) + 'px'; };
     const hideTip = () => { _tip.style.opacity = '0'; };
     window.showTip = showTip; window.moveTip = moveTip; window.hideTip = hideTip;
+
+    const _tagPop = document.createElement('div');
+    _tagPop.className = 'tag-pop';
+    document.body.appendChild(_tagPop);
+    let _tagEl = null;
+    const showTagPop = (el) => {
+      _tagPop.textContent = el.dataset.tip || '';
+      _tagPop.style.opacity = '1';
+      const r = el.getBoundingClientRect();
+      const pw = _tagPop.offsetWidth, ph = _tagPop.offsetHeight;
+      let left = Math.max(8, Math.min(r.left + r.width / 2 - pw / 2, window.innerWidth - pw - 8));
+      let top = r.top - ph - 8;
+      if (top < 8) top = r.bottom + 8;
+      _tagPop.style.left = left + 'px';
+      _tagPop.style.top = top + 'px';
+      _tagEl = el;
+    };
+    const hideTagPop = () => { _tagPop.style.opacity = '0'; _tagEl = null; };
+    window.tagOver = (el) => showTagPop(el);
+    window.tagOut = () => hideTagPop();
+    window.tagTap = (el, ev) => { ev.stopPropagation(); if (_tagEl === el) hideTagPop(); else showTagPop(el); };
+    document.addEventListener('click', hideTagPop);
+    window.addEventListener('scroll', hideTagPop, true);
 
     const _fmtH = h => { const ap = h < 12 ? 'am' : 'pm'; const hr = h % 12 || 12; return `${hr}${ap}`; };
     window.onSleepRange = function () {
@@ -747,6 +782,7 @@
       const weekTotal = week ? parseInt(week.recenttracks['@attr'].total) : null;
       const avgPerDay = weekTotal ? (weekTotal / 7).toFixed(1) : '—';
       const profileUrl = u.url || `https://www.last.fm/user/${encodeURIComponent(u.name)}`;
+      _profile = { playcount: totalPlays, memberYears: +memberYears };
 
       const artistRows = buildArtistRows(topArtists);
       const { rows: trackRows, tracks: trackList } = buildTrackRows(topTracks);
@@ -799,7 +835,8 @@
             ${avatarUrl ? `<img class="hero-avatar" src="${avatarUrl}" alt="${esc(u.name)}" onerror="this.outerHTML='<div class=hero-avatar-ph>♪</div>'" />` : `<div class="hero-avatar-ph">♪</div>`}
             <div class="hero-info">
               <div class="hero-name">${esc(u.name)}</div>
-              <div class="hero-meta">${fmt(totalPlays)} scrobbles · ${memberYears}y on <a href="${profileUrl}" target="_blank" rel="noopener">last.fm</a></div>
+              <div class="hero-meta">${fmt(totalPlays)} scrobbles · ${memberYears}y on <a href="${profileUrl}" target="_blank" rel="noopener">last.fm</a><span id="profile-views"></span></div>
+              <div class="hero-tags" id="hero-tags"></div>
             </div>
           </div>
           <div class="hero-stats">
@@ -860,6 +897,19 @@
 
       animateBars($('results-card'));
       if (trackList.length) loadTrackImages(trackList);
+      loadProfileViews(u.name);
+    }
+
+    async function loadProfileViews(username) {
+      const el = $('profile-views');
+      if (!el) return;
+      try {
+        const key = encodeURIComponent(username.toLowerCase());
+        const r = await fetch(`https://abacus.jasoncameron.dev/hit/welffi-lastfm-tool/${key}`);
+        if (!r.ok) return;
+        const d = await r.json();
+        if (typeof d.value === 'number') el.textContent = ` · ${fmt(d.value)} profile view${d.value === 1 ? '' : 's'}`;
+      } catch {}
     }
 
     window.switchTab = function(name) {
@@ -1014,6 +1064,8 @@
           suspicious.push({ prevTrack: prev.name, currTrack: curr.name, currArtist: curr.artist['#text'], gap, currDur });
         }
       }
+
+      renderTags({ all, week, totalListenSecs, impossibleCount: suspicious.length });
 
       const intCard = $('integrity-card');
       if (!intCard) return;
@@ -1367,6 +1419,70 @@
     }
 
     window.toggleStrict = function () { strictStreaks = !strictStreaks; renderStreaks(); };
+
+    function renderTags(ctx) {
+      const box = $('hero-tags');
+      if (!box) return;
+      const { all, week, totalListenSecs, impossibleCount } = ctx;
+      const p = _profile || { playcount: 0, memberYears: 0 };
+      const total = all.length || 1;
+
+      let night = 0;
+      const artistCounts = {}, trackSet = new Set();
+      all.forEach(t => {
+        const h = new Date(parseInt(t.date.uts) * 1000).getHours();
+        if (h <= 5) night++;
+        const a = t.artist['#text'];
+        artistCounts[a] = (artistCounts[a] || 0) + 1;
+        trackSet.add(`${a}|||${t.name}`);
+      });
+      const streaks = computeStreaks(all);
+      const longestLoop = streaks.reduce((m, s) => Math.max(m, s.topTrack ? s.topTrack.count : 0), 0);
+
+      const dayset = new Set();
+      let weekend = 0;
+      week.forEach(t => {
+        const d = new Date(parseInt(t.date.uts) * 1000);
+        dayset.add(d.toDateString());
+        if (d.getDay() === 0 || d.getDay() === 6) weekend++;
+      });
+
+      const c = {
+        hoursPerDay: totalListenSecs / 8 / 3600,
+        banFrac: totalListenSecs / (6 * 24 * 3600),
+        nightShare: night / total,
+        uniqArtists: Object.keys(artistCounts).length,
+        repeatRatio: trackSet.size ? total / trackSet.size : 1,
+        topArtistShare: Math.max(0, ...Object.values(artistCounts)) / total,
+        longestLoop,
+        activeDays: dayset.size,
+        weekendShare: week.length ? weekend / week.length : 0,
+        avgPerDay: week.length / 7,
+        impossibleCount,
+        playcount: p.playcount,
+        memberYears: p.memberYears,
+      };
+
+      const defs = [
+        { label: 'sleep scrobbler', color: 'purple', prio: 100, on: c.hoursPerDay >= 14, tip: 'averages 14+ hours of listening a day.' },
+        { label: 'near ban limit', color: 'red', prio: 95, on: c.banFrac >= 0.9, tip: "within 10% of fmbot's 6-days-in-8 listening limit." },
+        { label: 'song looper', color: '', prio: 85, on: c.longestLoop >= 20 || c.repeatRatio >= 3.5, tip: 'played the same song 20+ times in a row.' },
+        { label: 'single-artist heavy', color: 'purple', prio: 80, on: c.topArtistShare >= 0.35, tip: 'one artist is 35%+ of their scrobbles.' },
+        { label: 'high variety', color: 'green', prio: 78, on: c.uniqArtists >= 80 && c.repeatRatio <= 1.4, tip: '80+ artists and rarely repeats a track.' },
+        { label: 'late-night listener', color: 'purple', prio: 70, on: c.nightShare >= 0.3, tip: '30%+ of scrobbles are after midnight.' },
+        { label: 'manual scrobbler', color: 'red', prio: 65, on: c.impossibleCount >= 100, tip: '100+ scrobbles logged faster than the songs could play.' },
+        { label: 'high volume', color: '', prio: 60, on: c.playcount >= 100000 || c.avgPerDay >= 250, tip: '100k+ total scrobbles, or 250+ a day.' },
+        { label: 'weekend listener', color: '', prio: 45, on: c.weekendShare >= 0.42, tip: 'listening is concentrated on weekends.' },
+        { label: 'daily listener', color: 'green', prio: 40, on: c.activeDays === 7, tip: 'scrobbled every day this week.' },
+        { label: 'longtime user', color: '', prio: 35, on: c.memberYears >= 10, tip: '10+ years on last.fm.' },
+        { label: 'new user', color: 'green', prio: 34, on: c.memberYears > 0 && c.memberYears < 1, tip: 'less than a year on last.fm.' },
+      ];
+
+      const chosen = defs.filter(d => d.on).sort((a, b) => b.prio - a.prio).slice(0, 5);
+      box.innerHTML = chosen.map(d =>
+        `<span class="tag${d.color ? ' ' + d.color : ''}" tabindex="0" data-tip="${esc(d.tip)}" onmouseenter="tagOver(this)" onmouseleave="tagOut()" onclick="tagTap(this,event)">${d.label}</span>`
+      ).join('');
+    }
 
     function updateBanCard(totalSecs, scrobbleCount, realDurCount, fallbackCount = 0, fallbackSecs = 210) {
       const card = $('ban-card');
