@@ -1379,6 +1379,8 @@
       const overHrs = ((totalSecs - BAN_LIMIT_SECS) / 3600).toFixed(1);
       const fbMin = Math.floor(fallbackSecs / 60), fbSecR = Math.round(fallbackSecs % 60);
       const fmtFb = `${fbMin}m${fbSecR > 0 ? ' ' + fbSecR + 's' : ''}`;
+      const accuracy = scrobbleCount > 0 ? Math.round((realDurCount / scrobbleCount) * 100) : 100;
+      const accColor = accuracy >= 90 ? 'var(--green)' : accuracy >= 70 ? 'var(--accent)' : 'var(--red)';
 
       let banColor, statusClass, statusText, banDisplay;
       if (banPct >= 100) { banColor = '#e87b78'; statusClass = 'danger'; statusText = 'over!'; banDisplay = banPct > 999 ? 999 : banPct; }
@@ -1404,6 +1406,7 @@
             <div class="ban-row"><span class="ban-row-lbl">listened / limit</span><span class="ban-row-val">${listenHrs} / 144 hrs</span></div>
             <div class="ban-row"><span class="ban-row-lbl">${banPct >= 100 ? 'over by' : 'headroom left'}</span><span class="ban-row-val" style="color:${banColor}">${banPct >= 100 ? '+' + overHrs + ' hrs' : remainHrs + ' hrs'}</span></div>
             <div class="ban-row"><span class="ban-row-lbl">durations / est. durations</span><span class="ban-row-val">${realDurCount}/${scrobbleCount}${fallbackCount > 0 ? ` · est ${fmtFb}` : ''}</span></div>
+            <div class="ban-row"><span class="ban-row-lbl">estimate accuracy</span><span class="ban-row-val" style="color:${accColor}">${accuracy}%</span></div>
           </div>
         </div>
         <p class="ban-foot">shows you how close you are to getting banned on fmbot (fmbot bans you from global leaderboards if you have over 6 days of listening in 8 days)</p>`;
