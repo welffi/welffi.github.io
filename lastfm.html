@@ -101,6 +101,11 @@
     .pulse-line span:nth-child(4){ animation-delay: .54s; }
     .pulse-line span:nth-child(5){ animation-delay: .72s; }
 
+    .mode-toggle { display: flex; gap: 0.25rem; padding: 0.28rem; background: var(--surface2); border: 1px solid var(--border2); border-radius: 12px; }
+    .mode-opt { flex: 1; background: none; border: 1px solid transparent; border-radius: 9px; padding: 0.5rem; font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.14em; color: var(--muted2); cursor: pointer; text-transform: lowercase; transition: color 0.2s, background 0.2s, border-color 0.2s; }
+    .mode-opt:hover { color: var(--text); }
+    .mode-opt.active { color: var(--accent2); background: rgba(216,167,114,0.1); border-color: rgba(216,167,114,0.24); }
+
     .field { display: flex; flex-direction: column; gap: 0.55rem; }
     .field label { font-size: 0.56rem; letter-spacing: 0.22em; color: var(--muted2); text-transform: lowercase; }
     .field-wrap { position: relative; display: flex; align-items: center; }
@@ -195,6 +200,31 @@
     .tag.green { background: rgba(130,215,164,0.1); border-color: rgba(130,215,164,0.28); color: #9fe0bb; }
     .tag.green:hover { background: rgba(130,215,164,0.18); border-color: rgba(130,215,164,0.45); }
     .tag-pop { position: fixed; max-width: 230px; background: rgba(11,10,8,0.98); border: 1px solid var(--border2); border-radius: 9px; padding: 0.5rem 0.7rem; font-family: var(--mono); font-size: 0.58rem; line-height: 1.55; color: var(--text); letter-spacing: 0.03em; text-transform: none; pointer-events: none; z-index: 300; opacity: 0; transition: opacity 0.12s; box-shadow: 0 6px 24px rgba(0,0,0,0.6); }
+    .genre-row { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.6rem; }
+    .genre-chip { font-family: var(--mono); font-size: 0.55rem; letter-spacing: 0.07em; text-transform: lowercase; color: var(--muted3); background: rgba(255,255,255,0.03); border: 1px solid var(--border2); border-radius: 20px; padding: 0.2rem 0.6rem; }
+    .genre-chip.ontour { color: var(--green); background: rgba(130,215,164,0.1); border-color: rgba(130,215,164,0.28); }
+    .bio-card { padding: 1.2rem 1.4rem; }
+    .bio-text { font-size: 0.68rem; color: var(--muted3); line-height: 1.75; letter-spacing: 0.01em; margin-top: 0.6rem; }
+    .bio-text a { color: var(--accent); text-decoration: none; }
+    .similar-row { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.6rem; }
+    .similar-chip { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.04em; color: var(--accent2); background: rgba(216,167,114,0.08); border: 1px solid rgba(216,167,114,0.22); border-radius: 9px; padding: 0.45rem 0.7rem; cursor: pointer; transition: background 0.2s, border-color 0.2s, transform 0.15s; }
+    .similar-chip:hover { background: rgba(216,167,114,0.16); border-color: rgba(216,167,114,0.4); transform: translateY(-1px); }
+    .th-actions { display: flex; align-items: center; gap: 0.45rem; }
+    .sort-toggle { display: inline-flex; gap: 0.12rem; background: var(--surface2); border: 1px solid var(--border2); border-radius: 8px; padding: 0.14rem; }
+    .sort-opt { background: none; border: none; border-radius: 6px; padding: 0.28rem 0.5rem; font-family: var(--mono); font-size: 0.5rem; letter-spacing: 0.06em; color: var(--muted2); cursor: pointer; text-transform: lowercase; transition: color 0.2s, background 0.2s; }
+    .sort-opt:hover { color: var(--text); }
+    .sort-opt.active { color: var(--accent2); background: rgba(216,167,114,0.12); }
+    .view-all-btn { background: none; border: 1px solid var(--border2); border-radius: 8px; color: var(--muted3); cursor: pointer; padding: 0.32rem 0.55rem; font-family: var(--mono); font-size: 0.52rem; letter-spacing: 0.05em; text-transform: lowercase; white-space: nowrap; transition: color 0.2s, border-color 0.2s; }
+    .view-all-btn:hover { color: var(--accent2); border-color: rgba(216,167,114,0.35); }
+    .fs-overlay { position: fixed; inset: 0; z-index: 400; background: rgba(11,10,8,0.82); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; padding: 4vh 3vw; }
+    .fs-overlay.open { display: flex; animation: fadeUp 0.2s var(--ease); }
+    .fs-panel { background: var(--surface); border: 1px solid var(--border2); border-radius: 16px; width: 100%; max-width: 620px; max-height: 92vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.6); }
+    .fs-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.05rem 1.3rem; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .fs-title { font-family: var(--serif); font-size: 1.15rem; color: var(--text); }
+    .fs-sub { font-size: 0.53rem; color: var(--muted2); letter-spacing: 0.08em; text-transform: lowercase; margin-top: 0.25rem; }
+    .fs-close { background: none; border: 1px solid var(--border2); border-radius: 8px; color: var(--muted2); cursor: pointer; padding: 0.42rem 0.7rem; font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.05em; text-transform: lowercase; white-space: nowrap; transition: color 0.2s, border-color 0.2s; }
+    .fs-close:hover { color: var(--text); border-color: var(--muted2); }
+    .fs-body { overflow-y: auto; padding: 0.5rem 0.8rem 0.9rem; }
     .hero-stats { display: flex; align-items: center; position: relative; z-index: 1; }
     .hero-stat { padding: 0.15rem 1.5rem; display: flex; flex-direction: column; gap: 0.32rem; text-align: right; border-left: 1px solid var(--border); }
     .hero-stat:first-child { border-left: none; }
@@ -436,20 +466,25 @@
       <div class="pulse-line"><span style="height:8px"></span><span style="height:14px"></span><span style="height:18px"></span><span style="height:11px"></span><span style="height:6px"></span></div>
       <span class="eyebrow">last.fm</span>
       <h1 class="display">listening <em>stats</em></h1>
-      <p class="input-tagline">enter a username!</p>
+      <p class="input-tagline" id="input-tagline">enter a username!</p>
+    </div>
+
+    <div class="mode-toggle" id="mode-toggle">
+      <button class="mode-opt active" data-mode="user" onclick="setMode('user')">user</button>
+      <button class="mode-opt" data-mode="artist" onclick="setMode('artist')">artist</button>
     </div>
 
     <div class="field">
-      <label for="inp-user">username</label>
+      <label for="inp-user" id="field-label">username</label>
       <div class="field-wrap">
-        <span class="field-at">@</span>
+        <span class="field-at" id="field-at">@</span>
         <input id="inp-user" type="text" placeholder="welffi" autocomplete="off" spellcheck="false" />
       </div>
     </div>
 
     <div id="err-box" class="error-box" style="display:none"></div>
 
-    <button class="btn-primary" id="btn-search"><span>look up stats</span><span class="btn-arrow">→</span></button>
+    <button class="btn-primary" id="btn-search"><span id="btn-text">look up stats</span><span class="btn-arrow">→</span></button>
 
     <div id="recent-searches"></div>
     <p class="input-note">profile must have recent tracks public! | i also can't up the rate limits so use wisely thank you</p>
@@ -469,6 +504,19 @@
 
 <div class="page hidden" id="page-results">
   <div class="results-card" id="results-card"></div>
+</div>
+
+<div class="fs-overlay" id="fs-overlay" onclick="if(event.target===this)closeFs()">
+  <div class="fs-panel">
+    <div class="fs-head">
+      <div class="fs-head-txt">
+        <div class="fs-title" id="fs-title"></div>
+        <div class="fs-sub" id="fs-sub"></div>
+      </div>
+      <button class="fs-close" onclick="closeFs()">close ✕</button>
+    </div>
+    <div class="fs-body" id="fs-body"></div>
+  </div>
 </div>
 
 <div class="taskbar">
@@ -510,6 +558,8 @@
     let strictStreaks = false;
     let _streaks = { all: null, dur: null };
     let _profile = null;
+    let _artist = null;
+    let artistSort = 'listeners';
 
     // ── Clock ──
     function updateClock() {
@@ -600,14 +650,19 @@
 
     // ── Persistence & recents ──
     const inpUser = $('inp-user');
-    inpUser.value = localStorage.getItem('lfm_user') || '';
-    const _paramUser = new URLSearchParams(location.search).get('user');
-    if (_paramUser) inpUser.value = _paramUser;
+    let searchMode = localStorage.getItem('lfm_mode') === 'artist' ? 'artist' : 'user';
+    const _params = new URLSearchParams(location.search);
+    const _paramUser = _params.get('user');
+    const _paramArtist = _params.get('artist');
+    if (_paramArtist) { searchMode = 'artist'; inpUser.value = _paramArtist; }
+    else if (_paramUser) { searchMode = 'user'; inpUser.value = _paramUser; }
+    else inpUser.value = localStorage.getItem('lfm_user') || '';
 
-    const getRecents = () => JSON.parse(localStorage.getItem('lfm_recents') || '[]');
-    function saveRecent(user) {
-      const list = [user, ...getRecents().filter(u => u !== user)].slice(0, 6);
-      localStorage.setItem('lfm_recents', JSON.stringify(list));
+    const recentsKey = () => searchMode === 'artist' ? 'lfm_recents_artist' : 'lfm_recents';
+    const getRecents = () => JSON.parse(localStorage.getItem(recentsKey()) || '[]');
+    function saveRecent(name) {
+      const list = [name, ...getRecents().filter(u => u !== name)].slice(0, 6);
+      localStorage.setItem(recentsKey(), JSON.stringify(list));
     }
     function renderRecents() {
       const list = getRecents();
@@ -621,8 +676,31 @@
           ${list.map(u => `<button class="recent-chip" onclick="quickSearch('${u.replace(/'/g,"\\'")}')">${u}</button>`).join('')}
         </div>`;
     }
-    window.quickSearch = (user) => { inpUser.value = user; handleSearch(); };
-    renderRecents();
+    window.quickSearch = (name) => { inpUser.value = name; handleSearch(); };
+
+    const MODE_TEXT = {
+      user:   { tagline: 'enter a username!', label: 'username', at: '@', ph: 'welffi', btn: 'look up stats' },
+      artist: { tagline: 'enter an artist!', label: 'artist', at: '♪', ph: 'radiohead', btn: 'look up artist' },
+    };
+    function applyMode() {
+      const t = MODE_TEXT[searchMode];
+      $('input-tagline').textContent = t.tagline;
+      $('field-label').textContent = t.label;
+      $('field-at').textContent = t.at;
+      inpUser.placeholder = t.ph;
+      $('btn-text').textContent = t.btn;
+      document.querySelectorAll('.mode-opt').forEach(b => b.classList.toggle('active', b.dataset.mode === searchMode));
+      renderRecents();
+    }
+    window.setMode = (m) => {
+      if (m !== 'user' && m !== 'artist') return;
+      searchMode = m;
+      localStorage.setItem('lfm_mode', m);
+      hideErr();
+      applyMode();
+      inpUser.focus();
+    };
+    applyMode();
 
     // ── Pages ──
     function show(id) {
@@ -636,18 +714,24 @@
     function hideErr() { $('err-box').style.display = 'none'; }
 
     async function handleSearch() {
-      const user = inpUser.value.trim();
+      const q = inpUser.value.trim();
       hideErr();
-      if (!user) { showErr('please enter a username'); return; }
-      localStorage.setItem('lfm_user', user);
-      saveRecent(user);
+      if (!q) { showErr(searchMode === 'artist' ? 'please enter an artist' : 'please enter a username'); return; }
+      saveRecent(q);
       renderRecents();
-      history.replaceState(null, '', `?user=${encodeURIComponent(user)}`);
-      loadStats(user);
+      if (searchMode === 'artist') {
+        history.replaceState(null, '', `?artist=${encodeURIComponent(q)}`);
+        loadArtist(q);
+      } else {
+        localStorage.setItem('lfm_user', q);
+        history.replaceState(null, '', `?user=${encodeURIComponent(q)}`);
+        loadStats(q);
+      }
     }
     $('btn-search').addEventListener('click', handleSearch);
     document.addEventListener('keydown', e => {
       if (e.key === 'Enter' && !$('page-input').classList.contains('hidden')) handleSearch();
+      if (e.key === 'Escape') { const o = $('fs-overlay'); if (o && o.classList.contains('open')) o.classList.remove('open'); }
     });
 
     // ── API ──
@@ -687,7 +771,9 @@
     const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
     function listItem(rank, imgUrl, name, sub, count, pct, imgId = null) {
-      const imgHtml = imgUrl
+      const imgHtml = imgUrl === false
+        ? ''
+        : imgUrl
         ? `<img class="list-img" src="${imgUrl}" alt="" onerror="this.outerHTML='<div class=list-img-ph></div>'" />`
         : `<div class="list-img-ph"${imgId ? ` id="${imgId}"` : ''}></div>`;
       return `
@@ -706,6 +792,185 @@
       settle(() => {
         (root || document).querySelectorAll('.bar[data-w]').forEach(b => { b.style.width = b.dataset.w + '%'; });
       });
+    }
+
+    // ── Artist mode ──
+    async function loadArtist(name) {
+      show('page-loading');
+      const setStatus = (lbl, sub = '') => {
+        const l = $('loading-label'), s = $('loading-sub');
+        if (l) l.textContent = lbl;
+        if (s) s.textContent = sub;
+      };
+
+      setStatus('looking up artist', 'fetching info');
+      let info;
+      try {
+        info = await lfm('artist.getInfo', API_KEY, { artist: name, autocorrect: 1 });
+      } catch (e) {
+        show('page-input'); showErr(e.message || 'artist not found'); return;
+      }
+      if (!info || !info.artist) { show('page-input'); showErr('artist not found'); return; }
+
+      const realName = info.artist.name || name;
+      setStatus('loading tracks & albums');
+      const settled = await Promise.allSettled([
+        lfm('artist.getTopTracks', API_KEY, { artist: realName, autocorrect: 1, limit: 1000 }),
+        lfm('artist.getTopAlbums', API_KEY, { artist: realName, autocorrect: 1, limit: 12 }),
+      ]);
+      const ok = r => r.status === 'fulfilled' ? r.value : null;
+
+      renderArtist({ info, topTracks: ok(settled[0]), topAlbums: ok(settled[1]) });
+      show('page-results');
+      animateBars($('results-card'));
+    }
+
+    window.searchArtist = (name) => { setMode('artist'); inpUser.value = name; handleSearch(); };
+
+    const SORT_UNIT = k => k === 'playcount' ? 'plays' : 'listeners';
+    const sortArtistTracks = (tracks) => {
+      const key = artistSort === 'plays' ? 'playcount' : 'listeners';
+      return tracks.slice().sort((x, y) => (parseInt(y[key]) || 0) - (parseInt(x[key]) || 0));
+    };
+    function artistTrackRow(t, rank, max) {
+      const key = artistSort === 'plays' ? 'playcount' : 'listeners';
+      const other = key === 'playcount' ? 'listeners' : 'playcount';
+      return listItem(rank, false, t.name, `${fmt(t[other] || 0)} ${SORT_UNIT(other)}`,
+        `${fmt(t[key] || 0)} ${SORT_UNIT(key)}`, Math.round(((parseInt(t[key]) || 0) / max) * 100));
+    }
+
+    window.setArtistSort = (s) => {
+      if ((s !== 'plays' && s !== 'listeners') || s === artistSort) return;
+      artistSort = s;
+      if (_artist) renderArtist(_artist);
+      if ($('fs-overlay')?.classList.contains('open')) fillArtistTracks();
+    };
+    window.openArtistTracks = () => { fillArtistTracks(); $('fs-overlay').classList.add('open'); };
+    window.closeFs = () => $('fs-overlay').classList.remove('open');
+    function fillArtistTracks() {
+      if (!_artist) return;
+      const key = artistSort === 'plays' ? 'playcount' : 'listeners';
+      const sorted = sortArtistTracks(toArr(_artist.topTracks?.toptracks?.track));
+      const max = sorted.length ? Math.max(...sorted.map(t => parseInt(t[key]) || 0), 1) : 1;
+      $('fs-title').textContent = _artist.info.artist.name;
+      $('fs-sub').textContent = `all tracks · by ${artistSort} · ${fmt(sorted.length)} shown`;
+      $('fs-body').innerHTML = sorted.length
+        ? sorted.map((t, i) => artistTrackRow(t, i + 1, max)).join('')
+        : `<p class="empty-note">no track data.</p>`;
+      animateBars($('fs-body'));
+    }
+
+    function renderArtist({ info, topTracks, topAlbums }) {
+      _artist = { info, topTracks, topAlbums };
+      const a = info.artist;
+      const D = (n) => `style="animation-delay:${n}ms"`;
+      const listeners = parseInt(a.stats?.listeners) || 0;
+      const playcount = parseInt(a.stats?.playcount) || 0;
+      const url = a.url || `https://www.last.fm/music/${encodeURIComponent(a.name)}`;
+      const initial = (a.name || '?').trim()[0]?.toUpperCase() || '♪';
+
+      const tags = toArr(a.tags?.tag).map(t => t.name).filter(Boolean).slice(0, 6);
+      const ontour = a.ontour === '1';
+      const genreRow = (tags.length || ontour) ? `<div class="genre-row">
+        ${ontour ? `<span class="genre-chip ontour">● on tour</span>` : ''}
+        ${tags.map(t => `<span class="genre-chip">${esc(t)}</span>`).join('')}
+      </div>` : '';
+
+      const albums = toArr(topAlbums?.topalbums?.album);
+      const sortKey = artistSort === 'plays' ? 'playcount' : 'listeners';
+      const sorted = sortArtistTracks(toArr(topTracks?.toptracks?.track));
+
+      const topT = sorted.slice(0, 8);
+      const maxT = topT.length ? Math.max(...topT.map(t => parseInt(t[sortKey]) || 0), 1) : 1;
+      const topTracksHtml = topT.length
+        ? topT.map((t, i) => artistTrackRow(t, i + 1, maxT)).join('')
+        : `<p class="empty-note">no track data.</p>`;
+
+      let deepCard = '';
+      const MIN_BOTTOM_PLAYS = 1000;
+      const listenable = sorted.filter(t => (parseInt(t.playcount) || 0) >= MIN_BOTTOM_PLAYS);
+      if (listenable.length >= 20) {
+        const deep = listenable.slice(-8).reverse();
+        const maxD = Math.max(...deep.map(t => parseInt(t[sortKey]) || 0), 1);
+        const deepHtml = deep.map((t, i) => artistTrackRow(t, listenable.length - i, maxD)).join('');
+        deepCard = `<div class="card tabs-card reveal" ${D(200)}>
+          <div class="section-head" style="padding:0.7rem 0.9rem 0.3rem"><span class="section-label">bottom tracks</span><span class="section-aside">least ${SORT_UNIT(sortKey)} · ${fmt(MIN_BOTTOM_PLAYS)}+ plays</span></div>
+          <div class="tab-content active">${deepHtml}</div>
+        </div>`;
+      }
+
+      const maxA = albums.length ? Math.max(...albums.map(al => parseInt(al.playcount) || 0), 1) : 1;
+      const albumsHtml = albums.length ? albums.slice(0, 8).map((al, i) =>
+        listItem(i + 1, false, al.name, null, `${fmt(al.playcount || 0)} plays`,
+          Math.round(((parseInt(al.playcount) || 0) / maxA) * 100))
+      ).join('') : `<p class="empty-note">no album data.</p>`;
+
+      const similar = toArr(a.similar?.artist).map(s => s.name).filter(Boolean).slice(0, 8);
+      const similarCard = similar.length ? `<div class="card bio-card cell-full reveal" ${D(320)}>
+        <div class="section-head"><span class="section-label">similar artists</span><span class="section-aside">tap to explore</span></div>
+        <div class="similar-row">${similar.map(s =>
+          `<button class="similar-chip" onclick="searchArtist('${s.replace(/'/g, "\\'")}')">${esc(s)}</button>`).join('')}</div>
+      </div>` : '';
+
+      const bioRaw = (a.bio?.content || a.bio?.summary || '').replace(/<a [^>]*>Read more[^<]*<\/a>\.?/i, '').trim();
+      const bioParas = bioRaw.split(/\n\s*\n/).map(p => p.trim().replace(/\n/g, ' ')).filter(Boolean);
+      const bioCard = bioParas.length ? `<div class="card bio-card cell-full reveal" ${D(60)}>
+        <div class="section-head"><span class="section-label">about</span></div>
+        ${bioParas.map(p => `<p class="bio-text">${p}</p>`).join('')}
+        <p class="bio-text"><a href="${url}" target="_blank" rel="noopener">read more on last.fm →</a></p>
+      </div>` : '';
+
+      $('results-card').innerHTML = `
+        <div class="card hero cell-full reveal" ${D(0)}>
+          <div class="hero-id">
+            <div class="hero-avatar-ph">${esc(initial)}</div>
+            <div class="hero-info">
+              <div class="hero-name">${esc(a.name)}</div>
+              <div class="hero-meta"><a href="${url}" target="_blank" rel="noopener">last.fm artist</a></div>
+              ${genreRow}
+            </div>
+          </div>
+          <div class="hero-stats">
+            <div class="hero-stat big">
+              <span class="hero-stat-num">${fmt(listeners)}</span>
+              <span class="hero-stat-lbl">listeners</span>
+            </div>
+            <div class="hero-stat">
+              <span class="hero-stat-num">${fmt(playcount)}</span>
+              <span class="hero-stat-lbl">total<br>scrobbles</span>
+            </div>
+          </div>
+          <button class="back-btn" onclick="show('page-input')">← back</button>
+        </div>
+
+        ${bioCard}
+
+        <div class="card tabs-card reveal" ${D(120)}>
+          <div class="section-head" style="padding:0.7rem 0.9rem 0.3rem">
+            <span class="section-label">top tracks</span>
+            <div class="th-actions">
+              <div class="sort-toggle">
+                <button class="sort-opt${artistSort === 'listeners' ? ' active' : ''}" onclick="setArtistSort('listeners')">listeners</button>
+                <button class="sort-opt${artistSort === 'plays' ? ' active' : ''}" onclick="setArtistSort('plays')">plays</button>
+              </div>
+              <button class="view-all-btn" onclick="openArtistTracks()">view all →</button>
+            </div>
+          </div>
+          <div class="tab-content active">${topTracksHtml}</div>
+        </div>
+
+        ${deepCard || `<div class="card tabs-card reveal" ${D(200)}>
+          <div class="section-head" style="padding:0.7rem 0.9rem 0.3rem"><span class="section-label">top albums</span></div>
+          <div class="tab-content active">${albumsHtml}</div>
+        </div>`}
+
+        ${deepCard ? `<div class="card tabs-card cell-full reveal" ${D(260)}>
+          <div class="section-head" style="padding:0.7rem 0.9rem 0.3rem"><span class="section-label">top albums</span></div>
+          <div class="tab-content active">${albumsHtml}</div>
+        </div>` : ''}
+
+        ${similarCard}
+      `;
     }
 
     // ── Load & render ──
@@ -1507,7 +1772,7 @@
     }
 
     // auto-load from URL param
-    if (_paramUser) handleSearch();
+    if (_paramArtist || _paramUser) handleSearch();
 })();
 </script>
 </body>
