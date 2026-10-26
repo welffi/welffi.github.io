@@ -40,8 +40,6 @@
     .h10:hover { transform: translateY(-5px) scale(1.08); }
     .h11:hover { background: rgba(216,167,114,0.1); transform: translateY(-5px) scale(1.08); }
     .h12:hover { background: rgba(216,167,114,0.1); transform: translateY(-5px) scale(1.08); }
-    .h13:hover { background: linear-gradient(180deg, rgba(216,167,114,0.09), rgba(216,167,114,0.04)); border-color: rgba(216,167,114,0.3); transform: translateY(-3px); box-shadow: 0 18px 44px -22px rgba(0,0,0,0.7), 0 0 0 1px rgba(216,167,114,0.08); }
-    .h14:hover { background: rgba(216,167,114,0.1); transform: translateY(-5px) scale(1.08); }
   </style>
 </head>
 <body>
@@ -78,19 +76,6 @@
           <div style="flex: 1;">
             <div style="font-family: 'Newsreader', Georgia, serif; font-size: clamp(1.35rem, 1.9vw, 2rem); font-weight: 300; letter-spacing: -0.01em; line-height: 1.1;">image cropper</div>
             <div style="margin-top: clamp(0.4rem, 0.6vw, 0.7rem); font-size: clamp(0.6rem, 0.84vw, 0.8rem); letter-spacing: 0.05em; color: #786a59; line-height: 1.7;">crop images to any aspect ratio! allows zooming, extending the image, all with multi-format exporting</div>
-          </div>
-          <div style="display: flex; align-items: center; justify-content: flex-end;">
-            <span style="font-size: clamp(0.75rem, 1vw, 1rem); color: #574d40;">↗</span>
-          </div>
-        </a>
-
-        <a href="voxelreducer.html" style="display: flex; flex-direction: column; gap: clamp(1.1rem, 1.5vw, 1.7rem); padding: clamp(1.4rem, 1.9vw, 2.2rem) clamp(1.4rem, 1.9vw, 2.2rem) clamp(1.2rem, 1.6vw, 1.9rem); color: #f0eae1; text-decoration: none; background: linear-gradient(180deg, #15110d 0%, rgba(21,17,13,0.7) 100%); border: 1px solid #261f19; border-radius: 18px; box-shadow: 0 1px 0 rgba(255,255,255,0.025) inset, 0 18px 40px -28px rgba(0,0,0,0.8); transition: background 0.3s, border-color 0.3s, transform 0.25s cubic-bezier(0.22,1,0.36,1), box-shadow 0.3s;" class="h13">
-          <div style="width: clamp(42px, 3.4vw, 56px); height: clamp(42px, 3.4vw, 56px); border-radius: clamp(13px, 1.05vw, 17px); background: rgba(216,167,114,0.1); border: 1px solid rgba(216,167,114,0.2); display: flex; align-items: center; justify-content: center;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#d8a772" stroke-width="1.6" style="width: clamp(18px, 1.45vw, 24px); height: clamp(18px, 1.45vw, 24px);"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><path d="M3.27 6.96L12 12.01l8.73-5.05"></path><path d="M12 22.08V12"></path></svg>
-          </div>
-          <div style="flex: 1;">
-            <div style="font-family: 'Newsreader', Georgia, serif; font-size: clamp(1.35rem, 1.9vw, 2rem); font-weight: 300; letter-spacing: -0.01em; line-height: 1.1;">voxel reducer</div>
-            <div style="margin-top: clamp(0.4rem, 0.6vw, 0.7rem); font-size: clamp(0.6rem, 0.84vw, 0.8rem); letter-spacing: 0.05em; color: #786a59; line-height: 1.7;">losslessly cuts the polygon count of voxelized glb/obj models by merging coplanar faces, textures included</div>
           </div>
           <div style="display: flex; align-items: center; justify-content: flex-end;">
             <span style="font-size: clamp(0.75rem, 1vw, 1rem); color: #574d40;">↗</span>
@@ -158,9 +143,6 @@
     </a>
     <a href="lastfm.html" title="last.fm" style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 13px; position: relative; transition: transform 0.2s cubic-bezier(0.22,1,0.36,1), background 0.2s;" class="h12">
       <svg viewBox="0 0 24 24" fill="none" stroke="#d8a772" stroke-width="1.8" style="width: 17px; height: 17px; display: block;"><path d="M3 18v-6a9 9 0 0 1 18 0v6"></path><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path></svg>
-    </a>
-    <a href="voxelreducer.html" title="voxel reducer" style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 13px; position: relative; transition: transform 0.2s cubic-bezier(0.22,1,0.36,1), background 0.2s;" class="h14">
-      <svg viewBox="0 0 24 24" fill="none" stroke="#d8a772" stroke-width="1.8" style="width: 17px; height: 17px; display: block;"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><path d="M3.27 6.96L12 12.01l8.73-5.05"></path><path d="M12 22.08V12"></path></svg>
     </a>
   </div>
 </div>
