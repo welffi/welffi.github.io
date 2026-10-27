@@ -184,6 +184,7 @@
       transition: opacity 0.25s, width 0.3s cubic-bezier(0.22,1,0.36,1), margin 0.3s cubic-bezier(0.22,1,0.36,1);
       overflow: hidden;
     }
+    .previews-panel.wide { width: 200px; }
     .previews-panel.hidden {
       opacity: 0;
       width: 0;
@@ -363,7 +364,12 @@
       color: var(--accent);
     }
 
-    #zoom-slider {
+    #fade-preview {
+      position: absolute;
+      inset: 0;
+    }
+
+    #zoom-slider, #fade-size {
       flex: 1;
       -webkit-appearance: none;
       appearance: none;
@@ -373,7 +379,7 @@
       outline: none;
       cursor: pointer;
     }
-    #zoom-slider::-webkit-slider-thumb {
+    #zoom-slider::-webkit-slider-thumb, #fade-size::-webkit-slider-thumb {
       -webkit-appearance: none;
       appearance: none;
       width: 14px;
@@ -384,7 +390,7 @@
       border: 2px solid var(--bg);
       box-shadow: 0 0 0 1px rgba(212,165,116,0.4);
     }
-    #zoom-slider::-moz-range-thumb {
+    #zoom-slider::-moz-range-thumb, #fade-size::-moz-range-thumb {
       width: 14px;
       height: 14px;
       border-radius: 50%;
@@ -392,6 +398,8 @@
       cursor: pointer;
       border: 2px solid var(--bg);
     }
+
+    #fade-size { flex: 0 0 90px; }
 
     .zoom-label {
       font-size: 0.58rem;
@@ -782,6 +790,7 @@
         flex-shrink: 0;
         width: 80px;
       }
+      .preview-item.banner { width: 200px; }
       .preview-canvas-wrap {
         width: 80px;
         height: 80px;
@@ -917,7 +926,7 @@
             <div class="crop-overlay" id="ov-bottom"></div>
             <div class="crop-overlay" id="ov-left"></div>
             <div class="crop-overlay" id="ov-right"></div>
-            <div id="crop-box"></div>
+            <div id="crop-box"><div id="fade-preview"></div></div>
           </div>
 
           <p class="crop-info" id="crop-info">drag to pan · scroll or pinch to zoom · double-click to reset</p>
@@ -928,7 +937,7 @@
                 <line x1="5" y1="12" x2="19" y2="12"/>
               </svg>
             </button>
-            <input type="range" id="zoom-slider" min="1" max="500" value="100" step="1" />
+            <input type="range" id="zoom-slider" min="100" max="500" value="100" step="1" />
             <button class="zoom-btn" id="btn-zoom-in">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="11" height="11">
                 <line x1="12" y1="5" x2="12" y2="19"/>
@@ -958,6 +967,25 @@
                 </div>
                 <span class="fill-color-label" id="fill-color-hex">#000000</span>
                 <span class="auto-badge" id="auto-badge">auto</span>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <p class="section-label">fade</p>
+            <div class="fill-row">
+              <label class="fill-toggle">
+                <div class="toggle-track" id="fade-toggle-track">
+                  <div class="toggle-thumb"></div>
+                </div>
+                <span class="toggle-label">fade bottom into color</span>
+              </label>
+              <div class="fill-color-wrap" id="fade-color-wrap">
+                <div class="color-swatch" id="fade-swatch" style="background:#ffffff">
+                  <input type="color" id="fade-color-input" value="#ffffff" />
+                </div>
+                <span class="fill-color-label" id="fade-color-hex">#ffffff</span>
+                <input type="range" id="fade-size" min="5" max="100" value="35" title="fade height" />
               </div>
             </div>
           </div>
@@ -1055,13 +1083,18 @@
       { label: '9:16', ratio: 9/16,   iw: 16, ih: 28 },
       { label: '3:2',  ratio: 3/2,    iw: 26, ih: 17 },
       { label: '2:3',  ratio: 2/3,    iw: 17, ih: 26 },
+      { label: '5:2',  ratio: 5/2,    iw: 28, ih: 11 },
     ];
 
     const PREVIEWS = [
-      { id: 'pv-discord-server', label: 'discord server', size: 88, shape: 'roundrect', radius: 0.23, bg: '#313338', border: '#3a3b3d' },
-      { id: 'pv-discord-pfp',   label: 'discord pfp',    size: 88, shape: 'circle',    radius: 0.5,  bg: '#313338', border: '#3a3b3d' },
-      { id: 'pv-square',        label: 'square',          size: 88, shape: 'rect',      radius: 0,    bg: '#111',    border: '#241f1b' },
+      { id: 'pv-discord-server', label: 'discord server', ratio: 1, size: 88, shape: 'roundrect', radius: 0.23, bg: '#313338', border: '#3a3b3d' },
+      { id: 'pv-discord-pfp',   label: 'discord pfp',    ratio: 1, size: 88, shape: 'circle',    radius: 0.5,  bg: '#313338', border: '#3a3b3d' },
+      { id: 'pv-square',        label: 'square',          ratio: 1, size: 88, shape: 'rect',      radius: 0,    bg: '#111',    border: '#241f1b' },
+      { id: 'pv-discord-banner', label: 'discord banner', ratio: 5/2, shape: 'banner' },
     ];
+
+    // discord profile card mock: 5:2 banner with the avatar overlapping its bottom-left
+    const BANNER = { w: 340, bh: 136, h: 200, avatarR: 40, ring: 6, card: '#232428' };
 
     const IMAGE_FORMATS = [
       { id: 'png',  label: 'PNG',  desc: 'lossless · transparency', mime: 'image/png',  ext: 'png',  quality: null },
@@ -1180,7 +1213,34 @@
       autoColor: '#000000',
       userPickedColor: false,
       isVideo: false,
+      fadeEnabled: false,
+      fadeColor: '#ffffff',
+      fadeSize: 0.35,
     };
+
+    const fadeToggleTrack = document.getElementById('fade-toggle-track');
+    const fadeColorWrap   = document.getElementById('fade-color-wrap');
+    const fadeColorInput  = document.getElementById('fade-color-input');
+    const fadePreview     = document.getElementById('fade-preview');
+
+    fadeToggleTrack.addEventListener('click', function() {
+      state.fadeEnabled = !state.fadeEnabled;
+      fadeToggleTrack.classList.toggle('on', state.fadeEnabled);
+      fadeColorWrap.classList.toggle('enabled', state.fadeEnabled);
+      renderAll();
+    });
+
+    fadeColorInput.addEventListener('input', function() {
+      state.fadeColor = fadeColorInput.value;
+      document.getElementById('fade-swatch').style.background = state.fadeColor;
+      document.getElementById('fade-color-hex').textContent = state.fadeColor;
+      renderAll();
+    });
+
+    document.getElementById('fade-size').addEventListener('input', function(e) {
+      state.fadeSize = e.target.value / 100;
+      renderAll();
+    });
 
     function mediaSource() {
       return state.isVideo ? cropVideo : cropImg;
@@ -1204,8 +1264,6 @@
         document.querySelectorAll('.ratio-btn').forEach(function(b) { b.classList.remove('active'); });
         btn.classList.add('active');
         activeRatioIdx = idx;
-        const is1to1 = (r.ratio === 1);
-        previewsPanel.classList.toggle('hidden', !is1to1 || state.isVideo);
         applyRatio(r.ratio);
       });
       ratioRow.appendChild(btn);
@@ -1214,6 +1272,25 @@
     PREVIEWS.forEach(function(p) {
       const item = document.createElement('div');
       item.className = 'preview-item';
+      const label = document.createElement('span');
+      label.className = 'preview-item-label';
+      label.textContent = p.label;
+
+      if (p.shape === 'banner') {
+        item.classList.add('banner');
+        const canvas = document.createElement('canvas');
+        canvas.width  = BANNER.w;
+        canvas.height = BANNER.h;
+        canvas.style.width = '100%';
+        canvas.style.display = 'block';
+        canvas.style.borderRadius = '8px';
+        item.appendChild(canvas);
+        item.appendChild(label);
+        previewsPanel.appendChild(item);
+        pvCanvases[p.id] = { canvas: canvas, config: p, item: item };
+        return;
+      }
+
       const wrap = document.createElement('div');
       wrap.className = 'preview-canvas-wrap';
       wrap.style.background = p.bg;
@@ -1227,14 +1304,24 @@
       if (p.shape === 'circle') canvas.style.borderRadius = '50%';
       else if (p.shape === 'roundrect') canvas.style.borderRadius = Math.round(p.size * p.radius) + 'px';
       wrap.appendChild(canvas);
-      const label = document.createElement('span');
-      label.className = 'preview-item-label';
-      label.textContent = p.label;
       item.appendChild(wrap);
       item.appendChild(label);
       previewsPanel.appendChild(item);
-      pvCanvases[p.id] = { canvas: canvas, config: p };
+      pvCanvases[p.id] = { canvas: canvas, config: p, item: item };
     });
+
+    // show only the previews made for the current ratio; hide the panel if there are none
+    function syncPreviews() {
+      let any = false;
+      Object.values(pvCanvases).forEach(function(entry) {
+        const show = entry.config.ratio === state.ratio;
+        entry.item.style.display = show ? '' : 'none';
+        any = any || show;
+      });
+      previewsPanel.classList.toggle('hidden', !any || state.isVideo);
+      previewsPanel.classList.toggle('wide', state.ratio !== 1);
+    }
+    syncPreviews();
 
     fillToggleTrack.addEventListener('click', function() {
       state.extendEnabled = !state.extendEnabled;
@@ -1263,45 +1350,16 @@
       fillColorInput.value = state.fillColor;
     }
 
+    // one pixel just inside the top-left corner: the fill continues the image's edge
     function sampleAutoColor(source, w, h) {
       const sampleCanvas = document.createElement('canvas');
-      sampleCanvas.width  = w;
-      sampleCanvas.height = h;
+      sampleCanvas.width = sampleCanvas.height = 1;
       const ctx = sampleCanvas.getContext('2d');
-      try { ctx.drawImage(source, 0, 0); } catch(e) { return '#000000'; }
-
-      const samples = [];
-      const edgeWidth = Math.max(1, Math.floor(Math.min(w, h) * 0.03));
-
-      function addSample(x, y) {
-        try {
-          const d = ctx.getImageData(x, y, 1, 1).data;
-          samples.push([d[0], d[1], d[2]]);
-        } catch(e) {}
-      }
-
-      for (let x = 0; x < w; x += Math.max(1, Math.floor(w / 40))) {
-        for (let ey = 0; ey < edgeWidth; ey++) {
-          addSample(x, ey);
-          addSample(x, h - 1 - ey);
-        }
-      }
-      for (let y = 0; y < h; y += Math.max(1, Math.floor(h / 40))) {
-        for (let ex = 0; ex < edgeWidth; ex++) {
-          addSample(ex, y);
-          addSample(w - 1 - ex, y);
-        }
-      }
-
-      if (samples.length === 0) return '#000000';
-
-      let r = 0, g = 0, b = 0;
-      samples.forEach(function(s) { r += s[0]; g += s[1]; b += s[2]; });
-      r = Math.round(r / samples.length);
-      g = Math.round(g / samples.length);
-      b = Math.round(b / samples.length);
-
-      return '#' + [r,g,b].map(function(v) { return v.toString(16).padStart(2,'0'); }).join('');
+      try {
+        ctx.drawImage(source, Math.min(2, w - 1), Math.min(2, h - 1), 1, 1, 0, 0, 1, 1);
+        const d = ctx.getImageData(0, 0, 1, 1).data;
+        return '#' + [d[0], d[1], d[2]].map(function(v) { return v.toString(16).padStart(2,'0'); }).join('');
+      } catch(e) { return '#000000'; }
     }
 
     uploadZone.addEventListener('click', function() { fileInput.click(); });
@@ -1320,7 +1378,7 @@
     });
 
     function loadImage(file) {
-      const isVideo = file.type.startsWith('video/') || file.type === 'image/gif';
+      const isVideo = file.type.startsWith('video/');
       const url = URL.createObjectURL(file);
 
       if (videoAnimFrame) { cancelAnimationFrame(videoAnimFrame); videoAnimFrame = null; }
@@ -1339,8 +1397,7 @@
         state.fillColor = auto;
         syncSwatchDisplay();
 
-        const is1to1 = (activeRatioIdx === 0);
-        previewsPanel.classList.toggle('hidden', !is1to1 || isVideo);
+        syncPreviews();
 
         if (isVideo) {
           switchToVideoFormats();
@@ -1370,7 +1427,8 @@
         cropVideo.style.display = '';
         cropImg.src = '';
         cropVideo.src = url;
-        cropVideo.onloadedmetadata = function() {
+        // loadeddata, not loadedmetadata: the first frame must exist to sample the auto color
+        cropVideo.onloadeddata = function() {
           cropVideo.play();
           onReady(cropVideo.videoWidth, cropVideo.videoHeight);
         };
@@ -1400,12 +1458,15 @@
       const nh = mediaNaturalHeight();
       const ratio = state.ratio;
 
+      // inset so wide/tall ratios don't touch the container's rounded edges
+      const availW = cw - 32;
+      const availH = ch - 32;
       let cropW, cropH;
-      if (cw / ch >= ratio) {
-        cropH = ch;
+      if (availW / availH >= ratio) {
+        cropH = availH;
         cropW = cropH * ratio;
       } else {
-        cropW = cw;
+        cropW = availW;
         cropH = cropW / ratio;
       }
       const cropX = (cw - cropW) / 2;
@@ -1435,6 +1496,7 @@
 
     function applyRatio(ratio) {
       state.ratio = ratio;
+      syncPreviews();
       resetView();
       renderAll();
     }
@@ -1464,6 +1526,9 @@
       }
 
       cropBox.style.cssText = 'left:' + L.cropX + 'px;top:' + L.cropY + 'px;width:' + L.cropW + 'px;height:' + L.cropH + 'px';
+      fadePreview.style.background = state.fadeEnabled
+        ? 'linear-gradient(to bottom, ' + state.fadeColor + '00 ' + (100 - state.fadeSize * 100) + '%, ' + state.fadeColor + ')'
+        : 'none';
 
       const px = Math.round(L.cropW / L.displayScale);
       const py = Math.round(L.cropH / L.displayScale);
@@ -1498,53 +1563,83 @@
       ctx.clip();
     }
 
+    // crop rect in the media's natural pixel space
+    function natCrop(L) {
+      return {
+        x: (L.cropX - L.imgLeft) / L.displayScale,
+        y: (L.cropY - L.imgTop)  / L.displayScale,
+        w: L.cropW / L.displayScale,
+        h: L.cropH / L.displayScale,
+      };
+    }
+
+    // single draw path for previews, image export and video frames: fill, media, fade
+    function drawCrop(ctx, w, h, c) {
+      if (state.extendEnabled) {
+        ctx.fillStyle = state.fillColor;
+        ctx.fillRect(0, 0, w, h);
+      }
+      const sx = Math.max(0, c.x);
+      const sy = Math.max(0, c.y);
+      const sw = Math.min(mediaNaturalWidth(),  c.x + c.w) - sx;
+      const sh = Math.min(mediaNaturalHeight(), c.y + c.h) - sy;
+      if (sw > 0 && sh > 0) {
+        try {
+          ctx.drawImage(mediaSource(), sx, sy, sw, sh,
+            (sx - c.x) / c.w * w, (sy - c.y) / c.h * h, sw / c.w * w, sh / c.h * h);
+        } catch(e) {}
+      }
+      if (state.fadeEnabled) {
+        const g = ctx.createLinearGradient(0, h * (1 - state.fadeSize), 0, h);
+        g.addColorStop(0, state.fadeColor + '00');
+        g.addColorStop(1, state.fadeColor);
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, w, h);
+      }
+    }
+
+    function drawBannerCard(ctx, c) {
+      const B = BANNER;
+      ctx.fillStyle = B.card;
+      ctx.fillRect(0, 0, B.w, B.h);
+      drawCrop(ctx, B.w, B.bh, c);
+
+      const ax = 16 + B.ring + B.avatarR;
+      const ay = B.bh;
+      function circle(x, y, r, color) {
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.fill();
+      }
+      circle(ax, ay, B.avatarR + B.ring, B.card);
+      circle(ax, ay, B.avatarR, '#5865f2');
+      // online status dot, cut into the avatar ring like discord does
+      const d = B.avatarR * 0.707;
+      circle(ax + d, ay + d, 13, B.card);
+      circle(ax + d, ay + d, 8, '#23a55a');
+
+      // placeholder display name / username lines
+      ctx.fillStyle = '#4e5058';
+      ctx.fillRect(16, B.bh + B.avatarR + 18, 120, 12);
+      ctx.fillStyle = '#3a3c42';
+      ctx.fillRect(16, B.bh + B.avatarR + 38, 80, 8);
+    }
+
     function renderPreviews(L) {
       if (previewsPanel.classList.contains('hidden')) return;
-
-      const natCropX = (L.cropX - L.imgLeft) / L.displayScale;
-      const natCropY = (L.cropY - L.imgTop)  / L.displayScale;
-      const natCropW = L.cropW / L.displayScale;
-      const natCropH = L.cropH / L.displayScale;
-      const src = mediaSource();
-      const nw  = mediaNaturalWidth();
-      const nh  = mediaNaturalHeight();
+      const c = natCrop(L);
 
       Object.values(pvCanvases).forEach(function(entry) {
-        const canvas = entry.canvas;
+        if (entry.config.ratio !== state.ratio) return;
         const config = entry.config;
         const size   = config.size;
-        const ctx    = canvas.getContext('2d');
+        const ctx    = entry.canvas.getContext('2d');
+        if (config.shape === 'banner') { drawBannerCard(ctx, c); return; }
         ctx.clearRect(0, 0, size, size);
         ctx.save();
         clipPath(ctx, size, config.shape, config.radius);
-
-        if (state.extendEnabled) {
-          ctx.fillStyle = state.fillColor;
-          ctx.fillRect(0, 0, size, size);
-
-          const scaleX = size / natCropW;
-          const scaleY = size / natCropH;
-
-          const srcX = Math.max(0, natCropX);
-          const srcY = Math.max(0, natCropY);
-          const srcW = Math.min(nw - srcX, natCropX + natCropW - srcX);
-          const srcH = Math.min(nh - srcY, natCropY + natCropH - srcY);
-
-          if (srcW > 0 && srcH > 0) {
-            const dstX = (srcX - natCropX) * scaleX;
-            const dstY = (srcY - natCropY) * scaleY;
-            const dstW = srcW * scaleX;
-            const dstH = srcH * scaleY;
-            try { ctx.drawImage(src, srcX, srcY, srcW, srcH, dstX, dstY, dstW, dstH); } catch(e) {}
-          }
-        } else {
-          const sx = Math.max(0, natCropX);
-          const sy = Math.max(0, natCropY);
-          const sw = Math.min(nw - sx, natCropW);
-          const sh = Math.min(nh - sy, natCropH);
-          try { ctx.drawImage(src, sx, sy, sw, sh, 0, 0, size, size); } catch(e) {}
-        }
-
+        drawCrop(ctx, size, size, c);
         ctx.restore();
       });
     }
@@ -1676,14 +1771,11 @@
     }).observe(cropContainer);
 
     document.getElementById('btn-download').addEventListener('click', function() {
-      const L = getLayout();
-      const natCropX = (L.cropX - L.imgLeft) / L.displayScale;
-      const natCropY = (L.cropY - L.imgTop)  / L.displayScale;
-      const natCropW = L.cropW / L.displayScale;
-      const natCropH = L.cropH / L.displayScale;
-
-      const outW = Math.round(natCropW);
-      const outH = Math.round(natCropH);
+      const n = natCrop(getLayout());
+      // whole-pixel source rect so a non-extended export is a crisp 1:1 copy
+      const crop = { x: Math.round(n.x), y: Math.round(n.y), w: Math.round(n.w), h: Math.round(n.h) };
+      const outW = crop.w;
+      const outH = crop.h;
 
       if (state.isVideo) {
         const offCanvas = document.createElement('canvas');
@@ -1725,23 +1817,7 @@
             return;
           }
           offCtx.clearRect(0, 0, outW, outH);
-          if (state.extendEnabled) {
-            offCtx.fillStyle = state.fillColor;
-            offCtx.fillRect(0, 0, outW, outH);
-          }
-          const sx = Math.max(0, natCropX);
-          const sy = Math.max(0, natCropY);
-          const nw = mediaNaturalWidth();
-          const nh = mediaNaturalHeight();
-          const sw = Math.min(nw - sx, natCropX + natCropW - sx);
-          const sh = Math.min(nh - sy, natCropY + natCropH - sy);
-          if (sw > 0 && sh > 0) {
-            const dstX = state.extendEnabled ? Math.round((sx - natCropX) / natCropW * outW) : 0;
-            const dstY = state.extendEnabled ? Math.round((sy - natCropY) / natCropH * outH) : 0;
-            const dstW = state.extendEnabled ? Math.round(sw / natCropW * outW) : outW;
-            const dstH = state.extendEnabled ? Math.round(sh / natCropH * outH) : outH;
-            try { offCtx.drawImage(src, sx, sy, sw, sh, dstX, dstY, dstW, dstH); } catch(e) {}
-          }
+          drawCrop(offCtx, outW, outH, crop);
           requestAnimationFrame(drawFrame);
         }
         requestAnimationFrame(drawFrame);
@@ -1750,40 +1826,18 @@
         const canvas = document.createElement('canvas');
         canvas.width  = outW;
         canvas.height = outH;
-        const ctx = canvas.getContext('2d');
+        drawCrop(canvas.getContext('2d'), outW, outH, crop);
 
-        if (state.extendEnabled) {
-          ctx.fillStyle = state.fillColor;
-          ctx.fillRect(0, 0, outW, outH);
-
-          const nw = mediaNaturalWidth();
-          const nh = mediaNaturalHeight();
-          const srcX = Math.max(0, natCropX);
-          const srcY = Math.max(0, natCropY);
-          const srcW = Math.min(nw - srcX, natCropX + natCropW - srcX);
-          const srcH = Math.min(nh - srcY, natCropY + natCropH - srcY);
-
-          if (srcW > 0 && srcH > 0) {
-            const dstX = Math.round((srcX - natCropX) / natCropW * outW);
-            const dstY = Math.round((srcY - natCropY) / natCropH * outH);
-            const dstW = Math.round(srcW / natCropW * outW);
-            const dstH = Math.round(srcH / natCropH * outH);
-            ctx.drawImage(cropImg, srcX, srcY, srcW, srcH, dstX, dstY, dstW, dstH);
-          }
-        } else {
-          const natSX = Math.max(0, Math.round(natCropX));
-          const natSY = Math.max(0, Math.round(natCropY));
-          const natSW = Math.min(cropImg.naturalWidth  - natSX, Math.round(natCropW));
-          const natSH = Math.min(cropImg.naturalHeight - natSY, Math.round(natCropH));
-          ctx.drawImage(cropImg, natSX, natSY, natSW, natSH, 0, 0, outW, outH);
-        }
-
-        const link = document.createElement('a');
-        link.download = 'cropped.' + activeFormat.ext;
-        link.href = activeFormat.quality !== null
-          ? canvas.toDataURL(activeFormat.mime, activeFormat.quality)
-          : canvas.toDataURL(activeFormat.mime);
-        link.click();
+        canvas.toBlob(function(blob) {
+          // browsers that can't encode the format (often AVIF) silently return PNG, so name by what we got
+          const fmt = IMAGE_FORMATS.find(function(f) { return f.mime === blob.type; }) || IMAGE_FORMATS[0];
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.download = 'cropped.' + fmt.ext;
+          link.href = url;
+          link.click();
+          setTimeout(function() { URL.revokeObjectURL(url); }, 5000);
+        }, activeFormat.mime, activeFormat.quality ?? undefined);
       }
     });
 
@@ -1791,7 +1845,11 @@
       cropperArea.classList.remove('visible');
       uploadZone.style.display = '';
       cropImg.src = '';
+      if (videoAnimFrame) { cancelAnimationFrame(videoAnimFrame); videoAnimFrame = null; }
+      cropVideo.pause();
+      cropVideo.src = '';
       fileInput.value = '';
+      zoomSlider.min = 100;
       state.loaded = false;
       state.extendEnabled = false;
       state.userPickedColor = false;
