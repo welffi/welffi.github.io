@@ -364,12 +364,71 @@
       color: var(--accent);
     }
 
-    #fade-preview {
+    #result-canvas {
       position: absolute;
-      inset: 0;
+      pointer-events: none;
     }
 
-    #zoom-slider, #fade-size {
+    /* pfp mode: the crop box is a circle and its shadow dims everything outside it */
+    #crop-container.pfp .crop-overlay { display: none; }
+    #crop-container.pfp #crop-box {
+      border-radius: 50%;
+      overflow: hidden;
+      box-shadow: 0 0 0 1px rgba(212,165,116,0.9), 0 0 0 9999px rgba(10,9,8,0.68);
+    }
+    #crop-container.pfp #crop-box::after { display: none; }
+
+    /* effects panel: one tab per effect, a dot on tabs that are switched on */
+    .fx-panel {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.015);
+      overflow: hidden;
+    }
+    .fx-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+    }
+    .fx-tab {
+      position: relative;
+      flex: 1;
+      padding: 0.7rem 0.9rem;
+      border: none;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      background: none;
+      color: var(--muted2);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.12em;
+      text-transform: lowercase;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: color 0.2s, background 0.2s, border-color 0.2s;
+    }
+    .fx-tab:hover { color: var(--text); background: rgba(212,165,116,0.04); }
+    .fx-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .fx-tab.on::after {
+      content: '';
+      display: inline-block;
+      width: 5px;
+      height: 5px;
+      margin-left: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      vertical-align: middle;
+    }
+    .fx-pane { display: none; padding: 1rem 1.1rem 1.1rem; }
+    .fx-pane.active { display: block; }
+    .fx-pane .fill-row { flex-direction: column; align-items: stretch; gap: 1rem; }
+    .fx-pane .fill-color-wrap { flex-direction: column; align-items: stretch; gap: 0.8rem; }
+    .fx-row { display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap; }
+    .fx-row .ratio-btn { padding: 6px 11px; }
+    .fx-row .fill-color-label { min-width: 56px; }
+    .fx-pane .sl, .fx-pane #fade-size { flex: 1; }
+
+    #zoom-slider, #fade-size, .sl {
       flex: 1;
       -webkit-appearance: none;
       appearance: none;
@@ -379,7 +438,7 @@
       outline: none;
       cursor: pointer;
     }
-    #zoom-slider::-webkit-slider-thumb, #fade-size::-webkit-slider-thumb {
+    #zoom-slider::-webkit-slider-thumb, #fade-size::-webkit-slider-thumb, .sl::-webkit-slider-thumb {
       -webkit-appearance: none;
       appearance: none;
       width: 14px;
@@ -390,7 +449,7 @@
       border: 2px solid var(--bg);
       box-shadow: 0 0 0 1px rgba(212,165,116,0.4);
     }
-    #zoom-slider::-moz-range-thumb, #fade-size::-moz-range-thumb {
+    #zoom-slider::-moz-range-thumb, #fade-size::-moz-range-thumb, .sl::-moz-range-thumb {
       width: 14px;
       height: 14px;
       border-radius: 50%;
@@ -399,7 +458,7 @@
       border: 2px solid var(--bg);
     }
 
-    #fade-size { flex: 0 0 90px; }
+    #fade-size, .sl { flex: 0 0 90px; }
 
     .zoom-label {
       font-size: 0.58rem;
@@ -922,11 +981,12 @@
             <img id="crop-img" src="" alt="" draggable="false" />
             <video id="crop-video" src="" muted loop playsinline autoplay draggable="false" style="display:none"></video>
             <div class="recording-badge" id="recording-badge"><div class="recording-dot"></div>recording</div>
+            <canvas id="result-canvas" style="display:none"></canvas>
             <div class="crop-overlay" id="ov-top"></div>
             <div class="crop-overlay" id="ov-bottom"></div>
             <div class="crop-overlay" id="ov-left"></div>
             <div class="crop-overlay" id="ov-right"></div>
-            <div id="crop-box"><div id="fade-preview"></div></div>
+            <div id="crop-box"></div>
           </div>
 
           <p class="crop-info" id="crop-info">drag to pan · scroll or pinch to zoom · double-click to reset</p>
@@ -953,39 +1013,154 @@
           </div>
 
           <div>
-            <p class="section-label">fill color</p>
-            <div class="fill-row">
-              <label class="fill-toggle" id="fill-toggle-label">
-                <div class="toggle-track" id="fill-toggle-track">
-                  <div class="toggle-thumb"></div>
-                </div>
-                <span class="toggle-label">extend beyond image</span>
-              </label>
-              <div class="fill-color-wrap" id="fill-color-wrap">
-                <div class="color-swatch" id="color-swatch">
-                  <input type="color" id="fill-color-input" value="#000000" />
-                </div>
-                <span class="fill-color-label" id="fill-color-hex">#000000</span>
-                <span class="auto-badge" id="auto-badge">auto</span>
+            <p class="section-label">effects</p>
+            <div class="fx-panel">
+              <div class="fx-tabs" id="fx-tabs">
+                <button class="fx-tab active" data-tab="fill">extend</button>
+                <button class="fx-tab" data-tab="mirror">mirror</button>
+                <button class="fx-tab" data-tab="blur">blur</button>
+                <button class="fx-tab" data-tab="fade">fade</button>
+                <button class="fx-tab" data-tab="ring">ring</button>
               </div>
-            </div>
-          </div>
 
-          <div>
-            <p class="section-label">fade</p>
-            <div class="fill-row">
-              <label class="fill-toggle">
-                <div class="toggle-track" id="fade-toggle-track">
-                  <div class="toggle-thumb"></div>
+              <div class="fx-pane active" id="pane-fill">
+                <div class="fill-row">
+                  <label class="fill-toggle" id="fill-toggle-label">
+                    <div class="toggle-track" id="fill-toggle-track"><div class="toggle-thumb"></div></div>
+                    <span class="toggle-label">extend beyond image</span>
+                  </label>
+                  <div class="fill-color-wrap" id="fill-color-wrap">
+                    <div class="fx-row">
+                      <div class="color-swatch" id="color-swatch">
+                        <input type="color" id="fill-color-input" value="#000000" />
+                      </div>
+                      <span class="fill-color-label" id="fill-color-hex">#000000</span>
+                      <span class="auto-badge" id="auto-badge">auto</span>
+                    </div>
+                  </div>
                 </div>
-                <span class="toggle-label">fade bottom into color</span>
-              </label>
-              <div class="fill-color-wrap" id="fade-color-wrap">
-                <div class="color-swatch" id="fade-swatch" style="background:#ffffff">
-                  <input type="color" id="fade-color-input" value="#ffffff" />
+              </div>
+
+              <div class="fx-pane" id="pane-mirror">
+                <div class="fill-row">
+                  <label class="fill-toggle">
+                    <div class="toggle-track" id="mirror-toggle-track"><div class="toggle-thumb"></div></div>
+                    <span class="toggle-label">mirror past the edges</span>
+                  </label>
+                  <div class="fill-color-wrap" id="mirror-wrap">
+                    <div class="fx-row">
+                      <span class="fill-color-label">blur</span>
+                      <input type="range" class="sl" id="mirror-blur" min="0" max="100" value="0" />
+                    </div>
+                  </div>
                 </div>
-                <span class="fill-color-label" id="fade-color-hex">#ffffff</span>
-                <input type="range" id="fade-size" min="5" max="100" value="35" title="fade height" />
+              </div>
+
+              <div class="fx-pane" id="pane-blur">
+                <div class="fill-row">
+                  <label class="fill-toggle">
+                    <div class="toggle-track" id="edge-toggle-track"><div class="toggle-thumb"></div></div>
+                    <span class="toggle-label">blur in from the edges</span>
+                  </label>
+                  <div class="fill-color-wrap" id="edge-wrap">
+                    <div class="fx-row">
+                      <span class="fill-color-label">reach</span>
+                      <input type="range" class="sl" id="edge-size" min="5" max="100" value="40" />
+                    </div>
+                    <div class="fx-row">
+                      <span class="fill-color-label">amount</span>
+                      <input type="range" class="sl" id="edge-blur" min="5" max="100" value="50" />
+                    </div>
+                    <label class="fill-toggle" id="edge-ring-row">
+                      <div class="toggle-track" id="edge-ring-track"><div class="toggle-thumb"></div></div>
+                      <span class="toggle-label">from the pfp ring (1:1)</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <div class="fx-pane" id="pane-fade">
+                <div class="fill-row">
+                  <label class="fill-toggle">
+                    <div class="toggle-track" id="fade-toggle-track"><div class="toggle-thumb"></div></div>
+                    <span class="toggle-label">fade edges</span>
+                  </label>
+                  <div class="fill-color-wrap" id="fade-color-wrap">
+                    <label class="fill-toggle">
+                      <div class="toggle-track" id="fade-trans-track"><div class="toggle-thumb"></div></div>
+                      <span class="toggle-label">fade to transparent</span>
+                    </label>
+                    <div class="fx-row" id="fade-color-row">
+                      <div class="color-swatch" id="fade-swatch" style="background:#ffffff">
+                        <input type="color" id="fade-color-input" value="#ffffff" />
+                      </div>
+                      <span class="fill-color-label" id="fade-color-hex">#ffffff</span>
+                    </div>
+                    <div class="fx-row">
+                      <span class="fill-color-label">reach</span>
+                      <input type="range" id="fade-size" min="5" max="100" value="35" />
+                    </div>
+                    <div class="fx-row" id="fade-sides">
+                      <span class="fill-color-label">sides</span>
+                    </div>
+                    <label class="fill-toggle" id="fade-ring-row">
+                      <div class="toggle-track" id="fade-ring-track"><div class="toggle-thumb"></div></div>
+                      <span class="toggle-label">from the pfp ring (1:1)</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <div class="fx-pane" id="pane-ring">
+                <div class="fill-row">
+                  <label class="fill-toggle">
+                    <div class="toggle-track" id="pat-toggle-track"><div class="toggle-thumb"></div></div>
+                    <span class="toggle-label">pattern ring on the pfp edge</span>
+                  </label>
+                  <div class="fill-color-wrap" id="pat-wrap">
+                    <div class="ratio-row" id="pat-styles"></div>
+                    <div class="fx-row">
+                      <span class="fill-color-label">color</span>
+                      <div class="color-swatch" id="pat-swatch" style="background:#ffffff">
+                        <input type="color" id="pat-color-input" value="#ffffff" />
+                      </div>
+                      <label class="fill-toggle">
+                        <div class="toggle-track" id="pat-cut-track"><div class="toggle-thumb"></div></div>
+                        <span class="toggle-label">cut out (transparent)</span>
+                      </label>
+                    </div>
+                    <div class="fx-row">
+                      <span class="fill-color-label">size</span>
+                      <input type="range" class="sl" id="pat-size" min="2" max="12" value="6" />
+                    </div>
+                    <div class="fx-row">
+                      <span class="fill-color-label">spacing</span>
+                      <input type="range" class="sl" id="pat-spacing" min="12" max="60" value="20" />
+                    </div>
+                    <div class="fx-row">
+                      <span class="fill-color-label">inset</span>
+                      <input type="range" class="sl" id="pat-inset" min="0" max="20" value="0" />
+                    </div>
+                    <div class="fx-row">
+                      <span class="fill-color-label">rotate</span>
+                      <input type="range" class="sl" id="pat-rotate" min="0" max="360" value="0" />
+                    </div>
+                    <div class="fx-row">
+                      <span class="fill-color-label">opacity</span>
+                      <input type="range" class="sl" id="pat-opacity" min="5" max="100" value="100" />
+                    </div>
+                    <div class="fx-row">
+                      <span class="fill-color-label">backing</span>
+                      <div class="color-swatch" id="pat-back-swatch" style="background:#000000">
+                        <input type="color" id="pat-back-input" value="#000000" />
+                      </div>
+                      <label class="fill-toggle">
+                        <div class="toggle-track" id="pat-back-track"><div class="toggle-thumb"></div></div>
+                        <span class="toggle-label">band behind the pattern</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -1077,6 +1252,7 @@
 
     const RATIOS = [
       { label: '1:1',  ratio: 1,      iw: 22, ih: 22 },
+      { label: 'pfp',  ratio: 1,      iw: 22, ih: 22, pfp: true }, // 1:1, but the crop box is drawn as discord's circle
       { label: '4:3',  ratio: 4/3,    iw: 26, ih: 20 },
       { label: '3:4',  ratio: 3/4,    iw: 18, ih: 24 },
       { label: '16:9', ratio: 16/9,   iw: 28, ih: 16 },
@@ -1120,6 +1296,7 @@
     const cropVideo      = document.getElementById('crop-video');
     const recordingBadge = document.getElementById('recording-badge');
     const cropBox        = document.getElementById('crop-box');
+    const resultCanvas   = document.getElementById('result-canvas');
     const cropInfo       = document.getElementById('crop-info');
     const zoomSlider     = document.getElementById('zoom-slider');
     const zoomLabel      = document.getElementById('zoom-label');
@@ -1216,12 +1393,33 @@
       fadeEnabled: false,
       fadeColor: '#ffffff',
       fadeSize: 0.35,
+      fadeSides: { top: true, right: true, bottom: true, left: true },
+      fadeRing: false, fadeTransparent: false, pfp: false,
+      mirrorEnabled: false, mirrorBlur: 0,
+      edgeEnabled: false, edgeSize: 0.4, edgeBlur: 0.5, edgeRing: false,
+      patEnabled: false, patStyle: 'dots', patColor: '#ffffff', patSize: 0.06,
+      patSpacing: 2, patInset: 0, patRotate: 0, patOpacity: 1,
+      patCut: false, patBack: false, patBackColor: '#000000',
     };
 
     const fadeToggleTrack = document.getElementById('fade-toggle-track');
     const fadeColorWrap   = document.getElementById('fade-color-wrap');
     const fadeColorInput  = document.getElementById('fade-color-input');
-    const fadePreview     = document.getElementById('fade-preview');
+
+    bindToggle('fade-ring-track', null, 'fadeRing');
+    bindToggle('fade-trans-track', null, 'fadeTransparent');
+    const fadeSidesRow = document.getElementById('fade-sides');
+    ['top', 'right', 'bottom', 'left'].forEach(function(side) {
+      const btn = document.createElement('button');
+      btn.className = 'ratio-btn' + (state.fadeSides[side] ? ' active' : '');
+      btn.innerHTML = '<span class="ratio-text">' + side + '</span>';
+      btn.addEventListener('click', function() {
+        state.fadeSides[side] = !state.fadeSides[side];
+        btn.classList.toggle('active', state.fadeSides[side]);
+        renderAll();
+      });
+      fadeSidesRow.appendChild(btn);
+    });
 
     fadeToggleTrack.addEventListener('click', function() {
       state.fadeEnabled = !state.fadeEnabled;
@@ -1258,13 +1456,13 @@
       const btn = document.createElement('button');
       btn.className = 'ratio-btn' + (idx === 0 ? ' active' : '');
       btn.innerHTML =
-        '<span class="ratio-icon"><span class="ratio-icon-inner" style="width:' + r.iw + 'px;height:' + r.ih + 'px"></span></span>' +
+        '<span class="ratio-icon"><span class="ratio-icon-inner" style="width:' + r.iw + 'px;height:' + r.ih + 'px' + (r.pfp ? ';border-radius:50%' : '') + '"></span></span>' +
         '<span class="ratio-text">' + r.label + '</span>';
       btn.addEventListener('click', function() {
-        document.querySelectorAll('.ratio-btn').forEach(function(b) { b.classList.remove('active'); });
+        document.querySelectorAll('#ratio-row .ratio-btn').forEach(function(b) { b.classList.remove('active'); });
         btn.classList.add('active');
         activeRatioIdx = idx;
-        applyRatio(r.ratio);
+        applyRatio(r.ratio, !!r.pfp);
       });
       ratioRow.appendChild(btn);
     });
@@ -1318,21 +1516,120 @@
         entry.item.style.display = show ? '' : 'none';
         any = any || show;
       });
-      previewsPanel.classList.toggle('hidden', !any || state.isVideo);
+      previewsPanel.classList.toggle('hidden', !any || state.isVideo || state.pfp);
       previewsPanel.classList.toggle('wide', state.ratio !== 1);
     }
     syncPreviews();
 
-    fillToggleTrack.addEventListener('click', function() {
-      state.extendEnabled = !state.extendEnabled;
-      fillToggleTrack.classList.toggle('on', state.extendEnabled);
-      fillColorWrap.classList.toggle('enabled', state.extendEnabled);
-      if (state.extendEnabled) {
-        zoomSlider.min = 1;
-      } else {
-        zoomSlider.min = 100;
+    function setExtend(on) {
+      state.extendEnabled = on;
+      fillToggleTrack.classList.toggle('on', on);
+      fillColorWrap.classList.toggle('enabled', on);
+      zoomSlider.min = on ? 1 : 100;
+      if (!on) {
         if (state.zoom < 1) setZoom(1);
+        setMirror(false); // mirroring only exists past the image edge
       }
+      renderAll();
+    }
+
+    function setMirror(on) {
+      state.mirrorEnabled = on;
+      mirrorTrack.classList.toggle('on', on);
+      mirrorWrap.classList.toggle('enabled', on);
+      if (on && !state.extendEnabled) setExtend(true);
+      renderAll();
+    }
+
+    fillToggleTrack.addEventListener('click', function() { setExtend(!state.extendEnabled); });
+
+    const mirrorTrack = document.getElementById('mirror-toggle-track');
+    const mirrorWrap  = document.getElementById('mirror-wrap');
+    mirrorTrack.parentElement.addEventListener('click', function() { setMirror(!state.mirrorEnabled); });
+
+    function bindToggle(trackId, wrapId, key) {
+      const track = document.getElementById(trackId);
+      const wrap  = wrapId && document.getElementById(wrapId);
+      track.parentElement.addEventListener('click', function() {
+        state[key] = !state[key];
+        track.classList.toggle('on', state[key]);
+        if (wrap) wrap.classList.toggle('enabled', state[key]);
+        renderAll();
+      });
+    }
+
+    function bindRange(id, key, div) {
+      document.getElementById(id).addEventListener('input', function(e) {
+        state[key] = e.target.value / div;
+        renderAll();
+      });
+    }
+
+    bindToggle('edge-toggle-track', 'edge-wrap', 'edgeEnabled');
+    bindToggle('pat-toggle-track',  'pat-wrap',  'patEnabled');
+    bindRange('mirror-blur', 'mirrorBlur', 100);
+    bindRange('edge-size',   'edgeSize',   100);
+    bindRange('edge-blur',   'edgeBlur',   100);
+    bindRange('pat-size',    'patSize',    100);
+    bindRange('pat-spacing', 'patSpacing', 10);
+    bindRange('pat-inset',   'patInset',   100);
+    bindRange('pat-rotate',  'patRotate',  1);
+    bindRange('pat-opacity', 'patOpacity', 100);
+    bindToggle('pat-cut-track',  null, 'patCut');
+    bindToggle('pat-back-track', null, 'patBack');
+
+    bindToggle('edge-ring-track', null, 'edgeRing');
+
+    const fxTabs = document.querySelectorAll('.fx-tab');
+    const ringTab = document.querySelector('.fx-tab[data-tab="ring"]');
+    const edgeRingRow = document.getElementById('edge-ring-row');
+
+    function showTab(name) {
+      fxTabs.forEach(function(t) { t.classList.toggle('active', t.dataset.tab === name); });
+      document.querySelectorAll('.fx-pane').forEach(function(p) { p.classList.toggle('active', p.id === 'pane-' + name); });
+    }
+    fxTabs.forEach(function(t) { t.addEventListener('click', function() { showTab(t.dataset.tab); }); });
+
+    // 1:1-only controls (pfp ring, blur-from-ring) appear only at 1:1
+    function syncRatioUI() {
+      const square = state.ratio === 1;
+      ringTab.style.display = square ? '' : 'none';
+      edgeRingRow.style.display = square ? '' : 'none';
+      document.getElementById('fade-ring-row').style.display = square ? '' : 'none';
+      if (!square && ringTab.classList.contains('active')) showTab('fill');
+    }
+
+    function syncTabs() {
+      const on = { fill: state.extendEnabled, mirror: state.mirrorEnabled, blur: state.edgeEnabled,
+                   fade: state.fadeEnabled, ring: state.patEnabled && state.ratio === 1 };
+      fxTabs.forEach(function(t) { t.classList.toggle('on', !!on[t.dataset.tab]); });
+      // the ring replaces the side fades, so dim the side picker while it's active
+      fadeSidesRow.style.opacity = state.fadeRing && state.ratio === 1 ? '0.35' : '';
+      document.getElementById('fade-color-row').style.opacity = state.fadeTransparent ? '0.35' : '';
+    }
+
+    document.getElementById('pat-back-input').addEventListener('input', function(e) {
+      state.patBackColor = e.target.value;
+      document.getElementById('pat-back-swatch').style.background = state.patBackColor;
+      renderAll();
+    });
+
+    ['dots', 'dashes', 'squares', 'zigzag', 'solid'].forEach(function(style) {
+      const btn = document.createElement('button');
+      btn.className = 'ratio-btn' + (style === state.patStyle ? ' active' : '');
+      btn.innerHTML = '<span class="ratio-text">' + style + '</span>';
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('#pat-styles .ratio-btn').forEach(function(b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        state.patStyle = style;
+        renderAll();
+      });
+      document.getElementById('pat-styles').appendChild(btn);
+    });
+
+    document.getElementById('pat-color-input').addEventListener('input', function(e) {
+      state.patColor = e.target.value;
+      document.getElementById('pat-swatch').style.background = state.patColor;
       renderAll();
     });
 
@@ -1494,8 +1791,17 @@
       return { cropX, cropY, cropW, cropH, imgLeft, imgTop, displayW, displayH, displayScale };
     }
 
-    function applyRatio(ratio) {
+    function applyRatio(ratio, pfp) {
       state.ratio = ratio;
+      cropContainer.classList.toggle('pfp', pfp);
+      // pfp mode starts with the "from the pfp ring" options on; leaving it turns them back off
+      state.pfp = pfp;
+      [['edgeRing', 'edge-ring-track'], ['fadeRing', 'fade-ring-track']].forEach(function(k) {
+        if (state[k[0]] === pfp) return;
+        state[k[0]] = pfp;
+        document.getElementById(k[1]).classList.toggle('on', pfp);
+      });
+      syncRatioUI();
       syncPreviews();
       resetView();
       renderAll();
@@ -1526,9 +1832,22 @@
       }
 
       cropBox.style.cssText = 'left:' + L.cropX + 'px;top:' + L.cropY + 'px;width:' + L.cropW + 'px;height:' + L.cropH + 'px';
-      fadePreview.style.background = state.fadeEnabled
-        ? 'linear-gradient(to bottom, ' + state.fadeColor + '00 ' + (100 - state.fadeSize * 100) + '%, ' + state.fadeColor + ')'
-        : 'none';
+
+      // effects the plain <img>/<video> can't show are rendered by the export path itself, so the box is WYSIWYG
+      syncTabs();
+      const fx = state.edgeEnabled || state.fadeEnabled || (state.patEnabled && state.ratio === 1) || (state.mirrorEnabled && state.extendEnabled);
+      resultCanvas.style.display = fx ? '' : 'none';
+      if (fx) {
+        const dpr = window.devicePixelRatio || 1;
+        const rw = Math.max(1, Math.round(L.cropW * dpr));
+        const rh = Math.max(1, Math.round(L.cropH * dpr));
+        // a solid backdrop (discord dark, as in the previews) behind a transparent fade; it also hides the plain <img> underneath the canvas
+        const checker = usesCut() ? ';background:#313338' : '';
+        resultCanvas.style.cssText = 'left:' + L.cropX + 'px;top:' + L.cropY + 'px;width:' + L.cropW + 'px;height:' + L.cropH + 'px' + checker;
+        resultCanvas.width = rw; // also clears it
+        resultCanvas.height = rh;
+        drawCrop(resultCanvas.getContext('2d'), rw, rh, natCrop(L));
+      }
 
       const px = Math.round(L.cropW / L.displayScale);
       const py = Math.round(L.cropH / L.displayScale);
@@ -1573,11 +1892,216 @@
       };
     }
 
-    // single draw path for previews, image export and video frames: fill, media, fade
+    // reusable offscreen canvases (video export redraws every frame); sizes must be whole pixels
+    const scratchCache = {};
+    function scratch(key, w, h) {
+      const c = scratchCache[key] || (scratchCache[key] = document.createElement('canvas'));
+      if (c.width !== w || c.height !== h) { c.width = w; c.height = h; }
+      const ctx = c.getContext('2d');
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, w, h);
+      return c;
+    }
+
+    // Motion-Tile-style fill: media tiled across the crop, every other tile flipped so edges meet seamlessly.
+    // Blur (px) is applied to the tiles only; drawBase paints the sharp original on top afterwards.
+    // Needs ctx.filter (no Safari): there the mirror just stays unblurred.
+    function drawMirror(ctx, w, h, c, blur) {
+      const tw = mediaNaturalWidth()  / c.w * w;
+      const th = mediaNaturalHeight() / c.h * h;
+      const ox = -c.x / c.w * w;
+      const oy = -c.y / c.h * h;
+      const pad = Math.ceil(blur * 3); // blur kernel reach, so the crop edge isn't faded by transparent surroundings
+      const i0 = Math.floor((-pad - ox) / tw), i1 = Math.floor((w + pad - ox) / tw);
+      const j0 = Math.floor((-pad - oy) / th), j1 = Math.floor((h + pad - oy) / th);
+      // shortcut: past ~1000 tiles (extreme zoom-out) skip mirroring and keep the plain fill
+      if ((i1 - i0 + 1) * (j1 - j0 + 1) > 1000) return;
+
+      const t = scratch('mirror', Math.ceil(w) + 2 * pad, Math.ceil(h) + 2 * pad);
+      const tc = t.getContext('2d');
+      tc.translate(pad, pad);
+      for (let i = i0; i <= i1; i++) {
+        for (let j = j0; j <= j1; j++) {
+          tc.save();
+          tc.translate(ox + i * tw + (i & 1 ? tw : 0), oy + j * th + (j & 1 ? th : 0));
+          tc.scale(i & 1 ? -1 : 1, j & 1 ? -1 : 1);
+          // +1px overlap hides hairline seams between fractionally-placed tiles
+          try { tc.drawImage(mediaSource(), 0, 0, tw + 1, th + 1); } catch(e) {}
+          tc.restore();
+        }
+      }
+      if (blur > 0.5) ctx.filter = 'blur(' + blur + 'px)';
+      ctx.drawImage(t, -pad, -pad);
+      ctx.filter = 'none';
+    }
+
+    // blur that ramps from full at the crop's edges to none `reach` px inward; mutates and returns `src`
+    function edgeBlur(src, w, h) {
+      const blur  = state.edgeBlur * 0.06 * Math.max(w, h);
+      const reach = state.edgeSize * 0.5 * Math.min(w, h);
+      if (blur < 0.5 || reach < 1) return src;
+      const p = Math.ceil(blur * 3);
+
+      // copy with edge pixels stretched outward, so the blur doesn't pull in transparency at the borders
+      const P = scratch('pad', w + 2 * p, h + 2 * p);
+      const pc = P.getContext('2d');
+      pc.drawImage(src, p, p);
+      pc.drawImage(src, 0, 0, w, 1,     p, 0, w, p);
+      pc.drawImage(src, 0, h - 1, w, 1, p, h + p, w, p);
+      pc.drawImage(src, 0, 0, 1, h,     0, p, p, h);
+      pc.drawImage(src, w - 1, 0, 1, h, w + p, p, p, h);
+      pc.drawImage(src, 0, 0, 1, 1,         0, 0, p, p);
+      pc.drawImage(src, w - 1, 0, 1, 1,     w + p, 0, p, p);
+      pc.drawImage(src, 0, h - 1, 1, 1,     0, h + p, p, p);
+      pc.drawImage(src, w - 1, h - 1, 1, 1, w + p, h + p, p, p);
+
+      const B = scratch('blur', w, h);
+      const bc = B.getContext('2d');
+      bc.filter = 'blur(' + blur + 'px)';
+      bc.drawImage(P, -p, -p);
+      bc.filter = 'none';
+
+      // mask: opaque at the border (rectangle edges, or the pfp circle), fading to clear at `reach`
+      const M = scratch('mask', w, h);
+      const mc = M.getContext('2d');
+      if (state.edgeRing && state.ratio === 1) {
+        const R = Math.min(w, h) / 2;
+        const g = mc.createRadialGradient(w / 2, h / 2, Math.max(0, R - reach), w / 2, h / 2, R);
+        g.addColorStop(0, 'rgba(0,0,0,0)');
+        g.addColorStop(1, 'rgba(0,0,0,1)'); // also holds outside the circle, i.e. the corners
+        mc.fillStyle = g;
+        mc.fillRect(0, 0, w, h);
+      } else {
+        [[0, 0, 0, reach, 0, 0, w, reach],
+         [w, 0, w - reach, 0, w - reach, 0, reach, h],
+         [0, h, 0, h - reach, 0, h - reach, w, reach],
+         [0, 0, reach, 0, 0, 0, reach, h]].forEach(function(s) {
+          const g = mc.createLinearGradient(s[0], s[1], s[2], s[3]);
+          g.addColorStop(0, 'rgba(0,0,0,1)');
+          g.addColorStop(1, 'rgba(0,0,0,0)');
+          mc.fillStyle = g;
+          mc.fillRect(s[4], s[5], s[6], s[7]);
+        });
+      }
+      bc.globalCompositeOperation = 'destination-in';
+      bc.drawImage(M, 0, 0);
+      bc.globalCompositeOperation = 'source-over';
+
+      src.getContext('2d').drawImage(B, 0, 0);
+      return src;
+    }
+
+    // outline ring just inside the inscribed circle (what discord shows of a pfp); 1:1 only
+    // "cut out" erases the pattern instead of painting it, so ctx must hold only this crop (drawCrop gives it a layer)
+    function drawPattern(ctx, s) {
+      const t = Math.max(1, state.patSize * s);
+      const r = s / 2 - t / 2 - s * (0.01 + state.patInset);
+      if (r <= 0) return;
+      const n = Math.max(1, Math.round(2 * Math.PI * r / (t * state.patSpacing)));
+      const gap = 2 * Math.PI * r / n; // whole number of repeats, so the ring closes cleanly
+      ctx.save();
+      ctx.translate(s / 2, s / 2);
+      ctx.rotate(state.patRotate * Math.PI / 180);
+      ctx.globalAlpha = state.patOpacity;
+      ctx.lineJoin = 'round';
+
+      if (state.patBack) { // painted first, so a cut-out pattern punches holes through the band
+        ctx.strokeStyle = state.patBackColor;
+        ctx.lineWidth = t * 1.6;
+        ctx.beginPath();
+        ctx.arc(0, 0, r, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      ctx.globalCompositeOperation = state.patCut ? 'destination-out' : 'source-over';
+      ctx.strokeStyle = ctx.fillStyle = state.patColor;
+      ctx.lineWidth = t;
+      const style = state.patStyle;
+      if (style === 'squares') {
+        for (let i = 0; i < n; i++) {
+          ctx.save();
+          ctx.rotate(i * 2 * Math.PI / n);
+          ctx.fillRect(r - t / 2, -t / 2, t, t);
+          ctx.restore();
+        }
+      } else if (style === 'zigzag') {
+        ctx.lineWidth = Math.max(1, t * 0.3);
+        ctx.beginPath();
+        for (let k = 0; k < 2 * n; k++) {
+          const a = k * Math.PI / n;
+          const rad = r + (k & 1 ? t / 2 : -t / 2);
+          ctx[k ? 'lineTo' : 'moveTo'](Math.cos(a) * rad, Math.sin(a) * rad);
+        }
+        ctx.closePath();
+        ctx.stroke();
+      } else {
+        if (style === 'dots') { ctx.lineCap = 'round'; ctx.setLineDash([0, gap]); }
+        else if (style === 'dashes') ctx.setLineDash([gap * 0.6, gap * 0.4]);
+        ctx.beginPath();
+        ctx.arc(0, 0, r, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    // fade into fadeColor from each chosen side, or inward from the pfp circle (1:1)
+    // "transparent" erases instead of painting, so ctx must hold only this crop (drawCrop gives it a layer)
+    function drawFade(ctx, w, h) {
+      const cut = state.fadeTransparent;
+      const from = cut ? 'rgba(0,0,0,0)' : state.fadeColor + '00';
+      const to   = cut ? 'rgba(0,0,0,1)' : state.fadeColor;
+      ctx.save();
+      ctx.globalCompositeOperation = cut ? 'destination-out' : 'source-over';
+      function paint(g) {
+        g.addColorStop(0, from);
+        g.addColorStop(1, to);
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, w, h);
+      }
+      if (state.fadeRing && state.ratio === 1) {
+        const R = Math.min(w, h) / 2;
+        paint(ctx.createRadialGradient(w / 2, h / 2, Math.max(0, R - state.fadeSize * R), w / 2, h / 2, R));
+      } else {
+        const dh = h * state.fadeSize, dw = w * state.fadeSize;
+        const s = state.fadeSides;
+        if (s.top)    paint(ctx.createLinearGradient(0, dh, 0, 0));
+        if (s.bottom) paint(ctx.createLinearGradient(0, h - dh, 0, h));
+        if (s.left)   paint(ctx.createLinearGradient(dw, 0, 0, 0));
+        if (s.right)  paint(ctx.createLinearGradient(w - dw, 0, w, 0));
+      }
+      ctx.restore();
+    }
+
+    // single draw path for previews, image export and video frames: base, edge blur, fade, pattern
     function drawCrop(ctx, w, h, c) {
+      // a transparent fade erases pixels, so it works on its own layer and is then laid over whatever ctx already holds
+      const patOn = state.patEnabled && state.ratio === 1;
+      const cut = usesCut();
+      const layer = cut ? scratch('cut', w, h) : null;
+      const target = cut ? layer.getContext('2d') : ctx;
+      if (state.edgeEnabled) {
+        const base = scratch('base', w, h);
+        drawBase(base.getContext('2d'), w, h, c);
+        target.drawImage(edgeBlur(base, w, h), 0, 0);
+      } else {
+        drawBase(target, w, h, c);
+      }
+      if (state.fadeEnabled) drawFade(target, w, h);
+      if (patOn) drawPattern(target, Math.min(w, h));
+      if (cut) ctx.drawImage(layer, 0, 0);
+    }
+
+    // true when a transparent fade or a cut-out pattern erases pixels
+    function usesCut() {
+      return (state.fadeEnabled && state.fadeTransparent) || (state.patEnabled && state.ratio === 1 && state.patCut);
+    }
+
+    // fill (solid or mirrored) plus the media itself
+    function drawBase(ctx, w, h, c) {
       if (state.extendEnabled) {
         ctx.fillStyle = state.fillColor;
         ctx.fillRect(0, 0, w, h);
+        if (state.mirrorEnabled) drawMirror(ctx, w, h, c, state.mirrorBlur * 0.06 * w);
       }
       const sx = Math.max(0, c.x);
       const sy = Math.max(0, c.y);
@@ -1588,13 +2112,6 @@
           ctx.drawImage(mediaSource(), sx, sy, sw, sh,
             (sx - c.x) / c.w * w, (sy - c.y) / c.h * h, sw / c.w * w, sh / c.h * h);
         } catch(e) {}
-      }
-      if (state.fadeEnabled) {
-        const g = ctx.createLinearGradient(0, h * (1 - state.fadeSize), 0, h);
-        g.addColorStop(0, state.fadeColor + '00');
-        g.addColorStop(1, state.fadeColor);
-        ctx.fillStyle = g;
-        ctx.fillRect(0, 0, w, h);
       }
     }
 
@@ -1695,7 +2212,11 @@
 
     function setZoom(z) {
       const minZoom = state.extendEnabled ? 0.01 : 1;
-      state.zoom = Math.max(minZoom, Math.min(5, z));
+      const next = Math.max(minZoom, Math.min(5, z));
+      // pan is the image center's offset from the crop center; scaling it with the zoom keeps the point under the crop center fixed
+      state.panX *= next / state.zoom;
+      state.panY *= next / state.zoom;
+      state.zoom = next;
       zoomSlider.value = Math.round(state.zoom * 100);
       zoomLabel.textContent = parseFloat(state.zoom.toFixed(2)) + '×';
       renderAll();
@@ -1849,12 +2370,9 @@
       cropVideo.pause();
       cropVideo.src = '';
       fileInput.value = '';
-      zoomSlider.min = 100;
       state.loaded = false;
-      state.extendEnabled = false;
+      setExtend(false);
       state.userPickedColor = false;
-      fillToggleTrack.classList.remove('on');
-      fillColorWrap.classList.remove('enabled');
     });
   })();
 </script>
